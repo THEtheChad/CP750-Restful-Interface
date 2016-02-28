@@ -13,5 +13,10 @@
   "author": "Chad Elliott",
   "license": "MIT",
   "readmeFilename": "README.md",
-  "gitHead": "67a6cd7d87a91a989864c55b76e7e621d187a36a"
+  "gitHead": "67a6cd7d87a91a989864c55b76e7e621d187a36a",
+  "dependencies": {
+    "koa": "^1.1.2",
+    "koa-router": "^5.4.0",
+    "telnet-client": "^0.7.0"
+  }
 }
