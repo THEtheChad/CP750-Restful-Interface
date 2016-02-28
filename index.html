@@ -1,0 +1,22 @@
+<html>
+<head>
+	<title>CP750 Web Client</title>
+
+	<script type="//ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+	<script type="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-rc.2/angular.min.js"></script>
+</head>
+<body ng-app="App">
+	<h1>CP750 Web Client</h1>
+
+	<script>
+		var app = angular.module('App', []);
+
+		app.controller('Command-Ctrl', ['$scope', '$http', function($scope, $http){
+			$http.get('/commands').then(function(commands){
+				console.log(commands);
+				$scope.commands = commands;
+			});
+		}]);
+	</script>
+</body>
+</html>

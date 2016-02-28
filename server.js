@@ -7,6 +7,7 @@ const DEVICE_GATEWAY = '192.168.1.129';
 var app = require('koa')();
 var router = require('koa-router')();
 var logger = require('koa-logger');
+var send = require('koa-send');
 var telnet = require('telnet-client');
 var connection = new telnet();
 
@@ -40,11 +41,19 @@ console.log(`${DEVICE_IP}:${DEVICE_PORT} connection successful!`);
 //   return channel.exec(cmd + ' ' + value, cb);
 // };
 
+router.get('/', function *(){
+  yield send(this, 'index.html');
+});
+
 // grab command documentation
 
 var commands = require('./commands.json');
 
-// build the routes
+router.get('/commands', function *(){
+  this.body = commands;
+});
+
+// build a route for each command (and its aliases)
 
 commands.forEach(function(cmd){
   var routes = (typeof cmd.aliases == 'string') ? [cmd.aliases] : cmd.aliases;
@@ -57,11 +66,6 @@ commands.forEach(function(cmd){
   });
 });
 
-router.get('/commands', function *(){
-  this.body = commands;
-});
-
 app
-  .use(router.routes());
-
-app.listen(SERVER_PORT);
+  .use(router.routes())
+  .listen(SERVER_PORT);
