@@ -8,15 +8,24 @@
 <body ng-app="App">
 	<h1>CP750 Web Client</h1>
 	<div ng-controller="Command-Ctrl">
-		
+		<h2>Commands</h2>
+		<ul>
+			<li ng-repeat="cmd in commands">
+				<div class="command">
+					<span class="command__name">{{cmd.command}}</span>
+					<span ng-if="cmd.input.values">
+						<select ng-options="value for value in cmd.input.values" ng-model="test"></select>
+					</span>
+				</div>
+			</li>
+		</ul>
 	</div>
 	<script>
 		var app = angular.module('App', []);
 
 		app.controller('Command-Ctrl', ['$scope', '$http', function($scope, $http){
-			$http.get('/commands').then(function(commands){
-				console.log(commands);
-				$scope.commands = commands;
+			$http.get('/commands').then(function(res){
+				$scope.commands = res.data;
 			});
 		}]);
 	</script>
