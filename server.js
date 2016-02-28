@@ -13,9 +13,8 @@ var connection = new telnet();
 app.use(logger());
 
 var channel = {
-  exec: function(cmd){
-    console.log('executing command: ');
-    return cmd.split(' ')[0] + '[value]';
+  exec: function(cmd, cb){
+    cb(null, cmd.split(' ')[0] + ' [value]');
   }
 };
 // var channel = yield connection.connect({
@@ -28,11 +27,13 @@ var channel = {
 console.log(`${DEVICE_IP}:${DEVICE_PORT} connection successful!`);
 // console.log(`${DEVICE_IP}:${DEVICE_PORT} connection failed.`);
 
-function device(cmd, value){
-  console.log(arguments);
-  if(!value) value = '?';
+function device(cmd, value, cb){
+  if(!cb){
+    cb = value;
+    value = '?';
+  }
 
-  return channel.exec(cmd + ' ' + value);
+  return channel.exec(cmd + ' ' + value, cb);
 };
 
 router
