@@ -13,19 +13,19 @@ var connection = new telnet();
 app.use(logger());
 
 app.use(function *(next){
-  try{
-    this.device = yield connection.connect({
-      host: DEVICE_IP,
-      port: DEVICE_PORT,
-      shellPrompt: '/ # ',
-      timeout: 1500,
-      // removeEcho: 4
-    });
-    console.log(`${DEVICE_IP}:${DEVICE_PORT} connection successful!`);
-  }
-  catch(e){
-    console.log(`${DEVICE_IP}:${DEVICE_PORT} connection failed.`);
-  }
+  // try{
+  //   this.device = yield connection.connect({
+  //     host: DEVICE_IP,
+  //     port: DEVICE_PORT,
+  //     shellPrompt: '/ # ',
+  //     timeout: 1500,
+  //     // removeEcho: 4
+  //   });
+  //   console.log(`${DEVICE_IP}:${DEVICE_PORT} connection successful!`);
+  // }
+  // catch(e){
+  //   console.log(`${DEVICE_IP}:${DEVICE_PORT} connection failed.`);
+  // }
 });
 
 router.get('/version', function *(next){
