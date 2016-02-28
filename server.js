@@ -40,8 +40,8 @@ router
     this.body = 'Hello World!';
   })
   .get('/version', function *(next){
-    // var response = yield device('cp750.sysinfo.version');
-    this.body = 'version';
+    var response = yield device('cp750.sysinfo.version');
+    this.body = response;
   })
   .get('/marco', function *(next){
     this.body = 'polo';
