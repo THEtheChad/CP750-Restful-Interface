@@ -44,6 +44,11 @@ router.get('/version', function *(){
   this.body = value;
 });
 
+router.get('/marco', function *(){
+  console.log('test');
+  this.body = 'polo';
+});
+
 app
   .use(router.routes());
 
