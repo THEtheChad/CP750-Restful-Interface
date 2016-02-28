@@ -27,31 +27,30 @@ var channel = {
 console.log(`${DEVICE_IP}:${DEVICE_PORT} connection successful!`);
 // console.log(`${DEVICE_IP}:${DEVICE_PORT} connection failed.`);
 
-function device(cmd, value, cb){
-  console.log(arguments);
+// function device(cmd, value, cb){
+//   console.log(arguments);
 
-  if(!cb){
-    cb = value;
-    value = '?';
-  }
+//   if(!cb){
+//     cb = value;
+//     value = '?';
+//   }
 
-  return {};
+//   return {};
 
-  return channel.exec(cmd + ' ' + value, cb);
-};
+//   return channel.exec(cmd + ' ' + value, cb);
+// };
 
-router
-  .get('/', function *(next) {
-    this.body = 'Hello World!';
-  })
-  .get('/version', function *(next){
-    var response = yield device('cp750.sysinfo.version');
-    this.body = response;
-  })
-  .get('/marco', function *(next){
-    this.body = 'polo';
+// grab command documentation
+
+var commands = require('./commands.json');
+
+// build the routes
+
+commands.forEach(function(cmd){
+  router.get('/' + cmd.command, function *(){
+    this.body = cmd.input;
   });
-
+});
 
 app
   .use(router.routes());
