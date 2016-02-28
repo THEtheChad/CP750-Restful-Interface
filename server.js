@@ -1,4 +1,4 @@
-const SERVER_PORT = 1337;
+const SERVER_PORT = 2222;
 const DEVICE_PORT = 61408;
 const DEVICE_IP = '192.168.1.136';
 const DEVICE_SUBNET = '255.255.255.128';
@@ -28,10 +28,14 @@ console.log(`${DEVICE_IP}:${DEVICE_PORT} connection successful!`);
 // console.log(`${DEVICE_IP}:${DEVICE_PORT} connection failed.`);
 
 function device(cmd, value, cb){
+  console.log(arguments);
+
   if(!cb){
     cb = value;
     value = '?';
   }
+
+  return {};
 
   return channel.exec(cmd + ' ' + value, cb);
 };
