@@ -1,0 +1,17 @@
+{
+  "name": "CP750-Restful-Interface",
+  "version": "0.0.0",
+  "description": "A RESTful interface for the Dolby CP750 Digital Cinema Processor.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/THEtheChad/CP750-Restful-Interface.git"
+  },
+  "author": "Chad Elliott",
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "gitHead": "67a6cd7d87a91a989864c55b76e7e621d187a36a"
+}
