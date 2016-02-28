@@ -1,0 +1,3146 @@
+[
+  {
+    "command": "cp750.sysinfo.version",
+    "input": "1.0.0.150183"
+  },
+  {
+    "command": "cp750.ctrl.default_params",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.ctrl.fader_delta",
+    "input": {
+      "range": [
+        -100,
+        100
+      ]
+    }
+  },
+  {
+    "command": "cp750.ctrl.full_ascii_ctrl",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.ctrl.log_erase",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.ctrl.reboot",
+    "input": {
+      "range": [
+        0,
+        2147483647
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.analog_global_delay",
+    "input": {
+      "range": [
+        0,
+        250
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.analog_route",
+    "input": "[L R C Sw Ls Rs 7 8]"
+  },
+  {
+    "command": "cp750.sys.dig_1_global_delay",
+    "input": {
+      "range": [
+        0,
+        250
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.dig_1_route",
+    "input": "[L R C Sw Ls Rs 7 8]"
+  },
+  {
+    "command": "cp750.sys.dig_2_global_delay",
+    "input": {
+      "range": [
+        0,
+        250
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.dig_3_global_delay",
+    "input": {
+      "range": [
+        0,
+        250
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.dig_4_global_delay",
+    "input": {
+      "range": [
+        0,
+        250
+      ]
+    }
+  },
+  {
+    "command": "p750.sys.dolby_digital_2_channel_decode_mode_1",
+    "input": {
+      "values": [
+        "auto",
+        "invalid",
+        "lr_discrete",
+        "n_a",
+        "prologic",
+        "prologic_2"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.dolby_digital_2_channel_decode_mode_2",
+    "input": {
+      "values": [
+        "auto",
+        "invalid",
+        "lr_discrete",
+        "n_a",
+        "prologic",
+        "prologic_2"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.dolby_digital_2_channel_decode_mode_3",
+    "input": {
+      "values": [
+        "auto",
+        "invalid",
+        "lr_discrete",
+        "n_a",
+        "prologic",
+        "prologic_2"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.dolby_digital_2_channel_decode_mode_4",
+    "input": {
+      "values": [
+        "auto",
+        "invalid",
+        "lr_discrete",
+        "n_a",
+        "prologic",
+        "prologic_2"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.dolby_digital_dialnorm_1",
+    "input": {
+      "values": [
+        "n_a",
+        "off",
+        "on"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.dolby_digital_dialnorm_2",
+    "input": {
+      "values": [
+        "n_a",
+        "off",
+        "on"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.dolby_digital_dialnorm_3",
+    "input": {
+      "values": [
+        "n_a",
+        "off",
+        "on"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.dolby_digital_dialnorm_4",
+    "input": {
+      "values": [
+        "n_a",
+        "off",
+        "on"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader",
+    "input": {
+      "range": [
+        0,
+        100
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_1",
+    "input": {
+      "range": [
+        0,
+        100
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_1_enable",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_2",
+    "input": {
+      "range": [
+        0,
+        100
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_2_enable",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_3",
+    "input": {
+      "range": [
+        0,
+        100
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_3_enable",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_4",
+    "input": {
+      "range": [
+        0,
+        100
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_4_enable",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_a",
+    "input": {
+      "range": [
+        0,
+        100
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_a_enable",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_m",
+    "input": {
+      "range": [
+        0,
+        100
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_m_enable",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_n",
+    "input": {
+      "range": [
+        0,
+        100
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_n_enable",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.input_mode",
+    "input": {
+      "values": [
+        "analog",
+        "dig_1",
+        "dig_2",
+        "dig_3",
+        "dig_4",
+        "last",
+        "mic",
+        "non_sync"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.ip_setting",
+    "input": "[ip.ip.ip.ip nm.nm.nm.nm gw.gw.gw.gw off|on hostname]"
+  },
+  {
+    "command": "cp750.sys.mic_global_delay",
+    "input": {
+      "range": [
+        0,
+        250
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.non_sync_global_delay",
+    "input": {
+      "range": [
+        0,
+        250
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.non_sync_route",
+    "input": "[L R]"
+  },
+  {
+    "command": "cp750.sys.ntp_server",
+    "input": "[hostname|ip_address]"
+  },
+  {
+    "command": "cp750.sys.pcm_2_channel_decode_mode_1",
+    "input": {
+      "values": [
+        "auto",
+        "invalid",
+        "lr_discrete",
+        "n_a",
+        "prologic",
+        "prologic_2"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.pcm_2_channel_decode_mode_2",
+    "input": {
+      "values": [
+        "auto",
+        "invalid",
+        "lr_discrete",
+        "n_a",
+        "prologic",
+        "prologic_2"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.pcm_2_channel_decode_mode_3",
+    "input": {
+      "values": [
+        "auto",
+        "invalid",
+        "lr_discrete",
+        "n_a",
+        "prologic",
+        "prologic_2"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.pcm_2_channel_decode_mode_4",
+    "input": {
+      "values": [
+        "auto",
+        "invalid",
+        "lr_discrete",
+        "n_a",
+        "prologic",
+        "prologic_2"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.pcm_2_channel_decode_mode_a",
+    "input": {
+      "values": [
+        "auto",
+        "invalid",
+        "lr_discrete",
+        "n_a",
+        "prologic",
+        "prologic_2"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.pcm_2_channel_decode_mode_n",
+    "input": {
+      "values": [
+        "auto",
+        "invalid",
+        "lr_discrete",
+        "n_a",
+        "prologic",
+        "prologic_2"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.power_on_input",
+    "input": {
+      "values": [
+        "analog",
+        "dig_1",
+        "dig_2",
+        "dig_3",
+        "dig_4",
+        "last",
+        "mic",
+        "non_sync"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.process_mode_1",
+    "input": {
+      "values": [
+        "minimum_latency",
+        "mute",
+        "silent_switch"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.process_mode_2",
+    "input": {
+      "values": [
+        "minimum_latency",
+        "mute",
+        "silent_switch"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.process_mode_3",
+    "input": {
+      "values": [
+        "minimum_latency",
+        "mute",
+        "silent_switch"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.process_mode_4",
+    "input": {
+      "values": [
+        "minimum_latency",
+        "mute",
+        "silent_switch"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.subwoofer_filter",
+    "input": {
+      "range": [
+        50,
+        100
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.surround_delay",
+    "input": {
+      "range": [
+        0,
+        150
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.time"
+  },
+  {
+    "command": "cp750.sys.time_update_int",
+    "input": {
+      "range": [
+        1,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys_tune.dsp_1"
+  },
+  {
+    "command": "cp750.sys_tune.dsp_2"
+  },
+  {
+    "command": "cp750.sys_tune.dsp_3"
+  },
+  {
+    "command": "cp750.sys_tune.dsp_4"
+  },
+  {
+    "command": "cp750.sys_tune.dsp_5"
+  },
+  {
+    "command": "cp750.sys_tune.dsp_6"
+  },
+  {
+    "command": "cp750.sys_tune.dsp_7"
+  },
+  {
+    "command": "cp750.sys_tune.dsp_8"
+  },
+  {
+    "command": "cp750.ctrl.alignment_mode_tickle",
+    "input": {
+      "range": [
+        0,
+        2147483647
+      ]
+    }
+  },
+  {
+    "command": "cp750.ctrl.default_params",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.ctrl.full_ascii_ctrl",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.ctrl.reboot",
+    "input": {
+      "range": [
+        0,
+        2147483647
+      ]
+    }
+  },
+  {
+    "command": "cp750.internal.tecs_set_test_mode",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.state.channel_mode",
+    "input": {
+      "values": [
+        "1_0",
+        "1_1",
+        "2_0",
+        "2_1",
+        "2_2",
+        "3_0",
+        "3_1",
+        "3_2",
+        "3_2_L",
+        "n_a"
+      ]
+    }
+  },
+  {
+    "command": "cp750.state.decode_mode",
+    "input": {
+      "values": [
+        "auto",
+        "invalid",
+        "lr_discrete",
+        "n_a",
+        "prologic",
+        "prologic_2"
+      ]
+    }
+  },
+  {
+    "command": "cp750.state.dialnorm",
+    "input": {
+      "range": [
+        -31,
+        0
+      ]
+    }
+  },
+  {
+    "command": "cp750.state.dig_1_valid",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.state.dig_2_valid",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.state.dig_3_valid",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.state.dig_4_valid",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.state.headless",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.state.ip_status"
+  },
+  {
+    "command": "cp750.state.meters"
+  },
+  {
+    "command": "cp750.state.rta"
+  },
+  {
+    "command": "cp750.state.rta_avg",
+    "input": {
+      "range": [
+        0,
+        255
+      ]
+    }
+  },
+  {
+    "command": "cp750.state.sample_rate",
+    "input": {
+      "values": [
+        "32",
+        "44_1",
+        "48",
+        "88_2",
+        "96",
+        "n_a"
+      ]
+    }
+  },
+  {
+    "command": "cp750.state.spl",
+    "input": {
+      "range": [
+        -5000,
+        5000
+      ]
+    }
+  },
+  {
+    "command": "cp750.state.spl_calibrated",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.state.spl_stable",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.state.time"
+  },
+  {
+    "command": "cp750.sys.alignment_mode",
+    "input": {
+      "values": [
+        "n_a",
+        "off",
+        "on"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.analog_global_delay",
+    "input": {
+      "range": [
+        0,
+        250
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.analog_route",
+    "input": "[ L R C Sw Ls Rs 7 8 ]"
+  },
+  {
+    "command": "cp750.sys.analog_text"
+  },
+  {
+    "command": "cp750.sys.auditorium_number"
+  },
+  {
+    "command": "cp750.sys.automation_text"
+  },
+  {
+    "command": "cp750.sys.bass_level_bsl",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.bass_level_c",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.bass_level_ls",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.bass_level_r",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.bass_level_rs",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.cinema_system_text"
+  },
+  {
+    "command": "cp750.sys.comment_text"
+  },
+  {
+    "command": "cp750.sys.cp_text"
+  },
+  {
+    "command": "cp750.sys.dig_1_global_delay",
+    "input": {
+      "range": [
+        0,
+        250
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.dig_1_route",
+    "input": "[ L R C Sw Ls Rs 7 8 ]"
+  },
+  {
+    "command": "cp750.sys.dig_1_text"
+  },
+  {
+    "command": "cp750.sys.dig_2_global_delay",
+    "input": {
+      "range": [
+        0,
+        250
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.dig_2_text"
+  },
+  {
+    "command": "cp750.sys.dig_3_global_delay",
+    "input": {
+      "range": [
+        0,
+        250
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.dig_3_text"
+  },
+  {
+    "command": "cp750.sys.dig_4_global_delay",
+    "input": {
+      "range": [
+        0,
+        250
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.distance_units",
+    "input": {
+      "values": [
+        "feet",
+        "meters"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.dolby_digital_2_channel_decode_mode_2",
+    "input": {
+      "values": [
+        "auto",
+        "invalid",
+        "lr_discrete",
+        "n_a",
+        "prologic",
+        "prologic_2"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.dolby_digital_2_channel_decode_mode_3",
+    "input": {
+      "values": [
+        "auto",
+        "invalid",
+        "lr_discrete",
+        "n_a",
+        "prologic",
+        "prologic_2"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.dolby_digital_dialnorm_1",
+    "input": {
+      "values": [
+        "n_a",
+        "off",
+        "on"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.dolby_digital_dialnorm_2",
+    "input": {
+      "values": [
+        "n_a",
+        "off",
+        "on"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.dolby_digital_dialnorm_4",
+    "input": {
+      "values": [
+        "n_a",
+        "off",
+        "on"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsl_100",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsl_125",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsl_12_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsl_160",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsl_16k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsl_1_6k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsl_200",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsl_2_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsl_315",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsl_40",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsl_4k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsl_500",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsl_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsl_63",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsl_630",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsl_6_3k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsl_80",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsl_800",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsl_8k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_100",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_10k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_125",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_12_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_160",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_16k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_1_25k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_1_6k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_1k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_200",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_250",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_2_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_2k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_315",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_3_15k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_40",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_400",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_4k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_50",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_500",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_63",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_630",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_6_3k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_80",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_800",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_bsr_8k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_100",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_10k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_125",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_12_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_160",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_16k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_1_25k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_1_6k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_1k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_200",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_250",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_2_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_2k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_315",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_3_15k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_40",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_400",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_4k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_50",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_500",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_63",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_630",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_6_3k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_80",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_800",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_c_8k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_100",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_10k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_125",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_12_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_160",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_16k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_1_25k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_1_6k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_1k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_200",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_250",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_2_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_2k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_315",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_3_15k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_40",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_400",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_4k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_50",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_500",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_63",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_630",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_6_3k",
+    "input": "- 60 to 60"
+  },
+  {
+    "command": "cp750.sys.eq_l_80",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_800",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_l_8k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_lfe_cut",
+    "input": {
+      "range": [
+        -126,
+        0
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_lfe_freq",
+    "input": "25 to 125"
+  },
+  {
+    "command": "cp750.sys.eq_lfe_q",
+    "input": {
+      "values": [
+        "0_5",
+        "1_0",
+        "2_0",
+        "4_0"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_100",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_10k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_125",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_12_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_160",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_16k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_1_25k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_1_6k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_1k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_200",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_250",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_2_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_2k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_315",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_3_15k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_40",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_400",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_4k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_50",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_500",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_63",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_630",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_6_3k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_80",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_800",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_ls_8k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_100",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_10k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_125",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_12_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_160",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_16k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_1_25k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_1_6k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_1k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_200",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_250",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_2_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_2k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_315",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_3_15k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_40",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_400",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_4k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_50",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_500",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_63",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_630",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_6_3k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_80",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_800",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_r_8k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_100",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_10k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_125",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_12_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_160",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_16k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_1_25k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_1_6k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_1k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_200",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_250",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_2_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_2k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_315",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_3_15k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_40",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_400",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "p750.sys.eq_rs_4k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_50",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_500",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_5k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_63",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_630",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_6_3k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_80",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_800",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.eq_rs_8k",
+    "input": {
+      "range": [
+        -60,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader",
+    "input": {
+      "range": [
+        0,
+        100
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_1",
+    "input": {
+      "range": [
+        0,
+        100
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_1_enable",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_2",
+    "input": {
+      "range": [
+        0,
+        100
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_2_enable",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_3",
+    "input": {
+      "range": [
+        0,
+        100
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_3_enable",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_4",
+    "input": {
+      "range": [
+        0,
+        100
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_4_enable",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_a",
+    "input": {
+      "range": [
+        0,
+        100
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_a_enable",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_m",
+    "input": {
+      "range": [
+        0,
+        100
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_m_enable",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_n",
+    "input": {
+      "range": [
+        0,
+        100
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.fader_preset_n_enable",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.input_mode",
+    "input": {
+      "values": [
+        "analog",
+        "dig_1",
+        "dig_2",
+        "dig_3",
+        "dig_4",
+        "last",
+        "mic",
+        "non_sync"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.ip_setting",
+    "input": "[ ip.ip.ip.ip nm.nm.nm.nm gw.gw.gw.gw off|on hostname ]"
+  },
+  {
+    "command": "cp750.sys.lcd_contrast",
+    "input": {
+      "range": [
+        0,
+        31
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.level_bsl",
+    "input": {
+      "range": [
+        -160,
+        160
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.level_bsr",
+    "input": {
+      "range": [
+        -160,
+        160
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.level_l",
+    "input": {
+      "range": [
+        -160,
+        160
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.level_ls",
+    "input": {
+      "range": [
+        -160,
+        160
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.level_rs",
+    "input": {
+      "range": [
+        -160,
+        160
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.mic_text"
+  },
+  {
+    "command": "cp750.sys.mute_fade_in_time",
+    "input": {
+      "range": [
+        200,
+        5000
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.non_sync_global_delay",
+    "input": {
+      "range": [
+        0,
+        250
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.non_sync_text"
+  },
+  {
+    "command": "cp750.sys.pcm_2_channel_decode_mode_1",
+    "input": {
+      "values": [
+        "auto",
+        "invalid",
+        "lr_discrete",
+        "n_a",
+        "prologic",
+        "prologic_2"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.pcm_2_channel_decode_mode_3",
+    "input": {
+      "values": [
+        "auto",
+        "invalid",
+        "lr_discrete",
+        "n_a",
+        "prologic",
+        "prologic_2"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.pcm_2_channel_decode_mode_a",
+    "input": {
+      "values": [
+        "auto",
+        "invalid",
+        "lr_discrete",
+        "n_a",
+        "prologic",
+        "prologic_2"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.power_on_input",
+    "input": {
+      "values": [
+        "analog",
+        "dig_1",
+        "dig_2",
+        "dig_3",
+        "dig_4",
+        "last",
+        "mic",
+        "non_sync"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.process_mode_2",
+    "input": {
+      "values": [
+        "minimum_latency",
+        "mute",
+        "silent_switch"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.process_mode_4",
+    "input": {
+      "values": [
+        "minimum_latency",
+        "mute",
+        "silent_switch"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.rta_channel",
+    "input": {
+      "values": [
+        "Bsl",
+        "Bsr",
+        "C",
+        "L",
+        "LFE",
+        "Ls",
+        "R",
+        "Rs"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.serial_number",
+    "input": {
+      "range": [
+        0,
+        2147483647
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.signal_gen_mode",
+    "input": {
+      "values": [
+        "off",
+        "pink",
+        "program",
+        "sine_100",
+        "sine_10k",
+        "sine_1k",
+        "thump"
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.spl_room",
+    "input": {
+      "range": [
+        -5000,
+        5000
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.subwoofer_filter",
+    "input": {
+      "range": [
+        50,
+        100
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.surround_delay",
+    "input": {
+      "range": [
+        0,
+        150
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.theater_name"
+  },
+  {
+    "command": "cp750.sys.time"
+  },
+  {
+    "command": "cp750.sys.time_update_int",
+    "input": {
+      "range": [
+        1,
+        60
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.treble_freq_bsl",
+    "input": {
+      "range": [
+        1,
+        4
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.treble_freq_bsr",
+    "input": {
+      "range": [
+        1,
+        4
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.treble_freq_c",
+    "input": {
+      "range": [
+        1,
+        4
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.treble_freq_l",
+    "input": {
+      "range": [
+        1,
+        4
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.treble_freq_r",
+    "input": {
+      "range": [
+        1,
+        4
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.treble_freq_rs",
+    "input": {
+      "range": [
+        1,
+        4
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.treble_level_bsl",
+    "input": {
+      "range": [
+        -120,
+        120
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.treble_level_bsr",
+    "input": {
+      "range": [
+        -120,
+        120
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.treble_level_c",
+    "input": {
+      "range": [
+        -120,
+        120
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.treble_level_ls",
+    "input": {
+      "range": [
+        -120,
+        120
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.treble_level_rs",
+    "input": {
+      "range": [
+        -120,
+        120
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys.velocity_helper",
+    "input": {
+      "values": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys_tune.dsp_2"
+  },
+  {
+    "command": "cp750.sys_tune.dsp_4"
+  },
+  {
+    "command": "cp750.sys_tune.dsp_6"
+  },
+  {
+    "command": "cp750.sys_tune.dsp_8"
+  },
+  {
+    "command": "cp750.sys_tune.dsp_fade_time_ms",
+    "input": {
+      "range": [
+        0,
+        2147483647
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys_tune.meter_rate",
+    "input": {
+      "range": [
+        0,
+        30
+      ]
+    }
+  },
+  {
+    "command": "cp750.sys_tune.upgrade_timeout",
+    "input": {
+      "range": [
+        120,
+        1800
+      ]
+    }
+  },
+  {
+    "command": "cp750.sysinfo.ethernet_address"
+  },
+  {
+    "command": "cp750.sysinfo.parameter_file_version"
+  },
+  {
+    "command": "dump_log"
+  },
+  {
+    "command": "status"
+  }
+]
