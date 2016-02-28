@@ -35,19 +35,18 @@ function device(cmd, value){
   return channel.exec(cmd + ' ' + value);
 };
 
-app.use(function *(next){
-});
+router
+  .get('/', function *(next) {
+    this.body = 'Hello World!';
+  })
+  .get('/version', function *(next){
+    // var response = yield device('cp750.sysinfo.version');
+    this.body = 'version';
+  })
+  .get('/marco', function *(next){
+    this.body = 'polo';
+  });
 
-router.get('/version', function *(){
-  console.log('/version');
-  // var response = yield device('cp750.sysinfo.version');
-  this.body = value;
-});
-
-router.get('/marco', function *(){
-  console.log('test');
-  this.body = 'polo';
-});
 
 app
   .use(router.routes());
