@@ -1,7 +1,7 @@
 [
   {
     "command": "cp750.sysinfo.version",
-    "alias": "version",
+    "aliases": "version",
     "input": "1.0.0.150183"
   },
   {

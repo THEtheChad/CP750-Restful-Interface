@@ -47,8 +47,13 @@ var commands = require('./commands.json');
 // build the routes
 
 commands.forEach(function(cmd){
-  router.get('/' + cmd.command, function *(){
-    this.body = cmd.input;
+  var routes = (typeof cmd.aliases == 'string') ? [cmd.aliases] : cmd.aliases;
+  routes.unshift(cmd.command);
+
+  routes.forEach(function(route){
+    router.get('/' + route, function *(){
+      this.body = cmd.input;
+    });
   });
 });
 
