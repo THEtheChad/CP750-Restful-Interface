@@ -1,4 +1,4 @@
-const SERVER_PORT = 3000;
+const SERVER_PORT = 2727;
 const DEVICE_PORT = 61408;
 const DEVICE_IP = '192.168.1.136';
 const DEVICE_SUBNET = '255.255.255.128';
@@ -32,4 +32,4 @@ router.get('/version', function *(next){
 app
   .use(router.routes());
 
-app.listen(PORT);
+app.listen(SERVER_PORT);
