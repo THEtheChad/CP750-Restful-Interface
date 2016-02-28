@@ -57,6 +57,10 @@ commands.forEach(function(cmd){
   });
 });
 
+router.get('/commands', function *(){
+  this.body = commands;
+});
+
 app
   .use(router.routes());
 
