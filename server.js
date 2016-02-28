@@ -40,7 +40,7 @@ app.use(function *(next){
 
 router.get('/version', function *(){
   console.log('/version');
-  var response = yield device('cp750.sysinfo.version');
+  // var response = yield device('cp750.sysinfo.version');
   this.body = value;
 });
 
