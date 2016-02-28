@@ -1,0 +1,28 @@
+(^[^\s]+)\s(.*) -> {\n\t"command": "$1",\n\t"input": "$2"\n},
+"input":\s"([^,])\sto\s([^"]*)" -> "input": {\n\t\t\t"range": [$1, $2]\n\t\t}
+
+commands.forEach(function(cmd){
+	if(typeof cmd.input == 'string' && /\|/.test(cmd.input)){
+		var v = cmd.input.split('|').map(function(v){
+			return v.trim();
+		});
+		cmd.input = {values:v}
+	}
+});
+
+
+
+
+var seen = [];
+var filtered = commands.slice();
+var inputs = {};
+
+commands.forEach(function(cmd, idx){
+	if(seen.indexOf(cmd.command) == -1){
+		seen.push(cmd.command)
+		inputs[cmd.command] = cmd.input;
+	}
+	else{
+		filtered.splice(idx, 1);
+	}
+});
