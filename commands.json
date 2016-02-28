@@ -1816,7 +1816,9 @@
   },
   {
     "command": "cp750.sys.eq_l_6_3k",
-    "input": "- 60 to 60"
+    "input": {
+    	"range": [-60, 60]
+    }
   },
   {
     "command": "cp750.sys.eq_l_80",
@@ -1856,7 +1858,9 @@
   },
   {
     "command": "cp750.sys.eq_lfe_freq",
-    "input": "25 to 125"
+    "input": {
+    	"range": [25, 125]
+    }
   },
   {
     "command": "cp750.sys.eq_lfe_q",
