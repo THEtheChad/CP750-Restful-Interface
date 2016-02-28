@@ -4,12 +4,13 @@
 
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
 </head>
 <body ng-app="App">
 	<h1>CP750 Web Client</h1>
 	<div ng-controller="Command-Ctrl">
 		<h2>Commands</h2>
-		<ul>
+		<ul class="list-unstyled">
 			<li ng-repeat="cmd in commands">
 				<div class="command">
 					<span class="command__name">{{cmd.command}}</span>
