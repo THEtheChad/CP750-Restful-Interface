@@ -56,8 +56,12 @@ router.get('/commands', function *(){
 // build a route for each command (and its aliases)
 
 commands.forEach(function(cmd){
-  var routes = (typeof cmd.aliases == 'string') ? [cmd.aliases] : cmd.aliases;
-  routes.unshift(cmd.command);
+  var routes = [cmd.command];
+
+  if(cmd.aliases){
+    var aliases = (typeof cmd.aliases == 'string') ? [cmd.aliases] : cmd.aliases;
+    routes = routes.concat(aliases);
+  }
 
   routes.forEach(function(route){
     router.get('/' + route, function *(){
