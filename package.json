@@ -16,8 +16,9 @@
   "gitHead": "67a6cd7d87a91a989864c55b76e7e621d187a36a",
   "dependencies": {
     "koa": "^1.1.2",
+    "koa-logger": "git+https://github.com/MediaLandslide/logger.git",
     "koa-router": "^5.4.0",
-    "telnet-client": "^0.7.0",
-    "koa-logger": "git+https://github.com/MediaLandslide/logger.git"
+    "koa-send": "^3.1.0",
+    "telnet-client": "^0.7.0"
   }
 }
