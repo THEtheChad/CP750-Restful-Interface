@@ -13,25 +13,35 @@ var connection = new telnet();
 app.use(logger());
 
 app.use(function *(next){
-  // try{
-  //   this.device = yield connection.connect({
-  //     host: DEVICE_IP,
-  //     port: DEVICE_PORT,
-  //     shellPrompt: '/ # ',
-  //     timeout: 1500,
-  //     // removeEcho: 4
-  //   });
-  //   console.log(`${DEVICE_IP}:${DEVICE_PORT} connection successful!`);
-  // }
-  // catch(e){
-  //   console.log(`${DEVICE_IP}:${DEVICE_PORT} connection failed.`);
-  // }
+
+  var channel = {
+    exec: function(cmd){
+      console.log('executing command: ');
+      return cmd.split(' ')[0] + '[value]';
+    }
+  };
+
+  // var channel = yield connection.connect({
+  //   host: DEVICE_IP,
+  //   port: DEVICE_PORT,
+  //   shellPrompt: '/ # ',
+  //   timeout: 1500,
+  //   // removeEcho: 4
+  // });
+
+  this.device = function(cmd, value){
+    if(!value) value = '?';
+
+    return channel.exec(cmd + ' ' + value);
+  };
+
+  console.log(`${DEVICE_IP}:${DEVICE_PORT} connection successful!`);
+  // console.log(`${DEVICE_IP}:${DEVICE_PORT} connection failed.`);
 });
 
-router.get('/version', function *(next){
-  var cmd = 'cp750.sysinfo.version';
-  var response = yield this.device.exec(cmd);
-  this.body = response;
+router.get('/version', function *(){
+  var response = yield this.device('cp750.sysinfo.version');
+  this.body = value;
 });
 
 app
