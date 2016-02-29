@@ -72,13 +72,7 @@
 					}
 					else
 					if(values && typeof values != 'string'){
-						cmd.type = 'value'
-					}
-					else
-					if(values && values.length == 2){
-						if(values[0] == 0 && values[1] == 1){
-							cmd.type = 'toggle';
-						}
+						cmd.type = (values[0] == 0 && values[1] == 1) ? 'toggle' : 'value';
 					}
 					else
 					if(cmd.input.range){
