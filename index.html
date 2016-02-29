@@ -7,19 +7,24 @@
 	<link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
 </head>
 <body ng-app="App">
+	<div class="container">
+		<div class="row">
+			<div class="col-xs-12">
+
 	<h1>CP750 Web Client</h1>
 	<div ng-controller="Command-Ctrl">
 		<h2>Commands</h2>
-		<ul class="list-unstyled">
-			<li ng-repeat="cmd in commands">
-				<div class="command">
-					<span class="command__name">{{cmd.command}}</span>
-					<span ng-if="cmd.input.values">
-						<select ng-options="value for value in cmd.input.values" ng-model="test"></select>
-					</span>
-				</div>
-			</li>
-		</ul>
+
+		<dl class="dl-horizontal">
+		  <dt ng-repeat-start="cmd in commands">
+		  	<span class="command__name">{{cmd.command}}</span>
+		  </dt>
+		  <dd ng-repeat-end>
+				<span ng-if="cmd.input.values">
+					<select ng-options="value for value in cmd.input.values" ng-model="test"></select>
+				</span>
+		  </dd>
+		</dl>
 	</div>
 	<script>
 		var app = angular.module('App', []);
