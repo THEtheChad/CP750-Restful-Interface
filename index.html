@@ -24,12 +24,19 @@
 		  <div class="form-group" ng-repeat="cmd in commands">
 		    <label for="{{cmd.command}}" class="col-sm-5 control-label"><span class="command__name">{{cmd.command}}</span></label>
 		    <div class="col-sm-3">
+
+		    	<span ng-if="cmd.input.toggle">
+		    		<input type="checkbox">
+		    	</span>
+
+					<span ng-if="!cmd.input.toggle && cmd.input.values">
+						<select id="{{cmd.command}}" class="form-control" ng-options="value for value in cmd.input.values" ng-model="test"></select>
+					</span>
+
 		    	<span ng-if="!cmd.input.values">
 		    		<input type="text" class="form-control">
 	    		</span>
-					<span ng-if="cmd.input.values">
-						<select id="{{cmd.command}}" class="form-control" ng-options="value for value in cmd.input.values" ng-model="test"></select>
-					</span>
+
 		    </div>
 		  </div>
 		</form>
@@ -39,7 +46,14 @@
 
 		app.controller('Command-Ctrl', ['$scope', '$http', function($scope, $http){
 			$http.get('/commands').then(function(res){
-				$scope.commands = res.data;
+				$scope.commands = res.data.forEach(function(cmd){
+					var values = cmd.values;
+					if(values && values.length == 2){
+						if(values[0] == 0 && values[1] == 1){
+							cmd.input.toggle = true;
+						}
+					}
+				});
 			});
 		}]);
 	</script>
