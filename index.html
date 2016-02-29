@@ -22,20 +22,20 @@
 
 		<form class="form-horizontal">
 		  <div class="form-group" ng-repeat="cmd in commands">
-		    <label for="{{cmd.command}}" class="col-sm-5 control-label"><span class="command__name">{{cmd.command}}</span></label>
+		    <label for="{{cmd.command}}" class="col-sm-5 control-label">
+		    	<span class="command__name">{{cmd.command}}</span>
+		    </label>
 		    <div class="col-sm-3">
 
-		    	<span ng-if="cmd.input.toggle">
-		    		<input type="checkbox">
-		    	</span>
+		    	<input ng-if="type('toggle', cmd)" type="checkbox">
 
-					<span ng-if="!cmd.input.toggle && cmd.input.values">
-						<select id="{{cmd.command}}" class="form-control" ng-options="value for value in cmd.input.values" ng-model="test"></select>
-					</span>
+					<select ng-if="type('value', cmd)" id="{{cmd.command}}" class="form-control" ng-options="value for value in cmd.input.values" ng-model="test"></select>
 
-		    	<span ng-if="!cmd.input.values">
-		    		<input type="text" class="form-control">
-	    		</span>
+					<input ng-if="type('range', cmd)" type="range" min="{{cmd.input.range[0]}}" max="{{cmd.input.range[1]}}">
+
+		    	<input ng-if="type('other', cmd)" type="text" class="form-control">
+
+		    	<input ng-if="type('getter', cmd)" type="text" class="form-control" placeholder="Readonly" readonly>
 
 		    </div>
 		  </div>
@@ -45,17 +45,36 @@
 		var app = angular.module('App', []);
 
 		app.controller('Command-Ctrl', ['$scope', '$http', function($scope, $http){
-			$http.get('/commands').then(function(res){
-				$scope.commands = res.data.map(function(cmd){
+			$scope.type = function(type, cmd){
+				if(!cmd.type){
 					var values = cmd.input && cmd.input.values;
+					if(!cmd.input){
+						cmd.type = 'getter';
+					}
+					else
+					if(values && typeof values != 'string'){
+						cmd.type = 'value'
+					}
+					else
 					if(values && values.length == 2){
 						if(values[0] == 0 && values[1] == 1){
-							cmd.input.toggle = true;
+							cmd.type = 'toggle';
 						}
 					}
+					else
+					if(cmd.input.range){
+						cmd.type = 'range';
+					}
+					else{
+						cmd.type = 'other';
+					}
+				}
 
-					return cmd;
-				});
+				return cmd.type == type;
+			};
+
+			$http.get('/commands').then(function(res){
+				$scope.commands = res.data;
 			});
 		}]);
 	</script>
