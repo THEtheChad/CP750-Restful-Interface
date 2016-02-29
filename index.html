@@ -50,14 +50,13 @@
 			return {
 				restrict: 'A',
 				link: function($scope, $ele, $attrs){
-					console.log('input with type found', $ele[0], $attrs);
 					if($attrs.type != 'range') return;
 
-					var $value = $('<span>').appendTo($ele.parent());
+					var $value = $('<span class="range-output">').appendTo($ele.parent());
 
 					$value.html($ele[0].value);
 
-					$ele.on('change', function(){
+					$ele.on('input', function(){
 						$value.html(this.value);
 					});
 				}
