@@ -22,8 +22,8 @@
 
 		<form class="form-horizontal">
 		  <div class="form-group" ng-repeat="cmd in commands">
-		    <label for="{{cmd.command}}" class="col-sm-2 control-label"><span class="command__name">{{cmd.command}}</span></label>
-		    <div class="col-sm-10">
+		    <label for="{{cmd.command}}" class="col-sm-4 control-label"><span class="command__name">{{cmd.command}}</span></label>
+		    <div class="col-sm-3">
 					<span ng-if="cmd.input.values">
 						<select id="{{cmd.command}}" class="form-control" ng-options="value for value in cmd.input.values" ng-model="test"></select>
 					</span>
