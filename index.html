@@ -35,7 +35,7 @@
 						<input type="range" min="{{cmd.input.range[0]}}" max="{{cmd.input.range[1]}}">
 					</span>
 
-		    	<input ng-if="type('other', cmd)" type="text" class="form-control">
+		    	<input ng-if="type('other', cmd)" type="text" class="form-control" placeholder="{{cmd.input}}">
 
 		    	<input ng-if="type('getter', cmd)" type="text" class="form-control" placeholder="Readonly" readonly>
 
