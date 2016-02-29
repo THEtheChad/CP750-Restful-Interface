@@ -20,20 +20,16 @@
 	<div ng-controller="Command-Ctrl">
 		<h2>Commands</h2>
 
-		<table class="table table-striped table-hover">
-			<tbody>
-				<tr ng-repeat="cmd in commands">
-					<td>
-						<span class="command__name">{{cmd.command}}</span>
-					</td>
-					<td>
-						<span ng-if="cmd.input.values">
-							<select class="form-control" ng-options="value for value in cmd.input.values" ng-model="test"></select>
-						</span>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+		<form class="form-horizontal">
+		  <div class="form-group" ng-repeat="cmd in commands">
+		    <label for="{{cmd.command}}" class="col-sm-2 control-label"><span class="command__name">{{cmd.command}}</span></label>
+		    <div class="col-sm-10">
+					<span ng-if="cmd.input.values">
+						<select id="{{cmd.command}}" class="form-control" ng-options="value for value in cmd.input.values" ng-model="test"></select>
+					</span>
+		    </div>
+		  </div>
+		</form>
 	</div>
 	<script>
 		var app = angular.module('App', []);
