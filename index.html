@@ -5,6 +5,11 @@
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+	<style>
+		tr td:first-child{
+			text-align: right;
+		}
+	</style>
 </head>
 <body ng-app="App">
 	<div class="container">
@@ -23,7 +28,7 @@
 					</td>
 					<td>
 						<span ng-if="cmd.input.values">
-							<select ng-options="value for value in cmd.input.values" ng-model="test"></select>
+							<select class="form-control" ng-options="value for value in cmd.input.values" ng-model="test"></select>
 						</span>
 					</td>
 				</tr>
