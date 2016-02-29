@@ -6,8 +6,10 @@
 	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.4.9/angular.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
 	<style>
-		tr td:first-child{
-			text-align: right;
+		.range-output{
+			position: absolute;
+			right: -15px;
+			top: 0;
 		}
 	</style>
 </head>
@@ -54,10 +56,12 @@
 
 					var $value = $('<span class="range-output">').appendTo($ele.parent());
 
-					$value.html($ele[0].value);
-
 					$ele.on('input', function(){
 						$value.html(this.value);
+					});
+
+					setTimeout(function(){
+						$value.html($ele[0].value);
 					});
 				}
 			}
