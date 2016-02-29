@@ -31,7 +31,9 @@
 
 					<select ng-if="type('value', cmd)" id="{{cmd.command}}" class="form-control" ng-options="value for value in cmd.input.values" ng-model="test"></select>
 
-					<input ng-if="type('range', cmd)" type="range" min="{{cmd.input.range[0]}}" max="{{cmd.input.range[1]}}">
+					<span ng-if="type('range', cmd)">
+						<input type="range" min="{{cmd.input.range[0]}}" max="{{cmd.input.range[1]}}">
+					</span>
 
 		    	<input ng-if="type('other', cmd)" type="text" class="form-control">
 
@@ -43,6 +45,23 @@
 	</div>
 	<script>
 		var app = angular.module('App', []);
+
+		app.directive('type', function(){
+			return {
+				restrict: 'a',
+				link: function($scope, $ele, $attrs){
+					if($attrs.type != 'range') return;
+
+					var $value = $('<span>').appendTo($ele.parent());
+
+					$value.html($ele[0].value);
+
+					$ele.on('change', function(){
+						$value.html(this.value);
+					});
+				}
+			}
+		});
 
 		app.controller('Command-Ctrl', ['$scope', '$http', function($scope, $http){
 			$scope.type = function(type, cmd){
