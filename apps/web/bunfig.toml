@@ -1,0 +1,3 @@
+[test]
+# Registers happy-dom's window/document globals before any test file loads.
+preload = ["./test/setup.ts"]

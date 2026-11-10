@@ -1,0 +1,35 @@
+{
+  "name": "@cp750/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "CP750 web client: Vite + React + TanStack Query over the gateway's REST + SSE API.",
+  "scripts": {
+    "dev": "bun --bun vite",
+    "build": "bun --bun vite build",
+    "preview": "bun --bun vite preview",
+    "typecheck": "bun ../../node_modules/typescript/bin/tsc -p tsconfig.json",
+    "test": "bun test",
+    "gen": "bun scripts/gen-api.ts",
+    "gen:check": "bun scripts/gen-api.ts --check"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "5.105.0",
+    "openapi-fetch": "0.17.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@happy-dom/global-registrator": "21.0.4",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.8",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "happy-dom": "21.0.4",
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3",
+    "vite": "8.3.5"
+  }
+}

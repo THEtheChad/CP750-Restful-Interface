@@ -4,8 +4,6 @@ A REST + SSE gateway and web client for the Dolby CP750 Digital Cinema Processor
 unit over its ASCII TCP protocol (port 61408), uses a typed, per-firmware command registry, and
 ships as a single executable.
 
-> Work in progress: the web client is still being built.
-
 ## Quick start
 
 Requires [Bun](https://bun.sh) (the version in `.bun-version`).
@@ -15,16 +13,46 @@ bun install
 bun run check   # lint, typecheck, codegen and OpenAPI staleness checks, tests (what CI runs)
 ```
 
-Other scripts: `bun run format`, `bun run gen` (regenerate code from the firmware manifests),
-`bun run openapi` (regenerate `openapi/cp750.openapi.json`), `bun run compile`, `bun test`.
+Other scripts: `bun run format`, `bun run gen` (regenerate code from the firmware manifests and
+the web client's API types), `bun run openapi` (regenerate `openapi/cp750.openapi.json`),
+`bun run compile`, `bun run test` (all tests; `bun test` alone skips `apps/web`, see below).
 
 ## Run
 
 ```sh
-bun run dev                                   # API on http://127.0.0.1:2222 against a simulated CP750
+bun run dev                                   # API on :2222 (simulated CP750) + web client on :5173
+bun run dev:server                            # just the API against the simulated CP750
 bun apps/server/src/cli.ts serve              # against the real unit at CP750_HOST
-./dist/cp750-linux-x64 serve --mock           # the compiled executable
+./dist/cp750-linux-x64 serve --mock           # the compiled executable, web client included
 ```
+
+## Web client
+
+`apps/web` (`@cp750/web`) is the booth operator's UI: Vite, React and TanStack Query, plain CSS
+(light and dark follow the OS), usable from a phone up to a booth monitor, with the keyboard.
+
+- **Status bar**: connection, host, firmware, the selected manifest (exact/nearest/none, verified
+  or not), read-only and full-control modes, and the API token when the gateway requires one (kept
+  in `sessionStorage` for the tab). Banners warn when the gateway or the processor is unreachable
+  or the manifest is unverified.
+- **Controls**: the fader as a big `7.0` readout with dB from the API, a slider, ±0.1/±1.0 steps and
+  a return to 7.0; mute; the input. Writes are optimistic and roll back on errors; a rejected write
+  (`422`) says what the processor kept. Dragging sends at most one write per 150 ms, never queues a
+  backlog, and commits the final value on release.
+- **Advanced**: every param from `/api/commands`, grouped by namespace, with search. Each control
+  comes from the param's JSON Schema (switch, select, slider + number, number, text). Values are only
+  read for rows on screen, or with Read. Disabled controls say why. Destructive actions need an
+  inline second confirmation and send `"confirm": true`.
+- **Live**: one `EventSource` on `/api/events` updates the cache, reconnecting with backoff.
+
+In development `bun run dev` runs `cp750 serve --mock` and Vite together; Vite proxies `/api` to
+`http://127.0.0.1:2222` (set `CP750_API_URL` to point it elsewhere, e.g. at a server on the real
+unit). `bun run compile` builds the client and embeds it in the executable.
+
+The client's API types are generated from `openapi/cp750.openapi.json` into
+`apps/web/src/api/generated/` (`bun run gen`; CI fails on drift) and used through `openapi-fetch`.
+Its tests run in their own `bun test` process with happy-dom (`apps/web/bunfig.toml`), which is why
+the root `bunfig.toml` excludes `apps/web` from a bare `bun test`; `bun run test` runs both.
 
 ## Configuration
 
@@ -117,6 +145,7 @@ A misfired write during a screening is audible, so:
 | `packages/manifests` | `@cp750/manifests`: meta-schema, firmware manifests, loader, value codec, generated types |
 | `packages/device` | `@cp750/device`: TCP client, session (firmware detection, manifest selection), mock CP750, capture |
 | `apps/server` | `@cp750/server`: Hono HTTP API, OpenAPI generation, SSE, config, `cp750` CLI |
+| `apps/web` | `@cp750/web`: the web client (Vite, React, TanStack Query) |
 | `openapi/cp750.openapi.json` | generated OpenAPI 3.1 spec (CI fails on drift) |
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design and the device protocol.

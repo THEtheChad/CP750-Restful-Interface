@@ -15,11 +15,13 @@
     "apps/*"
   ],
   "scripts": {
-    "dev": "bun --watch apps/server/src/cli.ts serve --mock",
+    "dev": "bun run --parallel dev:server dev:web",
+    "dev:server": "bun --watch apps/server/src/cli.ts serve --mock",
+    "dev:web": "bun run --cwd apps/web dev",
     "lint": "biome check .",
     "format": "biome check --write .",
     "typecheck": "bun run --filter '*' typecheck",
-    "test": "bun test",
+    "test": "bun test && bun run --cwd apps/web test",
     "gen": "bun run --filter '*' gen",
     "gen:check": "bun run --filter '*' gen:check",
     "openapi": "bun apps/server/scripts/openapi.ts",

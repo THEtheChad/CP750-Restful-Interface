@@ -358,6 +358,35 @@ that overrides it, except `CP750_API_TOKEN`.
   `/$bunfs/…` paths. The committed module is empty; `bun run compile` fills it
   and restores it.
 
+## Web client (`@cp750/web`)
+
+- Vite + React + TanStack Query, plain CSS modules over a token sheet (`src/styles/tokens.css`),
+  light/dark via `prefers-color-scheme`. Vite runs under Bun (`bun --bun vite`). No router: two
+  views (Controls, Advanced) as ARIA tabs kept in the URL hash.
+- **API types** are generated from `openapi/cp750.openapi.json` by openapi-typescript into
+  `src/api/generated/schema.ts` (committed, `gen:check` in CI) and called through `openapi-fetch`.
+  openapi-typescript needs the TypeScript 5 compiler API, so `apps/web` has `typescript@5.9` as a
+  dev dependency for codegen only; its `typecheck` script runs the repo's TypeScript 7.
+- Every error is an `ApiError` carrying the problem details (plus a client-side `NETWORK` code), and
+  is shown as title/detail/code, never raw JSON.
+- **Cache keys**: `["device"]`, `["commands"]`, `["param", name]`. One `EventSource` on
+  `/api/events` writes `param` events into `["param", name]` and patches `["device"]` on
+  `connection`/`device` events (and refetches the command list). Param events carry no dB, so a
+  changed fader value drops its stale `db` and re-reads. The client owns reconnection
+  (exponential backoff 1 s → 30 s) and invalidates what it may have missed after a reopen.
+- **Writes** are optimistic and roll back on failure; `WRITE_REJECTED` sets the cache to `actual`.
+  Mutations never retry. The fader sends through a "latest value" sender: one request in flight,
+  newer values replace the waiting one, at most one send per 150 ms, flushed on release.
+- **Disabled controls** carry a reason: the command's `blocked` reason from `/api/commands`, then
+  read-only mode, a disconnected processor, or a missing token when `authRequired`.
+- **Advanced** reads lazily: groups are collapsed by default, rows read once they have been on
+  screen for 300 ms (IntersectionObserver), or on demand. Destructive actions use an inline
+  two-step confirmation that sends `confirm: true`.
+- Code layout: named exports only; components colocated recursively
+  (`components/X/X.tsx`, `components/X/components/Y/Y.tsx`) with their CSS modules and tests.
+- Tests run in a separate `bun test` process (`apps/web/bunfig.toml` preloads happy-dom and a CSS
+  module stub); the root `bunfig.toml` ignores `apps/web` so DOM globals never reach server tests.
+
 ## Safety principles
 
 A misfired write during a screening is audible to an audience. So:

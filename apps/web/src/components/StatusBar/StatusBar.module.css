@@ -1,0 +1,95 @@
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-4);
+}
+
+.brand {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+  flex: 1 1 auto;
+}
+
+.fact {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.fact dt {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.fact dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+.modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+}
+
+.chip {
+  display: inline-block;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.chipWarn {
+  border-color: var(--warn-border);
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+@media (max-width: 40rem) {
+  /* On a phone a sticky header would cover half the screen. */
+  .bar {
+    position: static;
+  }
+
+  .inner {
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .facts {
+    gap: var(--space-2) var(--space-4);
+  }
+}

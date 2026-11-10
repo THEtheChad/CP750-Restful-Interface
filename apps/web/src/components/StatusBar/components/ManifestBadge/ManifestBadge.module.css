@@ -1,0 +1,26 @@
+.manifest {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-2);
+}
+
+.firmware {
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+.match {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.verified {
+  color: var(--ok);
+  font-weight: 700;
+}
+
+.unverified {
+  color: var(--warn);
+  font-weight: 700;
+}

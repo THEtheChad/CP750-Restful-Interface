@@ -1,0 +1,18 @@
+/* The card frame shared by the main controls. */
+.card {
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  min-width: 0;
+}
+
+.heading {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
