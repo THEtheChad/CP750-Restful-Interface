@@ -1,0 +1,18 @@
+{
+  "name": "@cp750/device",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "CP750 protocol client, session and mock device.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contracts": "./src/contracts.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@cp750/manifests": "workspace:*"
+  }
+}

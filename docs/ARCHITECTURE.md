@@ -66,6 +66,10 @@ Code only depends downward: `web → (openapi spec)`, `server → device → man
   misprints the upper bound as "−10"; +10 is the only value consistent with
   0 dB at 7.0.
 - Mute fade in/out: 200–5000 ms.
+- In Issue 4, `cp750.sys.mute` and the mute fade times are listed **only** in
+  Table 6-2, so the 1.0.0.150183 manifest has them as `full` tier. Reading or
+  writing mute on that firmware therefore needs `CP750_ALLOW_FULL=1`, and the
+  default poll skips it otherwise. A capture from a real unit should settle this.
 
 ## Manifests: one per firmware
 
@@ -90,7 +94,7 @@ Manifest shape (top level):
       "access": "readwrite" | "readonly" | "action",
       "accessSource": "manual" | "inferred" | "observed",
       "value": { /* JSON Schema 2020-12 for the JSON value, e.g. {"type":"integer","minimum":0,"maximum":100} */ },
-      "unit": "fader" | "ms" | "us" | "dB_tenths" | "feet_or_meters" | ...,   // optional, see codec
+      "unit": "fader" | "ms" | "us" | "dB_tenths" | "feet_or_meters",   // optional; closed set in v1
       "destructive": true,            // optional; reboot, default_params, log_erase, save_params…
       "internal": true,               // optional; cp750.internal.* hidden and blocked by default
       "aliases": ["version"],         // optional
@@ -112,6 +116,13 @@ Value schemas:
 | `[ip.ip.ip.ip nm.nm.nm.nm gw.gw.gw.gw off\|on hostname]` | `{"type":"string"}` + `"x-format":"ip-setting"` |
 | blank (text and status fields) | `{"type":"string"}` |
 
+The meta-schema only allows these shapes: `{"type":"integer"}` with optional
+`minimum`, `maximum` and `enum`, or `{"type":"string"}` with optional `enum`,
+`maxLength` and `x-format`. `x-format` is a key inside the value schema. Ajv
+treats it as an annotation only. Beyond the meta-schema, the loader also
+rejects value schemas that don't compile, `minimum > maximum`, a
+`cp750.internal.*` param without `internal: true`, and aliases that collide.
+
 - **Codec** (`@cp750/manifests`): `encode(param, jsonValue) → wire string` and
   `decode(param, wireString) → jsonValue`. Integers are sent as decimal, and
   enums and strings are sent as-is. `decode` must accept the unit's casing and
@@ -119,16 +130,24 @@ Value schemas:
 - **Access is mostly inferred**, because the manual doesn't mark read-only
   params. Defaults: `cp750.state.*` and `cp750.sysinfo.*` are `readonly`;
   `cp750.ctrl.*` is `action`; everything else is `readwrite`. Record
-  `accessSource` honestly.
+  `accessSource` honestly. Exceptions, still `inferred`: `cp750.internal.save_params`
+  is an `action` (it's a trigger), and `cp750.sys.serial_number` is `readonly`
+  (it's read-only when unsure).
 - **Version compare**: firmware strings are dot-separated integers of any
   length (`1.0.0.150183`, `1.2.8.3`). Compare them numerically, part by part.
+  Missing trailing parts count as 0, so `1.2` equals `1.2.0`.
 - **Types**: a codegen step (`bun run gen`) emits TypeScript from each manifest
   (a `ParamName` union per firmware plus a value type per param) into
-  `packages/manifests/src/generated/`, committed. CI fails if it's stale.
+  `packages/manifests/src/generated/`, committed. CI fails if it's stale. The
+  same step emits `generated/builtin.ts`, the static JSON imports of every
+  `firmware/*.json`, so adding a firmware file only takes `bun run gen`. Those
+  imports are what `bun build --compile` embeds.
 - **Runtime validation** uses Ajv (2020 dialect) on each param's `value`
   schema.
 - Extra manifests can be loaded at runtime from a directory
-  (`CP750_MANIFEST_DIR`), so new firmware doesn't need a rebuild.
+  (`CP750_MANIFEST_DIR`), so new firmware doesn't need a rebuild. Each file
+  must be named `<firmware>.json`. A file with the same firmware as a built-in
+  replaces it. Any invalid file fails the whole load, at startup.
 
 ## Session: firmware detection and manifest selection (`@cp750/device`)
 
@@ -157,6 +176,16 @@ Other rules:
   with the actual value.
 - Errors are typed: `NotConnected`, `Timeout`, `UnknownParameter`,
   `WriteRejected`, `InvalidValue`, `Forbidden` (tier/internal/read-only/unverified).
+- Access rules live in one place, `packages/device/src/policy.ts`, which both
+  the real session and `FakeSession` use:
+  - `internal` params (and any `cp750.internal.*` name) are refused for reads
+    too, and left out of `commands()`.
+  - A param that `help` doesn't list raises `UnknownParameter`, not `Forbidden`.
+  - Destructive params need `confirm: true`. The session enforces this itself,
+    not just the HTTP layer.
+  - An action with no value sends `1`.
+  - `sendRaw` only sends read-only lines (`<param> ?`, `help`, `status`,
+    `dump_log`, `dump_log_100`). Anything else is `Forbidden`.
 - Reconnect with exponential backoff (capped). Poll key params (`fader`,
   `mute`, `input_mode`) at a configurable interval and emit change events.
 
