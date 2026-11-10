@@ -189,6 +189,59 @@ Other rules:
 - Reconnect with exponential backoff (capped). Poll key params (`fader`,
   `mute`, `input_mode`) at a configurable interval and emit change events.
 
+Implementation choices (`createCp750Session`, `Cp750Client`):
+
+- **One queue.** Detection, API calls and polls all go through one FIFO
+  queue on one socket, with one request in flight. Lines are split on CR, LF
+  or CRLF (also when CRLF straddles two TCP chunks), and NULs are dropped.
+- **Reply matching.** The reply to `<param> ?` or `<param> <value>` is the
+  first line whose first token equals the param, compared case-insensitively.
+  A `param : value` form is accepted too. Other lines (the 21st-session
+  warning, unsolicited text) are ignored.
+- **Blank lines.** A blank line before the match means `UnknownParameter`,
+  but only after a **grace window** (`timeouts.blankGraceMs`, default 50 ms)
+  with no matching line. A unit that treats CR and LF as two terminators
+  answers the LF of `\r\n` with a stray blank line, which can arrive just
+  before the next reply. That costs a genuinely unknown param 50 ms.
+- **Multi-line commands** (`help`, `status`, `dump_log*`): `commandMs` covers
+  the first line. After that, the reply ends after `idleMs` of silence
+  (default 300 ms), capped at `multiLineMaxMs` (10 s) and 10 000 lines.
+  Leading and trailing blank lines are dropped.
+- **Timeouts.** The caller gets `Timeout` after `commandMs` (default 2 s),
+  but the queue is held ("quarantine") until the late reply arrives (a
+  matching or blank line) or 3 × `commandMs` passes. The unit answers in
+  order, so this keeps a late echo from being taken as the reply to the next
+  command, which could otherwise cause a false `WriteRejected`. A timeout
+  does not drop the connection.
+- **Detection.** On every (re)connect: version, then `selectManifest`. Then,
+  with `allowFull`, `cp750.ctrl.full_ascii_ctrl 1` **before** `help`, so
+  `help` can vouch for full-tier params. Then `help`, then the `device` event,
+  then the `connection: connected` event. When `help` ran without full
+  control, a full-tier param it didn't list is `unchecked`, not `missing`
+  (`AccessPolicy.helpCoversFull`). So with `allowFull` off it is `Forbidden`
+  (`full-tier`), not `UnknownParameter`.
+- **Full control** is per connection on the unit. It is re-enabled on every
+  reconnect, and lazily before a full-tier call if it was turned off. Turning
+  it on is allowed in read-only mode, since it changes no audio.
+- **Writes** emit a `param` event for the echoed value, including on
+  `WriteRejected`. Actions are not recorded as param values.
+- **Polling** runs the first poll right after connecting, then waits
+  `pollIntervalMs` after each pass finishes. It never overlaps itself. Params
+  the policy refuses (e.g. `mute` on 1.0.0.150183 without `allowFull`) are
+  skipped and logged once per detection through `SessionOptions.logger`.
+  Failed polls are logged at debug level and never end the session.
+- **Reconnect** backoff starts at 500 ms and doubles up to 30 s. It resets
+  after a successful connect. An invalid `manifestDir` is fatal: `connect()`
+  rejects and the session closes.
+- `close()` fails pending calls with `NotConnected`, sends `exit`, and waits
+  up to 500 ms for the unit to close the socket.
+- **Capture** (`captureDevice`) reads the version, then `help` and `status`
+  with the normal set, then again with `full_ascii_ctrl 1` (and sets it back
+  to 0), then sends `exit`. The draft manifest takes specs from the nearest
+  built-in: an exact match, else the nearest lower firmware, else the oldest.
+  If the full-set pass revealed names the normal pass didn't, tiers are taken
+  from what was observed. Otherwise the base tiers are kept.
+
 ## Mock CP750 (`@cp750/device`)
 
 A real TCP server driven by a manifest, so tests exercise the real client. It
@@ -197,6 +250,30 @@ value, a blank line for an unknown param, `help`/`status`/`exit`,
 full-tier params acting as unknown until `full_ascii_ctrl` is `1` (an
 assumption), the 20-session limit, and optional NUL bytes and latency. The
 server can run against it with `CP750_MOCK=1` (or `cp750 serve --mock`).
+
+It is `startMockCp750` from `@cp750/device/mock`. Its choices:
+
+- Values are shared by all connections (one unit). **Full control is per
+  connection**, as the manual says "for this session", so every new session
+  starts with the normal set.
+- Defaults: the first enum member, else 0 if the range allows it, else the
+  minimum. Strings default to `""`. `cp750.sysinfo.version` is the manifest's
+  firmware unless `initial` overrides it, which is how tests fake a nearest
+  or unknown firmware.
+- Sets on `readonly` params and invalid values are ignored, and the current
+  value is echoed.
+- `help` prints a header, one indented `name  values` line per param visible
+  at the connection's tier, the single-word commands, and a blank line. That
+  format is invented, and clients only extract `cp750.*` tokens. `status`
+  prints `param : value` lines (no actions) and a blank line.
+- The 21st connection makes the mock write a warning line to the oldest
+  session and close it `evictionDelayMs` later (default 50 ms).
+- Replies on one connection are serialized and delayed by `latencyMs`, which
+  can be changed while the mock is running.
+- Test knobs: `nulBytes`, `fragmented` (each reply's CRLF is split across two
+  writes), `blankForEmptyLines` (CR and LF count as separate terminators, and
+  empty lines get a blank reply), `received` (the command log),
+  `dropConnections()`.
 
 ## HTTP API (`@cp750/server`)
 
