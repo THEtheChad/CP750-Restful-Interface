@@ -4,10 +4,19 @@ import { builtinManifests, type Manifest } from "@cp750/manifests";
 import { type CreateAppOptions, createApp } from "../src/app.ts";
 import { loadConfig, type ServerConfig } from "../src/config.ts";
 
-/** The verified 1.0.0.150183 manifest: writes are allowed without a help cross-check. */
-export const verified = builtinManifests().find((m) => m.status === "verified") as Manifest;
-/** The draft 1.2.8.3 manifest. */
-export const draft = builtinManifests().find((m) => m.status === "draft") as Manifest;
+function builtin(firmware: string): Manifest {
+  const found = builtinManifests().find((m) => m.firmware === firmware);
+  if (!found) throw new Error(`no built-in manifest for ${firmware}`);
+  return found;
+}
+
+/**
+ * The 1.0.0.150183 manifest, marked verified for these tests (whatever its checked-in status), so
+ * writes are allowed without a help cross-check.
+ */
+export const verified: Manifest = { ...builtin("1.0.0.150183"), status: "verified" };
+/** A draft manifest: 1.2.8.3, forced to draft. */
+export const draft: Manifest = { ...builtin("1.2.8.3"), status: "draft" };
 
 export interface Setup {
   session: FakeSession;

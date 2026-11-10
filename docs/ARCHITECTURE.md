@@ -78,6 +78,8 @@ Code only depends downward: `web → (openapi spec)`, `server → device → man
   against. The format version is part of the file name; breaking changes mean a
   new `v2` file.
 - `packages/manifests/firmware/<firmware>.json`, e.g. `1.0.0.150183.json`.
+- `packages/manifests/captures/<firmware>/`: the raw capture a `verified` manifest is checked
+  against (see [ADDING-A-FIRMWARE.md](ADDING-A-FIRMWARE.md)).
 
 Manifest shape (top level):
 
@@ -86,7 +88,7 @@ Manifest shape (top level):
   "$schema": "../schema/cp750-manifest.v1.schema.json",
   "manifestVersion": 1,
   "firmware": "1.0.0.150183",
-  "status": "verified" | "draft",          // draft = not checked against a real unit's `help`
+  "status": "verified" | "draft",          // verified = cross-checked against a checked-in capture
   "sources": [{ "kind": "manual" | "capture", "ref": "Dolby 9110270 Issue 4, Tables 6-1/6-2", "notes": "..." }],
   "params": {
     "cp750.sys.fader": {
@@ -119,8 +121,13 @@ Value schemas:
 The meta-schema only allows these shapes: `{"type":"integer"}` with optional
 `minimum`, `maximum` and `enum`, or `{"type":"string"}` with optional `enum`,
 `maxLength` and `x-format`. `x-format` is a key inside the value schema. Ajv
-treats it as an annotation only. Beyond the meta-schema, the loader also
-rejects value schemas that don't compile, `minimum > maximum`, a
+treats it as an annotation only. The meta-schema also requires at least one
+entry in `commands`, and allows `destructive: true` only with `access: "action"`.
+Param names are exactly three segments, `cp750.<category>.<parameter>`: the
+device layer's `help` parsing and raw-read checks assume that shape. Beyond the
+meta-schema, the loader also rejects value schemas that don't compile,
+`minimum > maximum`, integer `enum` members outside `minimum`/`maximum`, a
+`unit` on a non-integer value, a non-action `destructive` param, a
 `cp750.internal.*` param without `internal: true`, and aliases that collide.
 
 - **Codec** (`@cp750/manifests`): `encode(param, jsonValue) → wire string` and
@@ -147,7 +154,13 @@ rejects value schemas that don't compile, `minimum > maximum`, a
 - Extra manifests can be loaded at runtime from a directory
   (`CP750_MANIFEST_DIR`), so new firmware doesn't need a rebuild. Each file
   must be named `<firmware>.json`. A file with the same firmware as a built-in
-  replaces it. Any invalid file fails the whole load, at startup.
+  replaces it. Any invalid file fails the whole load, at startup. Non-JSON
+  files are ignored, so a `cp750 capture --out` directory works as-is.
+- **Draft → verified.** A manifest may only be `verified` when its capture is
+  checked in under `captures/<firmware>/`, `sources` names it
+  (`{"kind":"capture","ref":"captures/<firmware>/"}`), and every manifest param
+  is in that capture's `help` (normal or full) and vice versa. A test enforces
+  this; 1.0.0.150183 predates the rule and is grandfathered until it is demoted.
 
 ## Session: firmware detection and manifest selection (`@cp750/device`)
 
@@ -285,9 +298,9 @@ Hono with `@hono/zod-openapi`. Errors use RFC 9457 `application/problem+json`.
 | `GET /api/device` | connection state, host, firmware, manifest `{firmware,status,match,verified}`, fullControl, readOnly |
 | `GET /api/commands` | params of the active manifest (with availability and allowed operations) |
 | `GET /api/params/{name}` | read: `{name, value, raw, unit?, db?}`; `name` also accepts aliases, case-insensitively |
-| `PUT /api/params/{name}` `{value}` | write + verify. Errors: 400 schema, 403 forbidden, 404 unknown, 422 rejected by device, 503 not connected, 504 timeout |
-| `POST /api/actions/{name}` `{value?, confirm?}` | `ctrl.*` actions; destructive ones require `confirm: true` |
-| `GET /api/events` | SSE: `param` changes, `connection`, and `device` (firmware/manifest) events |
+| `PUT /api/params/{name}` `{value}` | write + verify. Errors: 400 schema, 403 forbidden, 404 unknown, 413 too large, 415 not JSON, 422 rejected by device, 503 not connected, 504 timeout |
+| `POST /api/actions/{name}` `{value?, confirm?}` | `ctrl.*` actions; destructive ones require `confirm: true`. JSON even without a body (`{}` when empty) |
+| `GET /api/events` | SSE: `param` changes, `connection`, and `device` (firmware/manifest) events. Capped; `HEAD` opens no stream |
 | `GET /api/openapi.json` | the spec |
 
 Because the value type differs per param, the spec types `value` loosely and
@@ -299,20 +312,68 @@ Details of the implementation:
 
 - Problem `type`s are `urn:cp750:problem:<code>` and every body carries the
   stable `code`: `INVALID_VALUE`/`BAD_REQUEST` 400, `UNAUTHORIZED` 401,
-  `FORBIDDEN` 403 (with `reason`), `UNKNOWN_PARAMETER`/`NOT_FOUND` 404,
+  `FORBIDDEN` (with `reason`)/`ORIGIN_NOT_ALLOWED` 403,
+  `UNKNOWN_PARAMETER`/`NOT_FOUND` 404, `METHOD_NOT_ALLOWED` 405 (with `Allow`),
+  `PAYLOAD_TOO_LARGE` 413, `UNSUPPORTED_MEDIA_TYPE` 415, `HOST_NOT_ALLOWED` 421,
   `WRITE_REJECTED` 422 (with `requested`, `actual`, `raw`), `INTERNAL` 500,
-  `NOT_CONNECTED` 503, `TIMEOUT` 504.
+  `NOT_CONNECTED`/`TOO_MANY_STREAMS` 503, `TIMEOUT` 504.
 - With `CP750_API_TOKEN` set, every non-GET/HEAD/OPTIONS request under `/api`
   needs `Authorization: Bearer <token>` (compared in constant time) or gets
-  401. Reads stay open. The token is env-only: no CLI flag, never logged.
-- The HTTP layer repeats two session rules before calling it: read-only mode
-  (403 `read-only-mode`) and the destructive confirmation (403
+  401. Reads stay open. The token is env-only: no CLI flag, never logged, and
+  at least 16 characters.
+- The HTTP layer repeats session rules before calling it, in the session's
+  order: read-only mode (403 `read-only-mode`), then the operation's own
+  refusal from the command list (`access`, `full-tier`, `unverified`…; so
+  `PUT` on an action is `access`), then the destructive confirmation (403
   `confirmation-required`).
 - `GET /api/events` starts with a `connection` and a `device` snapshot, then
   forwards session events. The SSE `event` is the type, `data` is the JSON
-  event, and `: ping` comments are sent every 15 s.
-- `secureHeaders` with a same-origin CSP. CORS is off unless `CORS_ORIGIN`
-  lists origins.
+  event, and `: ping` comments are sent every 15 s. At most
+  `CP750_MAX_SSE_CLIENTS` (32) streams are open at once; more get 503
+  `TOO_MANY_STREAMS`. A client with 100 unsent messages (it stopped reading)
+  is dropped. `HEAD` answers the headers without subscribing (Hono would
+  otherwise run the GET handler and leak the stream).
+- The request log prints the method, the raw (percent-encoded) path with
+  control characters escaped, the status and the duration.
+- `secureHeaders` with a same-origin CSP. CORS is off unless
+  `CP750_CORS_ORIGIN` lists origins.
+
+### Security model
+
+The threat to design for is a hostile web page open in the operator's browser
+while the gateway listens on 127.0.0.1. The browser can reach localhost, and a
+wrong write is audible in the auditorium. There are no cookies, so classic
+CSRF does not apply, but two browser tricks do. Every request passes these
+checks (`apps/server/src/guards.ts`) before routing:
+
+1. **Host allow-list (DNS rebinding).** A page on `evil.example` can rebind its
+   name to 127.0.0.1 and then read and write "same-origin". The browser still
+   sends `Host: evil.example`, so any `Host` not in the list gets 421
+   `HOST_NOT_ALLOWED`: `localhost`, `127.0.0.1`, `[::1]`, the listen host and
+   `CP750_ALLOWED_HOSTS`, each with any port. When listening on `0.0.0.0`/`::`
+   the machine's interface addresses are added too, since an IP literal cannot
+   be rebound. This covers every path, so the event stream and the web client
+   are refused too.
+2. **No cross-site mutations.** `PUT`/`POST` are refused with 403
+   `ORIGIN_NOT_ALLOWED` when `Sec-Fetch-Site: cross-site`, or when an `Origin`
+   header is present and is neither this server (its host equals `Host`) nor
+   listed in `CP750_CORS_ORIGIN`. Requests without either header (curl,
+   scripts) pass; the token still applies to them.
+3. **JSON only.** `PUT`/`POST` need `Content-Type: application/json`, even a
+   body-less action, or get 415. A cross-site page can only send a "simple
+   request" without a CORS preflight (form encodings, `text/plain`, or no
+   body), so this keeps out even a browser that sends no `Origin` or
+   `Sec-Fetch-Site`. An empty JSON action body counts as `{}`.
+4. **Size limits.** Bodies are limited to 4 KiB (`Bun.serve`
+   `maxRequestBodySize` and the app), string values to 256 characters and
+   names to 128.
+
+CORS (`CP750_CORS_ORIGIN`) only decides which other origins may *read*
+responses and send preflighted requests; `*` without a token draws a startup
+warning. The compiled executable reads its config from the real environment
+only (built with `--no-compile-autoload-dotenv`), and unknown `CP750_*`
+variables draw a warning, so a typo such as `CP750_READONLY` is not silently
+ignored.
 - Non-`/api` GETs serve the embedded web client: exact files, `index.html` for
   extension-less paths (SPA routes), 404 for other missing files, and a short
   HTML notice when the build has no web client.
@@ -323,34 +384,41 @@ Config (env, also CLI flags):
 |---|---|
 | `CP750_HOST` | `192.168.1.136` |
 | `CP750_PORT` | `61408` |
-| `LISTEN_HOST` | `127.0.0.1` |
-| `PORT` | `2222` |
+| `CP750_LISTEN_HOST` | `127.0.0.1` |
+| `CP750_LISTEN_PORT` | `2222` |
 | `CP750_READ_ONLY` | off |
 | `CP750_ALLOW_FULL` | off |
 | `CP750_ALLOW_INTERNAL` | off |
-| `CP750_API_TOKEN` | unset. If set, mutations require a Bearer token |
+| `CP750_API_TOKEN` | unset. If set (16+ characters), mutations require a Bearer token |
 | `CP750_EOL` | `\r\n` |
-| `CP750_POLL_MS` | — |
+| `CP750_POLL_MS` | `1000`; `0` turns polling off |
 | `CP750_MANIFEST_DIR` | — |
 | `CP750_MOCK` | off |
-| `CORS_ORIGIN` | unset. Comma-separated origins allowed cross-origin |
+| `CP750_CORS_ORIGIN` | unset. Comma-separated origins allowed cross-origin |
+| `CP750_ALLOWED_HOSTS` | unset. Extra comma-separated `Host` names to answer |
+| `CP750_MAX_SSE_CLIENTS` | `32` |
 
 Each variable has a flag (`--cp750-host`/`--host`, `--cp750-port`,
 `--listen-host`, `--port`, `--read-only`, `--allow-full`, `--allow-internal`,
-`--eol crlf|lf|cr`, `--poll-ms`, `--manifest-dir`, `--mock`, `--cors-origin`)
-that overrides it, except `CP750_API_TOKEN`.
+`--eol crlf|lf|cr`, `--poll-ms`, `--manifest-dir`, `--mock`, `--cors-origin`,
+`--allowed-hosts`, `--max-sse-clients`) that overrides it, except
+`CP750_API_TOKEN`. Every variable is `CP750_`-prefixed so the gateway never
+picks up another program's `PORT`. `GET /api/device` reports `pollMs`.
 
 ## CLI and distribution
 
 - `cp750 serve`: runs the API and serves the built web client, embedded in the
   executable.
-- `cp750 capture --host <ip> [--out dir]`: connects, records `version`, `help`
-  and `status` as raw text, and writes a draft manifest. This is how new
-  firmware gets added.
+- `cp750 capture --host <ip> [--out dir]`: connects, records the version line,
+  `help` and `status` (normal and full set) as raw text under
+  `<dir>/<firmware>/`, and writes the draft manifest as `<dir>/<firmware>.json`,
+  so `<dir>` works as `CP750_MANIFEST_DIR`. This is how new firmware gets
+  added; see [ADDING-A-FIRMWARE.md](ADDING-A-FIRMWARE.md).
 - `cp750 query <param>`: one-shot read for debugging; prints the reading as
   JSON (`{name, value, raw, unit?, db?}`).
 - `bun run compile` builds `dist/cp750-<target>` for linux-x64, windows-x64 and
-  darwin-arm64.
+  darwin-arm64, with `.env` and `bunfig.toml` autoloading off. CI compiles all
+  three and runs `scripts/smoke-test.sh` against the Linux one.
 - Session construction lives only in `apps/server/src/session-factory.ts`.
 - The web build is embedded through `apps/server/src/generated/web-assets.ts`,
   generated from `apps/web/dist` as `import … with { type: "file" }`
@@ -371,17 +439,36 @@ that overrides it, except `CP750_API_TOKEN`.
   is shown as title/detail/code, never raw JSON.
 - **Cache keys**: `["device"]`, `["commands"]`, `["param", name]`. One `EventSource` on
   `/api/events` writes `param` events into `["param", name]` and patches `["device"]` on
-  `connection`/`device` events (and refetches the command list). Param events carry no dB, so a
+  `connection`/`device` events (and refetches the command list) when they differ from the cache;
+  the matching snapshots a stream opens with change nothing. Param events carry no dB, so a
   changed fader value drops its stale `db` and re-reads. The client owns reconnection
   (exponential backoff 1 s → 30 s) and invalidates what it may have missed after a reopen.
-- **Writes** are optimistic and roll back on failure; `WRITE_REJECTED` sets the cache to `actual`.
-  Mutations never retry. The fader sends through a "latest value" sender: one request in flight,
-  newer values replace the waiting one, at most one send per 150 ms, flushed on release.
+- **Writes** are optimistic. Writes to one param run one at a time, in order (mutation
+  `scope`). A failure rolls back, or takes `actual` on `WRITE_REJECTED`, only while the cache
+  still holds that write's optimistic value; if something newer replaced it, the param is
+  re-read instead. A `param` event for a param with a write pending is held back; when the last
+  write settles, a held value that disagrees with the cache triggers a re-read (the write's own
+  echo does not). Mutations never retry. Mute, input and switch controls are `aria-disabled`
+  while their write is pending (they keep focus), so a double click sends one write.
+- **Fader safety.** The slider sends through a "latest value" sender: one request in flight,
+  newer values replace the waiting one, at most one send per 150 ms, flushed on release. Each send
+  moves at most 1.0 (10 raw) from the last known level; a bigger target (Home/End, a fast drag,
+  return to 7.0 from far away) is reached in 1.0 steps. A pointer gesture that starts on the
+  track moves one page (±1.0) toward the click, not to it. Wheel events are cancelled. The ±0.1
+  and ±1.0 buttons first re-read `cp750.sys.fader` and step from the processor's value, one click
+  at a time.
+- **Staleness.** Fader, mute and input show "Stale" when their value may no longer match the
+  unit: no confirmation for 3 poll intervals (at least 3 s; 10 s with polling off). The value
+  counts as confirmed while the event stream is open, the processor connected and the gateway
+  polling (`pollMs` from `/api/device`), since every front-panel change then arrives within one
+  interval.
 - **Disabled controls** carry a reason: the command's `blocked` reason from `/api/commands`, then
   read-only mode, a disconnected processor, or a missing token when `authRequired`.
 - **Advanced** reads lazily: groups are collapsed by default, rows read once they have been on
   screen for 300 ms (IntersectionObserver), or on demand. Destructive actions use an inline
-  two-step confirmation that sends `confirm: true`.
+  two-step confirmation that sends `confirm: true`; however it closes (Yes, Cancel, Escape,
+  expiry), focus returns to the trigger. Each row's Set, Undo and Read buttons are named after
+  the param ("Set cp750.sys.mute_fade_in_time").
 - Code layout: named exports only; components colocated recursively
   (`components/X/X.tsx`, `components/X/components/Y/Y.tsx`) with their CSS modules and tests.
 - Tests run in a separate `bun test` process (`apps/web/bunfig.toml` preloads happy-dom and a CSS
@@ -395,4 +482,6 @@ A misfired write during a screening is audible to an audience. So:
 - every mutation is an explicit `PUT` or `POST`
 - destructive actions need a confirmation
 - unverified manifests are restricted
-- the server binds to localhost by default.
+- the server binds to localhost by default, and refuses foreign `Host`s, cross-site and
+  non-JSON mutations (see "Security model")
+- the UI never steps from a stale display, and no single fader send moves more than 1.0.
