@@ -1,0 +1,28 @@
+{
+  "name": "@cp750/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "CP750 HTTP API (Hono + OpenAPI), SSE, config and the cp750 CLI.",
+  "bin": {
+    "cp750": "./src/cli.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "start": "bun src/cli.ts serve",
+    "dev": "bun --watch src/cli.ts serve --mock"
+  },
+  "dependencies": {
+    "@cp750/device": "workspace:*",
+    "@cp750/manifests": "workspace:*",
+    "@hono/zod-openapi": "1.6.3",
+    "hono": "4.13.13",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@seriousme/openapi-schema-validator": "2.11.0"
+  }
+}

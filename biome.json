@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
-  "files": { "includes": ["**", "!**/src/generated", "!**/bun.lock", "!**/*.md"] },
+  "files": { "includes": ["**", "!**/src/generated", "!**/bun.lock", "!**/*.md", "!openapi"] },
   "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
   "linter": {
     "enabled": true,
