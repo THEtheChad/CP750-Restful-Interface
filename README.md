@@ -4,8 +4,7 @@ A REST + SSE gateway and web client for the Dolby CP750 Digital Cinema Processor
 unit over its ASCII TCP protocol (port 61408), uses a typed, per-firmware command registry, and
 ships as a single executable.
 
-> Work in progress: the manifests package, the device contracts and the HTTP API exist; the TCP
-> client and the web client are being built. Until the TCP client lands, only `--mock` mode runs.
+> Work in progress: the web client is still being built.
 
 ## Quick start
 
@@ -45,7 +44,7 @@ Environment variables, or the matching flag (flags win). Booleans take `1/0`, `t
 | `CP750_EOL` | `--eol` | `crlf` | command terminator: `crlf`, `lf` or `cr` |
 | `CP750_POLL_MS` | `--poll-ms` | off | poll fader/mute/input and emit change events |
 | `CP750_MANIFEST_DIR` | `--manifest-dir` | none | extra `<firmware>.json` manifests |
-| `CP750_MOCK` | `--mock` | off | use a simulated CP750 |
+| `CP750_MOCK` | `--mock` | off | run against a built-in mock CP750 (a local TCP server) |
 | `CORS_ORIGIN` | `--cors-origin` | none | comma-separated origins allowed cross-origin |
 
 The compiled executable also reads a `.env` file in its working directory.
@@ -116,7 +115,7 @@ A misfired write during a screening is audible, so:
 | Path | Package |
 |---|---|
 | `packages/manifests` | `@cp750/manifests`: meta-schema, firmware manifests, loader, value codec, generated types |
-| `packages/device` | `@cp750/device`: session contracts (TCP client, session and mock to follow) |
+| `packages/device` | `@cp750/device`: TCP client, session (firmware detection, manifest selection), mock CP750, capture |
 | `apps/server` | `@cp750/server`: Hono HTTP API, OpenAPI generation, SSE, config, `cp750` CLI |
 | `openapi/cp750.openapi.json` | generated OpenAPI 3.1 spec (CI fails on drift) |
 

@@ -71,19 +71,27 @@ function timestamped(write: (line: string) => void): (line: string) => void {
   return (line) => write(`${new Date().toISOString()} ${line}`);
 }
 
-/** Waits for the session to connect, or fails after `ms`. */
+/**
+ * Waits for the session to connect. One-shot commands fail on the first failed attempt (or after
+ * `ms`) instead of riding the session's reconnect loop.
+ */
 async function connectWithin(session: Cp750Session, ms: number): Promise<void> {
   let timer: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<never>((_, reject) => {
+  let unsubscribe: (() => void) | undefined;
+  const failed = new Promise<never>((_, reject) => {
     timer = setTimeout(
       () => reject(new Error(`Could not connect to the CP750 within ${ms / 1000} s`)),
       ms,
     );
+    unsubscribe = session.on("connection", (event) => {
+      if (event.error) reject(new Error(`Could not connect to the CP750: ${event.error.message}`));
+    });
   });
   try {
-    await Promise.race([session.connect(), timeout]);
+    await Promise.race([session.connect(), failed]);
   } finally {
     clearTimeout(timer);
+    unsubscribe?.();
   }
 }
 

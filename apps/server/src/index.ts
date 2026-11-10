@@ -33,7 +33,6 @@ export {
   type CaptureResult,
   captureDevice,
   createSession,
-  NotWiredError,
   type SessionHandle,
   sessionOptions,
 } from "./session-factory.ts";

@@ -54,15 +54,20 @@ describe("cli", () => {
     expect(unknown.err[0]).toContain("not a known parameter");
   });
 
-  test("real-device modes report that they are not wired yet", async () => {
-    for (const argv of [
-      ["query", "version"],
-      ["capture", "--host", "10.0.0.2"],
-    ]) {
-      const r = io();
-      expect(await main(argv, {}, r.io)).toBe(1);
-      expect(r.err.join("\n")).toContain("not wired up yet");
-    }
+  test("real-device modes fail cleanly when the CP750 is unreachable", async () => {
+    // Grab a free port, then close it so nothing is listening there.
+    const probe = Bun.listen({ hostname: "127.0.0.1", port: 0, socket: { data() {} } });
+    const port = String(probe.port);
+    probe.stop(true);
+    const env = { CP750_HOST: "127.0.0.1", CP750_PORT: port };
+    const query = io();
+    expect(await main(["query", "version"], env, query.io)).toBe(1);
+    expect(query.err.join("\n")).not.toBe("");
+    const capture = io();
+    expect(
+      await main(["capture", "--host", "127.0.0.1", "--cp750-port", port], {}, capture.io),
+    ).toBe(1);
+    expect(capture.err.join("\n")).not.toBe("");
   });
 
   test("serve --mock answers HTTP and shuts down on a signal", async () => {
@@ -78,7 +83,11 @@ describe("cli", () => {
       if (!url) await Bun.sleep(10);
     }
     expect(url).toBeDefined();
-    const device = await (await fetch(new URL("/api/device", url))).json();
+    let device: { connection?: string } = {};
+    for (let i = 0; i < 100 && device.connection !== "connected"; i++) {
+      device = (await (await fetch(new URL("/api/device", url))).json()) as { connection?: string };
+      if (device.connection !== "connected") await Bun.sleep(20);
+    }
     expect(device).toMatchObject({ connection: "connected", firmware: "1.2.8.3" });
     const write = await fetch(new URL("/api/params/cp750.sys.fader", url), {
       method: "PUT",
