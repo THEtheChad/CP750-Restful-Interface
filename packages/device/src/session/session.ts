@@ -2,6 +2,10 @@
  * The real `Cp750Session` over TCP (docs/ARCHITECTURE.md, "Session"). Every access decision goes
  * through `policy.ts`; every exchange with the unit goes through one `Cp750Client` queue, so API
  * calls, polls and detection never interleave.
+ *
+ * On top of the client queue, every operation runs as one unit on the session's own serial
+ * queue (`serial`), so a check made at execution time (is full control on?) still holds when the
+ * operation's own command is sent.
  */
 import {
   decode,
@@ -53,12 +57,21 @@ import {
   resolveName,
 } from "../policy.ts";
 import { Cp750Client } from "../protocol/client.ts";
+import { parseReplyLine } from "../protocol/framing.ts";
 import { extractFirmware, extractParamNames } from "../protocol/help.ts";
 
 export const FULL_CONTROL_PARAM = "cp750.ctrl.full_ascii_ctrl";
 export const VERSION_PARAM = "cp750.sysinfo.version";
 
 export const RECONNECT_DEFAULTS = { initialDelayMs: 500, maxDelayMs: 30_000 } as const;
+
+/**
+ * Actions after which the unit may close the connection instead of echoing. For these, "the
+ * connection closed after the command was sent and before any reply" counts as accepted.
+ */
+export const CONNECTION_ENDING_ACTIONS: ReadonlySet<string> = new Set(["cp750.ctrl.reboot"]);
+
+const INTERNAL_NAME = /cp750\.internal\./i;
 
 /** Creates a session. Nothing happens on the network until `connect()`. */
 export function createCp750Session(options: SessionOptions): Cp750Session {
@@ -88,7 +101,8 @@ class TcpSession implements Cp750Session {
   private helpNames: ReadonlySet<string> | null = null;
   private helpCoversFull = true;
   private fullControl = false;
-  private enablingFull: Promise<void> | null = null;
+  /** Tail of the session's serial queue (see `serial`). */
+  private chain: Promise<unknown> = Promise.resolve();
   private manifests: readonly Manifest[] | null = null;
   private loop: Promise<void> | null = null;
   private closing: Promise<void> | null = null;
@@ -135,10 +149,12 @@ class TcpSession implements Cp750Session {
     return this.selection ? describeCommands(this.policy()) : [];
   }
 
-  async read(name: string): Promise<ParamResult> {
-    const client = this.requireClient();
-    const target = assertOperation(this.policy(), name, "read");
-    return this.readTarget(client, target, name);
+  read(name: string): Promise<ParamResult> {
+    return this.serial(() => {
+      const client = this.requireClient();
+      const target = assertOperation(this.policy(), name, "read");
+      return this.readTarget(client, target, name);
+    });
   }
 
   write(name: string, value: unknown, options: MutationOptions = {}): Promise<ParamResult> {
@@ -149,24 +165,39 @@ class TcpSession implements Cp750Session {
     return this.mutate(name, value, "action", options);
   }
 
+  /**
+   * Raw reads go through the same read policy as `read` for names the policy knows (tier,
+   * internal), and stay open for names it does not (capture, debugging). Aggregate replies
+   * (`help`, `status`, `dump_log*`) lose the lines the read policy would refuse.
+   */
   async sendRaw(line: string): Promise<string[]> {
     if (!isRawReadLine(line)) {
       throw new Forbidden(line.trim(), "raw-command", "Only read-only lines may be sent raw");
     }
-    const client = this.requireClient();
     const text = line.trim().toLowerCase();
     const query = /^(\S+?)\s*\?$/.exec(text);
-    if (!query?.[1]) return client.multi(text);
-    const name = query[1];
-    if (name.startsWith("cp750.internal.") && !this.options.allowInternal) {
-      throw new Forbidden(name, "internal", `read ${name}: internal`);
-    }
-    try {
-      return [(await client.query(name)).line];
-    } catch (error) {
-      if (error instanceof UnknownParameter) return [""];
-      throw error;
-    }
+    return this.serial(async () => {
+      const client = this.requireClient();
+      if (!query?.[1]) return this.filterAggregate(await client.multi(text));
+      const name = query[1];
+      const policy = this.policy();
+      const target = resolveName(policy, name);
+      if (target) {
+        const reason = checkOperation(policy, target, "read");
+        if (reason === "internal" || reason === "full-tier") {
+          throw new Forbidden(target.name, reason, `read ${target.name}: ${reason}`);
+        }
+        await this.ensureTier(client, target);
+      } else if (name.startsWith("cp750.internal.") && !this.options.allowInternal) {
+        throw new Forbidden(name, "internal", `read ${name}: internal`);
+      }
+      try {
+        return [(await client.query(target?.name ?? name)).line];
+      } catch (error) {
+        if (error instanceof UnknownParameter) return [""];
+        throw error;
+      }
+    });
   }
 
   on<T extends SessionEventType>(
@@ -267,6 +298,7 @@ class TcpSession implements Cp750Session {
       ...(t.idleMs !== undefined && { idleMs: t.idleMs }),
       ...(t.blankGraceMs !== undefined && { blankGraceMs: t.blankGraceMs }),
       ...(t.multiLineMaxMs !== undefined && { multiLineMaxMs: t.multiLineMaxMs }),
+      ...(t.quarantineMs !== undefined && { quarantineMs: t.quarantineMs }),
       onUnsolicited: (line) => this.logger.debug?.(`CP750 unsolicited: ${line.trim()}`),
     });
   }
@@ -350,7 +382,16 @@ class TcpSession implements Cp750Session {
     return { name: target.name, value, raw: reply.value };
   }
 
-  private async mutate(
+  private mutate(
+    name: string,
+    value: unknown,
+    op: Exclude<ParamOperation, "read">,
+    options: MutationOptions,
+  ): Promise<ParamResult> {
+    return this.serial(() => this.mutateNow(name, value, op, options));
+  }
+
+  private async mutateNow(
     name: string,
     value: unknown,
     op: Exclude<ParamOperation, "read">,
@@ -371,21 +412,41 @@ class TcpSession implements Cp750Session {
       throw error;
     }
     await this.ensureTier(client, target);
-    const reply = await withCallerName(name, client.set(target.name, wire));
+    let reply: Awaited<ReturnType<Cp750Client["set"]>>;
+    try {
+      reply = await withCallerName(name, client.set(target.name, wire));
+    } catch (error) {
+      // A reboot may drop the connection instead of echoing: sent, then closed with no reply.
+      if (
+        op === "action" &&
+        CONNECTION_ENDING_ACTIONS.has(target.name) &&
+        error instanceof NotConnected &&
+        error.inFlight
+      ) {
+        return { name: target.name, value: requested, raw: "" };
+      }
+      throw error;
+    }
     const actual = this.decodeValue(target, reply.value);
 
     if (op === "action") {
+      // The session tracks full control from what the unit says, whoever asked for the change.
       if (target.name === FULL_CONTROL_PARAM) this.fullControl = actual === 1;
-      return { name: target.name, value: actual, raw: reply.value };
+    } else {
+      this.record(target, actual, reply.value);
     }
-    this.record(target, actual, reply.value);
+    // An unrecognized value is ignored and the unit echoes its current status, so actions are
+    // verified like writes.
     if (!valuesEqual(spec, actual, requested)) {
       throw new WriteRejected(target.name, requested, actual, reply.value);
     }
     return { name: target.name, value: actual, raw: reply.value };
   }
 
-  /** With `allowFull`, makes sure `full_ascii_ctrl` is 1 before a full-tier param is used. */
+  /**
+   * With `allowFull`, makes sure `full_ascii_ctrl` is 1 before a full-tier param is used. Runs
+   * inside the serial queue, so nothing can turn full control off between this and the operation.
+   */
   private async ensureTier(client: Cp750Client, target: ResolvedName): Promise<void> {
     if (target.spec?.tier !== "full" || !this.options.allowFull || this.fullControl) return;
     try {
@@ -396,19 +457,35 @@ class TcpSession implements Cp750Session {
     }
   }
 
-  private enableFullControl(client: Cp750Client): Promise<void> {
-    this.enablingFull ??= (async () => {
-      try {
-        const reply = await client.set(FULL_CONTROL_PARAM, "1");
-        this.fullControl = reply.value.trim() === "1";
-        if (!this.fullControl) {
-          this.logger.warn(`The CP750 refused full control (replied "${reply.line}")`);
-        }
-      } finally {
-        this.enablingFull = null;
-      }
-    })();
-    return this.enablingFull;
+  private async enableFullControl(client: Cp750Client): Promise<void> {
+    const reply = await client.set(FULL_CONTROL_PARAM, "1");
+    this.fullControl = reply.value.trim() === "1";
+    if (!this.fullControl) {
+      this.logger.warn(`The CP750 refused full control (replied "${reply.line}")`);
+    }
+  }
+
+  /**
+   * Runs `fn` after every operation queued before it has finished. Operations never overlap, so
+   * each one's checks, enables and commands form one atomic unit on the wire.
+   */
+  private serial<T>(fn: () => Promise<T>): Promise<T> {
+    const run = this.chain.then(fn, fn);
+    this.chain = run.catch(() => {});
+    return run;
+  }
+
+  /** Drops lines of an aggregate reply that the read policy would refuse. */
+  private filterAggregate(lines: string[]): string[] {
+    const policy = this.policy();
+    return lines.filter((line) => {
+      if (!policy.allowInternal && INTERNAL_NAME.test(line)) return false;
+      const key = parseReplyLine(line)?.key;
+      if (!key?.startsWith("cp750.")) return true;
+      const target = resolveName(policy, key);
+      const reason = target ? checkOperation(policy, target, "read") : null;
+      return reason !== "internal" && reason !== "full-tier";
+    });
   }
 
   private decodeValue(target: ResolvedName, raw: string): ParamValue {
@@ -463,7 +540,10 @@ class TcpSession implements Cp750Session {
         continue;
       }
       try {
-        await this.readTarget(client, target, input);
+        await this.serial(() => {
+          if (this.client !== client) throw new NotConnected();
+          return this.readTarget(client, target, input);
+        });
       } catch (error) {
         if (error instanceof NotConnected) return;
         this.logger.debug?.(`poll ${target.name} failed: ${errorMessage(error)}`);

@@ -17,6 +17,9 @@ import {
 import { LineSplitter } from "../protocol/framing.ts";
 
 const FULL_CONTROL = "cp750.ctrl.full_ascii_ctrl";
+const FADER = "cp750.sys.fader";
+const FADER_DELTA = "cp750.ctrl.fader_delta";
+const REBOOT = "cp750.ctrl.reboot";
 const VERSION = "cp750.sysinfo.version";
 const VERSION_SPEC: ParamSpec = {
   tier: "normal",
@@ -187,6 +190,11 @@ class MockDevice implements MockCp750 {
       .then(async () => {
         const reply = this.respond(conn, line);
         if (this.latencyMs > 0) await sleep(this.latencyMs);
+        if (reply === "reboot") {
+          // The unit restarts: every session ends without a reply. Values survive.
+          this.dropConnections();
+          return;
+        }
         if (conn.socket.destroyed) return;
         if (reply === "exit") {
           conn.socket.end();
@@ -210,7 +218,7 @@ class MockDevice implements MockCp750 {
 
   // ---- protocol ----
 
-  private respond(conn: Connection, line: string): string[] | "exit" {
+  private respond(conn: Connection, line: string): string[] | "exit" | "reboot" {
     const text = line.trim();
     if (text === "") return this.options.blankForEmptyLines ? [""] : [];
     this.received.push(text);
@@ -242,14 +250,26 @@ class MockDevice implements MockCp750 {
       if (argument === "0" || argument === "1") conn.full = argument === "1";
       return [`${command} ${conn.full ? 1 : 0}`];
     }
-    if (spec.access !== "readonly") {
-      try {
-        const value = decode(spec, argument);
-        if (validateValue(spec, value).ok) this.state.set(command, value);
-      } catch {
-        // An unrecognized value is ignored; the reply is the current value.
-      }
+    if (spec.access === "readonly") return [`${command} ${this.valueOf(conn, command)}`];
+
+    let value: ParamValue;
+    try {
+      value = decode(spec, argument);
+      if (!validateValue(spec, value).ok) throw new Error("invalid");
+    } catch {
+      // An unrecognized value is ignored; the reply is the current value.
+      return [`${command} ${this.valueOf(conn, command)}`];
     }
+    if (spec.access === "action") {
+      if (command === REBOOT) return "reboot";
+      if (command === FADER_DELTA && typeof value === "number") {
+        const fader = Number(this.state.get(FADER) ?? 0);
+        this.state.set(FADER, Math.min(100, Math.max(0, fader + value)));
+      }
+      // Every other action (default_params, log_erase, alignment_mode_tickle, ...) is a no-op
+      // here: the mock only echoes it. Its value is kept so the echo is "the current status".
+    }
+    this.state.set(command, value);
     return [`${command} ${this.valueOf(conn, command)}`];
   }
 

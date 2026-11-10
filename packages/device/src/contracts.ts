@@ -19,6 +19,7 @@ export {
   InvalidValue,
   isCp750Error,
   NotConnected,
+  ReplyTruncated,
   Timeout,
   UnknownParameter,
   WriteRejected,
@@ -41,12 +42,17 @@ export interface SessionTimeouts {
   /** For multi-line replies (`help`, `status`): the reply ends after this much silence. */
   idleMs?: number;
   /**
-   * A blank reply means "unknown parameter" only if no matching line follows within this window
-   * (stray blank lines can precede a reply). Default 50.
+   * How long a blank line waits for a matching line before the client sends a sync query to tell
+   * an "unknown parameter" reply from a stray blank line. Default 50.
    */
   blankGraceMs?: number;
-  /** Hard cap on one multi-line reply. Default 10000. */
+  /** A multi-line reply still arriving after this long fails and resets the connection. Default 10000. */
   multiLineMaxMs?: number;
+  /**
+   * How long the queue waits for a sync reply after a timeout or a blank line before the
+   * connection is reset. Default 3 × `commandMs`.
+   */
+  quarantineMs?: number;
 }
 
 /** Where the session reports things that are not errors of a call (e.g. a poll param it skips). */
@@ -220,15 +226,23 @@ export interface Cp750Session {
   write(name: string, value: unknown, options?: MutationOptions): Promise<ParamResult>;
 
   /**
-   * Triggers an `action` param (`cp750.ctrl.*`). `value` defaults to `1`. The reply is returned
-   * but not compared. Same errors as `write` except `WriteRejected`.
+   * Triggers an `action` param (`cp750.ctrl.*`). `value` defaults to `1`. The echo is compared to
+   * the value sent, like a write: the unit ignores an unrecognized value and echoes its current
+   * status, which raises `WriteRejected`. Exception: an action that ends the connection
+   * (`cp750.ctrl.reboot`) counts as accepted when the connection closes after it was sent and
+   * before any reply; the result then carries the requested value and `raw: ""`. Same errors as
+   * `write`. `cp750.ctrl.full_ascii_ctrl` may be toggled; the session tracks the unit's echo and,
+   * with `allowFull`, turns it back on before the next full-tier operation.
    */
   action(name: string, value?: unknown, options?: MutationOptions): Promise<ParamResult>;
 
   /**
    * Sends one raw line and returns the reply lines (NULs stripped). For capture and debugging, so
    * only read-only lines are allowed: `<name> ?`, `help`, `status`, `dump_log`, `dump_log_100`.
-   * Anything else throws `Forbidden` with reason `raw-command`.
+   * Anything else throws `Forbidden` with reason `raw-command`. `<name> ?` for a name the policy
+   * knows follows the read rules (`Forbidden` with `full-tier` or `internal`); unknown names are
+   * passed through. Aggregate replies omit lines for params the read policy refuses, and any
+   * `cp750.internal.*` line unless `allowInternal`.
    */
   sendRaw(line: string): Promise<string[]>;
 

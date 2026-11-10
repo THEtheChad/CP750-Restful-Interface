@@ -163,6 +163,41 @@ describe("FakeSession", () => {
     });
   });
 
+  test("rejectWrites covers actions too (finding 5)", async () => {
+    const session = await connected();
+    session.rejectWrites("cp750.ctrl.fader_delta");
+    const rejected = await rejection(session.action("cp750.ctrl.fader_delta", 5));
+    expect(rejected).toBeInstanceOf(WriteRejected);
+    expect(rejected).toMatchObject({ requested: 5, actual: 0, param: "cp750.ctrl.fader_delta" });
+    session.rejectWrites("cp750.ctrl.fader_delta", false);
+    expect((await session.action("cp750.ctrl.fader_delta", 5)).value).toBe(5);
+  });
+
+  test("sendRaw follows the read policy like the real session (finding 6)", async () => {
+    const session = await connected();
+    expect(await rejection(session.sendRaw("cp750.sys.mute ?"))).toMatchObject({
+      reason: "full-tier",
+    });
+    expect(await rejection(session.sendRaw("cp750.internal.save_params ?"))).toMatchObject({
+      reason: "internal",
+    });
+    for (const command of ["help", "status"]) {
+      const lines = await session.sendRaw(command);
+      expect(lines.some((l) => l.includes("cp750.sys.fader"))).toBe(true);
+      expect(
+        lines.filter((l) => l.includes("cp750.internal.") || l.includes("cp750.sys.mute")),
+      ).toEqual([]);
+    }
+    for (const char of ["\u010a", "\u2028", "\n"]) {
+      expect(await rejection(session.sendRaw(`cp750.sys.fader ?${char}status`))).toMatchObject({
+        reason: "raw-command",
+      });
+    }
+    const full = await connected({ allowFull: true, allowInternal: true });
+    expect(await full.sendRaw("cp750.sys.mute ?")).toEqual(["cp750.sys.mute 0"]);
+    expect((await full.sendRaw("help")).some((l) => l.startsWith("cp750.internal."))).toBe(true);
+  });
+
   test("sendRaw only sends read-only lines", async () => {
     const session = await connected();
     expect(await session.sendRaw("cp750.sys.fader ?")).toEqual(["cp750.sys.fader 70"]);

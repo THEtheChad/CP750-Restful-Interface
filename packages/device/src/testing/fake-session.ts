@@ -164,7 +164,12 @@ export class FakeSession implements Cp750Session {
     }
     this.assertConnected();
     const command = line.trim().toLowerCase();
-    if (command === "help") return this.commands().map((c) => c.name);
+    // Same filtering as the real session: no lines for params the read policy refuses.
+    if (command === "help") {
+      return this.commands()
+        .filter((c) => c.blocked.read !== "full-tier" && c.blocked.read !== "internal")
+        .map((c) => c.name);
+    }
     if (command === "status") {
       return this.commands()
         .filter((c) => c.operations.includes("read"))
@@ -207,7 +212,10 @@ export class FakeSession implements Cp750Session {
     this.store(target, value);
   }
 
-  /** Makes the unit ignore writes to `name` (echoing its current value) until turned off. */
+  /**
+   * Makes the unit ignore writes and actions on `name` (echoing its current value) until turned
+   * off, so they raise `WriteRejected`.
+   */
   rejectWrites(name: string, enabled = true): void {
     const target = resolveName(this.policy(), name);
     if (!target) throw new UnknownParameter(name);
@@ -237,13 +245,13 @@ export class FakeSession implements Cp750Session {
     const raw = encode(spec, requested);
     this.sent.push(`${target.name} ${raw}`);
 
-    if (op === "action") {
-      if (target.name === "cp750.ctrl.full_ascii_ctrl") this.fullControl = requested === 1;
-      return { name: target.name, value: decode(spec, raw), raw };
-    }
     if (this.rejecting.has(target.name)) {
       const actual = this.currentValue(target) ?? defaultValue(spec);
       throw new WriteRejected(target.name, requested, actual, this.wire(target, actual));
+    }
+    if (op === "action") {
+      if (target.name === "cp750.ctrl.full_ascii_ctrl") this.fullControl = requested === 1;
+      return { name: target.name, value: decode(spec, raw), raw };
     }
     const echoed = decode(spec, raw);
     if (!valuesEqual(spec, echoed, requested)) {

@@ -370,10 +370,14 @@ describe("session: access and lifecycle", () => {
     await expect(s.action("cp750.ctrl.reboot")).rejects.toMatchObject({
       reason: "confirmation-required",
     });
-    expect(await s.action("cp750.ctrl.reboot", undefined, { confirm: true })).toMatchObject({
+    // The mock's reboot ends the session without a reply; that counts as accepted.
+    expect(await s.action("cp750.ctrl.reboot", undefined, { confirm: true })).toEqual({
       name: "cp750.ctrl.reboot",
       value: 1,
+      raw: "",
     });
+    await waitFor(() => s.state.connection !== "connected", { message: "reboot to drop" });
+    await s.connect();
     await expect(s.sendRaw("cp750.sys.fader 5")).rejects.toMatchObject({ reason: "raw-command" });
     await expect(s.sendRaw("cp750.internal.save_params ?")).rejects.toMatchObject({
       reason: "internal",

@@ -34,10 +34,17 @@ export abstract class Cp750Error extends Error {
 
 export class NotConnected extends Cp750Error {
   readonly code = "NOT_CONNECTED";
+  /**
+   * True when the request had already been written to the unit and the connection ended before
+   * any reply line arrived. The unit may or may not have acted on it. Used to accept actions that
+   * end the connection (`cp750.ctrl.reboot`).
+   */
+  readonly inFlight: boolean;
 
-  constructor(message = "Not connected to the CP750") {
+  constructor(message = "Not connected to the CP750", options: { inFlight?: boolean } = {}) {
     super(message);
     this.name = "NotConnected";
+    this.inFlight = options.inFlight ?? false;
   }
 }
 
@@ -52,6 +59,29 @@ export class Timeout extends Cp750Error {
     this.name = "Timeout";
     this.timeoutMs = timeoutMs;
     this.command = command;
+  }
+}
+
+/**
+ * A multi-line reply hit `multiLineMaxMs` or `multiLineMaxLines` before it ended. It is a
+ * `Timeout` (code `TIMEOUT`); the partial reply is attached. The client resets the connection,
+ * because the rest of the reply would otherwise be read as the answer to the next request.
+ */
+export class ReplyTruncated extends Timeout {
+  /** The lines received before the limit, NULs stripped. */
+  readonly lines: readonly string[];
+  /** Which limit was hit. */
+  readonly limit: "time" | "lines";
+
+  constructor(command: string, lines: readonly string[], limit: "time" | "lines", max: number) {
+    super(max, command);
+    this.name = "ReplyTruncated";
+    this.message =
+      limit === "time"
+        ? `The reply to "${command}" was still arriving after ${max} ms; it was cut off`
+        : `The reply to "${command}" exceeded ${max} lines; it was cut off`;
+    this.lines = lines;
+    this.limit = limit;
   }
 }
 

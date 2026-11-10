@@ -48,4 +48,12 @@ describe("policy", () => {
     expect(isRawReadLine("exit")).toBe(false);
     expect(isRawReadLine("help\r\ncp750.ctrl.reboot 1")).toBe(false);
   });
+
+  test("isRawReadLine refuses anything outside printable ASCII (finding 1)", () => {
+    for (const char of ["\u010a", "\u010d", "\u0100", "\u2028", "\n", "\r", "\u0000"]) {
+      expect(isRawReadLine(`cp750.sys.fader ?${char}cp750.ctrl.reboot 1`)).toBe(false);
+      expect(isRawReadLine(`help${char}`)).toBe(false);
+    }
+    expect(isRawReadLine("\tstatus ")).toBe(true);
+  });
 });

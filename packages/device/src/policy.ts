@@ -179,8 +179,9 @@ function isApplicable(spec: ParamSpec | null, op: ParamOperation): boolean {
 
 /** True for lines `sendRaw` may send: `<name> ?` and the read-only single-word commands. */
 export function isRawReadLine(line: string): boolean {
-  // biome-ignore lint/suspicious/noControlCharactersInRegex: refuse embedded control characters
-  if (/[\u0000-\u0008\u000a-\u001f\u007f]/.test(line)) return false;
+  // Printable ASCII only (tabs allowed as whitespace): no control characters, and nothing above
+  // 0x7E, whose low byte could be a terminator on a Latin-1 wire.
+  if (/[^\t\x20-\x7e]/.test(line)) return false;
   const text = line.trim().toLowerCase();
   if (RAW_COMMANDS.has(text)) return true;
   return /^cp750\.[a-z0-9_]+\.[a-z0-9_]+\s*\?$/.test(text);

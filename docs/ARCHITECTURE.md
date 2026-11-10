@@ -49,6 +49,11 @@ Code only depends downward: `web → (openapi spec)`, `server → device → man
   third-party clients report the `param : value` form), `dump_log`,
   `dump_log_100`, `exit` (closes the session).
 - Replies may contain NUL bytes. Strip them.
+- The gateway only ever **writes printable ASCII (0x20–0x7E)** plus its own
+  terminator. The codec refuses any other character in a value, and the
+  client refuses to write any line containing one. A non-ASCII character is
+  not harmless: written as Latin-1, U+010A becomes LF, which would end the
+  line and start a second command.
 - **20** simultaneous TCP sessions. The 21st kicks the oldest, which gets a
   warning message. Keep **one** persistent connection and serialize requests
   on it (one in flight).
@@ -174,7 +179,8 @@ Other rules:
 - Writes: validate against the schema, encode, send, read the reply for that
   param, decode, then compare. If the values differ, raise `WriteRejected`
   with the actual value.
-- Errors are typed: `NotConnected`, `Timeout`, `UnknownParameter`,
+- Errors are typed: `NotConnected`, `Timeout` (and its subclass
+  `ReplyTruncated`, same `TIMEOUT` code), `UnknownParameter`,
   `WriteRejected`, `InvalidValue`, `Forbidden` (tier/internal/read-only/unverified).
 - Access rules live in one place, `packages/device/src/policy.ts`, which both
   the real session and `FakeSession` use:
@@ -185,7 +191,13 @@ Other rules:
     not just the HTTP layer.
   - An action with no value sends `1`.
   - `sendRaw` only sends read-only lines (`<param> ?`, `help`, `status`,
-    `dump_log`, `dump_log_100`). Anything else is `Forbidden`.
+    `dump_log`, `dump_log_100`) made of printable ASCII. Anything else is
+    `Forbidden` (`raw-command`). A raw `<param> ?` for a name the policy knows
+    gets the same read checks as `read` (`full-tier`, `internal`), so raw reads
+    are not a way around them. Names the policy doesn't know are passed
+    through, for capture and debugging. Aggregate replies (`help`, `status`,
+    `dump_log*`) leave out the lines for params the read policy refuses, and
+    any line naming `cp750.internal.*` unless `allowInternal` is set.
 - Reconnect with exponential backoff (capped). Poll key params (`fader`,
   `mute`, `input_mode`) at a configurable interval and emit change events.
 
@@ -198,21 +210,52 @@ Implementation choices (`createCp750Session`, `Cp750Client`):
   first line whose first token equals the param, compared case-insensitively.
   A `param : value` form is accepted too. Other lines (the 21st-session
   warning, unsolicited text) are ignored.
-- **Blank lines.** A blank line before the match means `UnknownParameter`,
-  but only after a **grace window** (`timeouts.blankGraceMs`, default 50 ms)
-  with no matching line. A unit that treats CR and LF as two terminators
-  answers the LF of `\r\n` with a stray blank line, which can arrive just
-  before the next reply. That costs a genuinely unknown param 50 ms.
+- **Sync queries.** The protocol has no request ids and no end-of-reply
+  marker, but the unit answers in order. When a reply is ambiguous, the
+  client sends a read-only **sync query**: `cp750.sysinfo.version ?`, or
+  `cp750.sys.fader ?` when the request in flight is for the version. It then
+  holds the queue until the sync reply arrives. Every line before the sync
+  reply belongs to the old request, so nothing late can be taken as the reply
+  to the next command.
+- **Blank lines are ambiguous** and never resolve a request, or release the
+  queue, on their own. A blank line means "unknown parameter", but a unit
+  that treats CR and LF as two terminators answers the LF of `\r\n` with a
+  stray blank line. That blank arrives just before the *next* command's
+  reply, however slow that reply is. If a matching line follows a blank
+  within `timeouts.blankGraceMs` (default 50 ms), the blank was stray.
+  Otherwise the client sends a sync query. If the matching line arrives
+  before the sync reply, that line is the reply. If the sync reply comes
+  first, the request's answer was the blank, and only then is it
+  `UnknownParameter`. A genuinely unknown param therefore costs the grace
+  window plus one round trip.
+- **Timeouts.** The caller gets `Timeout` after `commandMs` (default 2 s).
+  The client then sends a sync query and holds the queue ("quarantine") until
+  the sync reply arrives. A late echo or a late blank is consumed. Otherwise
+  it would be taken as the reply to the next command, causing a false
+  `WriteRejected` or a stale read.
+- **Lost sync resets the connection.** If the sync reply doesn't arrive
+  within `timeouts.quarantineMs` (default 3 × `commandMs`), the client
+  destroys the socket. The pending request and everything queued behind it
+  fail with `NotConnected` ("Connection reset: …"). Nothing is replayed, and
+  queued writes are never sent. The session's reconnect loop reconnects and
+  re-detects the firmware, and `lastError` carries the reason.
 - **Multi-line commands** (`help`, `status`, `dump_log*`): `commandMs` covers
   the first line. After that, the reply ends after `idleMs` of silence
-  (default 300 ms), capped at `multiLineMaxMs` (10 s) and 10 000 lines.
-  Leading and trailing blank lines are dropped.
-- **Timeouts.** The caller gets `Timeout` after `commandMs` (default 2 s),
-  but the queue is held ("quarantine") until the late reply arrives (a
-  matching or blank line) or 3 × `commandMs` passes. The unit answers in
-  order, so this keeps a late echo from being taken as the reply to the next
-  command, which could otherwise cause a false `WriteRejected`. A timeout
-  does not drop the connection.
+  (default 300 ms). Leading and trailing blank lines are dropped. A sync
+  query can't end these, because any param line can be part of the reply.
+  Hitting a limit is a failure, not a completion. A reply still arriving at
+  `multiLineMaxMs` (10 s), or longer than 10 000 lines, fails with
+  `ReplyTruncated`. That error is a `Timeout` (code `TIMEOUT`) and carries
+  the partial `lines` and which `limit` was hit. The connection is then reset,
+  so the tail of the reply can't reach the next request. A multi-line command
+  that times out holds the queue until its output has started and gone quiet,
+  and resets the connection if that hasn't happened within `quarantineMs`.
+- **One operation at a time.** On top of the client queue, the session runs
+  each operation (read, write, action, raw read, poll read) as one unit on
+  its own serial queue. The policy and tier checks happen when the operation
+  *runs*, not when it is called. So the full-control check, the
+  `full_ascii_ctrl 1` it may send, and the operation's own command go out
+  together, and nothing queued in between can turn full control off.
 - **Detection.** On every (re)connect: version, then `selectManifest`. Then,
   with `allowFull`, `cp750.ctrl.full_ascii_ctrl 1` **before** `help`, so
   `help` can vouch for full-tier params. Then `help`, then the `device` event,
@@ -222,9 +265,24 @@ Implementation choices (`createCp750Session`, `Cp750Client`):
   (`full-tier`), not `UnknownParameter`.
 - **Full control** is per connection on the unit. It is re-enabled on every
   reconnect, and lazily before a full-tier call if it was turned off. Turning
-  it on is allowed in read-only mode, since it changes no audio.
+  it on is allowed in read-only mode, since it changes no audio. Callers may
+  toggle `cp750.ctrl.full_ascii_ctrl` themselves with `action`. The session
+  sets `state.fullControl` from the unit's echo, and with `allowFull` it turns
+  full control back on, atomically, before the next full-tier operation.
+  Turning it off is therefore never a way to make a full-tier call fail
+  halfway. Turning it on without `allowFull` doesn't unlock anything either:
+  the policy still refuses full-tier params, raw reads included.
 - **Writes** emit a `param` event for the echoed value, including on
   `WriteRejected`. Actions are not recorded as param values.
+- **Actions are verified like writes.** The unit ignores an unrecognized
+  value and echoes its current status, so an echo that differs from the value
+  sent raises `WriteRejected`. The one exception is an action that ends the
+  connection (`CONNECTION_ENDING_ACTIONS`: `cp750.ctrl.reboot`). If the
+  connection closes after the command was written and before *any* reply
+  line, the reboot counts as accepted. The client marks that case as
+  `NotConnected` with `inFlight: true`. The result carries the requested
+  value and `raw: ""`, and the session reconnects as usual. Any other action
+  whose connection drops fails with `NotConnected`.
 - **Polling** runs the first poll right after connecting, then waits
   `pollIntervalMs` after each pass finishes. It never overlaps itself. Params
   the policy refuses (e.g. `mute` on 1.0.0.150183 without `allowFull`) are
@@ -262,6 +320,10 @@ It is `startMockCp750` from `@cp750/device/mock`. Its choices:
   or unknown firmware.
 - Sets on `readonly` params and invalid values are ignored, and the current
   value is echoed.
+- Actions: `cp750.ctrl.fader_delta` adds the delta to `cp750.sys.fader`,
+  clamped to 0–100, and echoes the delta. `cp750.ctrl.reboot` closes every
+  session without a reply and keeps all values. All other actions
+  (`default_params`, `log_erase`, ...) are deliberate no-ops that only echo.
 - `help` prints a header, one indented `name  values` line per param visible
   at the connection's tier, the single-word commands, and a blank line. That
   format is invented, and clients only extract `cp750.*` tokens. `status`

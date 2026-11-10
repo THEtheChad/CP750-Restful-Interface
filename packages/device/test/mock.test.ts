@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { connect } from "node:net";
 import { assertManifest, type Manifest } from "@cp750/manifests";
-import { buildDraftManifest, captureDevice } from "../src/index.ts";
+import { buildDraftManifest, Cp750Client, captureDevice } from "../src/index.ts";
 import { mockDefaultValue } from "../src/mock/index.ts";
-import { builtin, mock, V1, V128, waitFor } from "./helpers.ts";
+import { builtin, mock, onCleanup, V1, V128, waitFor } from "./helpers.ts";
 
 /** Sends raw text and collects everything the mock writes back until it goes quiet. */
 async function converse(device: { host: string; port: number }, text: string): Promise<string> {
@@ -147,5 +147,49 @@ describe("captureDevice", () => {
       tier: "normal",
     });
     expect(manifest.commands).toEqual(["help", "status", "exit"]);
+  });
+});
+
+describe("mock CP750 actions (finding 8)", () => {
+  async function client(device: { host: string; port: number }) {
+    const c = await Cp750Client.connect({ host: device.host, port: device.port, idleMs: 20 });
+    onCleanup(() => c.close());
+    return c;
+  }
+
+  test("fader_delta moves the fader, clamped to 0–100, and echoes the delta", async () => {
+    const device = await mock({ initial: { "cp750.sys.fader": 70 } });
+    const c = await client(device);
+    expect((await c.set("cp750.ctrl.fader_delta", "10")).value).toBe("10");
+    expect((await c.query("cp750.sys.fader")).value).toBe("80");
+    await c.set("cp750.ctrl.fader_delta", "50");
+    expect(device.state.get("cp750.sys.fader")).toBe(100);
+    await c.set("cp750.ctrl.fader_delta", "-100");
+    await c.set("cp750.ctrl.fader_delta", "-3");
+    expect(device.state.get("cp750.sys.fader")).toBe(0);
+    // Out of range: ignored, and the echo is the last accepted delta.
+    expect((await c.set("cp750.ctrl.fader_delta", "500")).value).toBe("-3");
+    expect(device.state.get("cp750.sys.fader")).toBe(0);
+  });
+
+  test("reboot closes every session without a reply and keeps the values", async () => {
+    const device = await mock({ initial: { "cp750.sys.fader": 42 } });
+    const first = await client(device);
+    const second = await client(device);
+    const reboot = first.set("cp750.ctrl.reboot", "1").catch((e: unknown) => e);
+    expect(await reboot).toMatchObject({ code: "NOT_CONNECTED", inFlight: true });
+    await first.done;
+    await second.done;
+    expect(device.connections).toBe(0);
+    const after = await client(device);
+    expect((await after.query("cp750.sys.fader")).value).toBe("42");
+  });
+
+  test("other actions are echoed no-ops", async () => {
+    const device = await mock({ initial: { "cp750.sys.fader": 42 } });
+    const c = await client(device);
+    expect((await c.set("cp750.ctrl.log_erase", "1")).value).toBe("1");
+    expect((await c.set("cp750.ctrl.default_params", "1")).value).toBe("1");
+    expect(device.state.get("cp750.sys.fader")).toBe(42);
   });
 });
