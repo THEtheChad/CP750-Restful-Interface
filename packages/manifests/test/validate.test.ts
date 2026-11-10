@@ -35,6 +35,9 @@ describe("meta-schema", () => {
     ["unknown value schema key", withParam({ ...fader, value: { type: "integer", format: "x" } })],
     ["bad tier", withParam({ ...fader, tier: "secret" })],
     ["missing access", withParam({ ...fader, access: undefined })],
+    ["empty commands", { ...makeManifest("1.0.0"), commands: [] }],
+    ["destructive on a readwrite param", withParam({ ...fader, destructive: true })],
+    ["a four-segment param name", withParam(fader, "cp750.sys.fader.extra")],
   ])("rejects a manifest with %s", (_label, data) => {
     const result = validateManifest(data);
     expect(result.ok).toBe(false);
@@ -83,6 +86,46 @@ describe("meta-schema", () => {
       }),
     );
     expect(result.ok).toBe(false);
+  });
+});
+
+describe("semantic checks", () => {
+  const base = { tier: "normal", access: "readwrite", accessSource: "inferred" } as const;
+  function issuesFor(spec: Record<string, unknown>): string[] {
+    const result = validateManifest(
+      makeManifest("1.0.0", "verified", { "cp750.sys.x": spec as never }),
+    );
+    return result.ok ? [] : result.issues.map((i) => `${i.path}: ${i.message}`);
+  }
+
+  test("integer enum members must lie within minimum/maximum", () => {
+    expect(
+      issuesFor({ ...base, value: { type: "integer", minimum: 0, maximum: 1, enum: [0, 1, 2] } }),
+    ).toEqual(["/params/cp750.sys.x/value/enum: members outside minimum/maximum: 2"]);
+    expect(issuesFor({ ...base, value: { type: "integer", minimum: 0, enum: [-1, 0] } })).toEqual([
+      "/params/cp750.sys.x/value/enum: members outside minimum/maximum: -1",
+    ]);
+    expect(
+      issuesFor({ ...base, value: { type: "integer", minimum: 0, maximum: 1, enum: [0, 1] } }),
+    ).toEqual([]);
+  });
+
+  test("units only on integer values", () => {
+    expect(issuesFor({ ...base, unit: "fader", value: { type: "string" } })).toEqual([
+      '/params/cp750.sys.x/unit: unit "fader" needs an integer value',
+    ]);
+    expect(issuesFor({ ...base, unit: "ms", value: { type: "string" } })).toHaveLength(1);
+    expect(issuesFor({ ...base, unit: "fader", value: { type: "integer" } })).toEqual([]);
+  });
+
+  test("destructive only on actions", () => {
+    expect(
+      issuesFor({ ...base, access: "readonly", destructive: true, value: { type: "integer" } }),
+    ).not.toEqual([]);
+    expect(issuesFor({ ...base, destructive: false, value: { type: "integer" } })).toEqual([]);
+    expect(
+      issuesFor({ ...base, access: "action", destructive: true, value: { type: "integer" } }),
+    ).toEqual([]);
   });
 });
 
