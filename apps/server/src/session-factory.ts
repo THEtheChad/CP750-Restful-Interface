@@ -29,7 +29,7 @@ export function sessionOptions(config: ServerConfig): SessionOptions {
     allowFull: config.allowFull,
     allowInternal: config.allowInternal,
     readOnly: config.readOnly,
-    ...(config.pollMs ? { pollIntervalMs: config.pollMs } : {}),
+    ...(config.pollMs > 0 ? { pollIntervalMs: config.pollMs } : {}),
     ...(config.manifestDir ? { manifestDir: config.manifestDir } : {}),
   };
 }
@@ -88,12 +88,23 @@ export interface CaptureOptions {
 
 export interface CaptureResult {
   firmware: string;
+  /** The raw `cp750.sysinfo.version` reply line. */
+  versionLine: string;
+  /** `help` with the normal command set. */
   help: string[];
+  /** `status` with the normal command set. */
   status: string[];
+  /** `help` with `full_ascii_ctrl` 1, or `null` if the unit refused full control. */
+  helpFull: string[] | null;
+  /** `status` with `full_ascii_ctrl` 1, or `null` if the unit refused full control. */
+  statusFull: string[] | null;
   draftManifest: Manifest;
 }
 
-/** Connects to a unit and records `version`, `help` and `status` plus a draft manifest. */
+/**
+ * Connects to a unit and records the version line, `help` and `status` (with the normal and the
+ * full command set) plus a draft manifest.
+ */
 export async function captureDevice(options: CaptureOptions): Promise<CaptureResult> {
   return captureFromDevice(options);
 }

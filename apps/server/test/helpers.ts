@@ -46,10 +46,11 @@ export function put(path: string, body: unknown, headers: Record<string, string>
   });
 }
 
+/** A JSON POST; without `body` it sends `Content-Type: application/json` and an empty body. */
 export function post(path: string, body?: unknown, headers: Record<string, string> = {}) {
   return new Request(`http://localhost${path}`, {
     method: "POST",
-    headers: body === undefined ? headers : { "content-type": "application/json", ...headers },
+    headers: { "content-type": "application/json", ...headers },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });
 }

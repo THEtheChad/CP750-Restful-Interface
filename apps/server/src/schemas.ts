@@ -17,11 +17,16 @@ const BLOCK_REASONS = [
   "unavailable",
 ] as const;
 
-export const ParamValueSchema = z.union([z.number(), z.string()]).openapi("ParamValue", {
-  description:
-    "A parameter value: an integer or a string, depending on the param. `GET /api/commands` returns each param's JSON Schema.",
-  example: 70,
-});
+/** Longest string value the API accepts (the longest manifest string is far shorter). */
+export const MAX_STRING_VALUE = 256;
+
+export const ParamValueSchema = z
+  .union([z.number(), z.string().max(MAX_STRING_VALUE)])
+  .openapi("ParamValue", {
+    description:
+      "A parameter value: an integer or a string, depending on the param. `GET /api/commands` returns each param's JSON Schema.",
+    example: 70,
+  });
 
 export const ParamNameSchema = z
   .string()
@@ -107,6 +112,11 @@ export const DeviceSchema = z
     allowFull: z.boolean(),
     allowInternal: z.boolean(),
     authRequired: z.boolean().openapi({ description: "True when mutations need a Bearer token" }),
+    pollMs: z.number().int().openapi({
+      description:
+        "How often (ms) the gateway polls fader, mute and input for front-panel changes; 0 when polling is off",
+      example: 1000,
+    }),
     lastError: SessionErrorSchema.nullable(),
   })
   .openapi("Device");
@@ -222,22 +232,28 @@ export const ProblemSchema = z
   })
   .openapi("Problem", { description: "RFC 9457 problem details" });
 
-const PROBLEM_DESCRIPTIONS: Record<number, string> = {
-  400: "Invalid request body or value (`BAD_REQUEST`, `INVALID_VALUE`)",
+const PROBLEM_DESCRIPTIONS = {
+  400: "Invalid request body, value or name (`BAD_REQUEST`, `INVALID_VALUE`)",
   401: "Missing or wrong Bearer token (`UNAUTHORIZED`)",
   403: "Refused by the access policy (`FORBIDDEN`, see `reason`)",
-  404: "Unknown parameter (`UNKNOWN_PARAMETER`)",
+  404: "Unknown parameter or route (`UNKNOWN_PARAMETER`, `NOT_FOUND`)",
+  413: "The request body is larger than the server accepts (`PAYLOAD_TOO_LARGE`)",
+  415: "The request body is not `application/json` (`UNSUPPORTED_MEDIA_TYPE`)",
+  421: "The `Host` header is not one this server answers to (`HOST_NOT_ALLOWED`); see `CP750_ALLOWED_HOSTS`",
   422: "The device kept a different value (`WRITE_REJECTED`, see `requested` and `actual`)",
   500: "Unexpected server error (`INTERNAL`)",
   503: "Not connected to the CP750 (`NOT_CONNECTED`)",
   504: "The CP750 did not answer in time (`TIMEOUT`)",
-};
+} as const;
 
-const PROBLEM_EXAMPLES: Record<number, ProblemCode> = {
+const PROBLEM_EXAMPLES: Record<keyof typeof PROBLEM_DESCRIPTIONS, ProblemCode> = {
   400: "INVALID_VALUE",
   401: "UNAUTHORIZED",
   403: "FORBIDDEN",
   404: "UNKNOWN_PARAMETER",
+  413: "PAYLOAD_TOO_LARGE",
+  415: "UNSUPPORTED_MEDIA_TYPE",
+  421: "HOST_NOT_ALLOWED",
   422: "WRITE_REJECTED",
   500: "INTERNAL",
   503: "NOT_CONNECTED",
@@ -251,29 +267,35 @@ const EXAMPLE_EXTRAS: Partial<Record<ProblemCode, Record<string, unknown>>> = {
   WRITE_REJECTED: { param: "cp750.sys.fader", requested: 80, actual: 70, raw: "70" },
 };
 
-/** Problem response entries for `createRoute({ responses })`. */
+type ProblemEntry = {
+  description: string;
+  content: Record<string, { schema: typeof ProblemSchema }>;
+};
+
+/** One problem response entry, with `code` as the example. */
+export function problemEntry(code: ProblemCode, description: string): ProblemEntry {
+  const { title, status } = PROBLEMS[code];
+  const example = {
+    type: problemType(code),
+    title,
+    status,
+    detail: title,
+    code,
+    ...EXAMPLE_EXTRAS[code],
+  };
+  return {
+    description,
+    content: { "application/problem+json": { schema: ProblemSchema, example } as never },
+  };
+}
+
+/** Problem response entries for `createRoute({ responses })`, with the standard descriptions. */
 export function problemResponses<S extends keyof typeof PROBLEM_DESCRIPTIONS>(
   ...statuses: S[]
-): Record<S, { description: string; content: Record<string, { schema: typeof ProblemSchema }> }> {
-  const out = {} as Record<
-    S,
-    { description: string; content: Record<string, { schema: typeof ProblemSchema }> }
-  >;
+): Record<S, ProblemEntry> {
+  const out = {} as Record<S, ProblemEntry>;
   for (const status of statuses) {
-    const code = PROBLEM_EXAMPLES[status] as ProblemCode;
-    const { title } = PROBLEMS[code];
-    const example = {
-      type: problemType(code),
-      title,
-      status,
-      detail: title,
-      code,
-      ...EXAMPLE_EXTRAS[code],
-    };
-    out[status] = {
-      description: PROBLEM_DESCRIPTIONS[status] as string,
-      content: { "application/problem+json": { schema: ProblemSchema, example } as never },
-    };
+    out[status] = problemEntry(PROBLEM_EXAMPLES[status], PROBLEM_DESCRIPTIONS[status]);
   }
   return out;
 }

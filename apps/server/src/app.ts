@@ -4,7 +4,14 @@
  * confirmation as a second line of defence, and maps device errors to problem+json.
  */
 import { createHash, timingSafeEqual } from "node:crypto";
-import { type CommandInfo, type Cp750Session, Forbidden, type SessionEvent } from "@cp750/device";
+import {
+  type CommandInfo,
+  type Cp750Session,
+  Forbidden,
+  type ParamOperation,
+  type SessionEvent,
+  UnknownParameter,
+} from "@cp750/device";
 import { normalizeParamName, type ValueSchema } from "@cp750/manifests";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import type { Context, MiddlewareHandler } from "hono";
@@ -14,6 +21,7 @@ import { secureHeaders } from "hono/secure-headers";
 import { streamSSE } from "hono/streaming";
 import pkg from "../package.json" with { type: "json" };
 import type { ServerConfig } from "./config.ts";
+import { allowedHostNames, hostGuard, jsonBodyGuard, originGuard } from "./guards.ts";
 import { sortKeys } from "./json.ts";
 import {
   type Problem,
@@ -47,6 +55,10 @@ export interface CreateAppOptions {
   log?: (line: string) => void;
   /** SSE heartbeat interval. Default 15 s. */
   heartbeatMs?: number;
+  /** An SSE client with more unsent messages than this is dropped. Default 100. */
+  maxPendingEvents?: number;
+  /** The machine's interface addresses (for the Host allow-list on `0.0.0.0`). Default: `os`. */
+  interfaceHosts?: () => string[];
 }
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
@@ -85,25 +97,80 @@ function toCommand(c: CommandInfo) {
   };
 }
 
+/** Every API route's path pattern and methods, for 405 answers. */
+const ROUTE_METHODS: readonly { pattern: RegExp; methods: string[] }[] = (() => {
+  const byPath = new Map<string, Set<string>>();
+  for (const route of [
+    healthRoute,
+    deviceRoute,
+    commandsRoute,
+    readParamRoute,
+    writeParamRoute,
+    actionRoute,
+    eventsRoute,
+    openApiRoute,
+  ]) {
+    const methods = byPath.get(route.path) ?? new Set<string>();
+    methods.add(route.method.toUpperCase());
+    if (route.method === "get") methods.add("HEAD");
+    byPath.set(route.path, methods);
+  }
+  return [...byPath].map(([path, methods]) => ({
+    pattern: new RegExp(`^${path.replace(/\{[^}]+\}/g, "[^/]+").replaceAll(".", "\\.")}$`),
+    methods: [...methods].sort(),
+  }));
+})();
+
+/** The methods `path` supports, or `undefined` if it is not an API route. */
+function allowedMethods(path: string): string[] | undefined {
+  return ROUTE_METHODS.find((r) => r.pattern.test(path))?.methods;
+}
+
 function httpProblem(error: HTTPException): Problem {
   const codes: Record<number, ProblemCode> = {
     400: "BAD_REQUEST",
     401: "UNAUTHORIZED",
     404: "NOT_FOUND",
     405: "METHOD_NOT_ALLOWED",
+    413: "PAYLOAD_TOO_LARGE",
+    415: "UNSUPPORTED_MEDIA_TYPE",
   };
   const code = codes[error.status] ?? (error.status < 500 ? "BAD_REQUEST" : "INTERNAL");
   return problem(code, error.message || "Request failed");
 }
 
-/** Logs method, path (no query string), status and duration. Never headers or bodies. */
+/** Escapes control characters (`\n`, ESC…) so a request cannot forge or color log lines. */
+export function escapeControl(text: string): string {
+  return text.replace(
+    // biome-ignore lint/suspicious/noControlCharactersInRegex: matching them is the point
+    /[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g,
+    (ch) => {
+      const code = ch.charCodeAt(0);
+      return code < 0x100
+        ? `\\x${code.toString(16).padStart(2, "0")}`
+        : `\\u${code.toString(16).padStart(4, "0")}`;
+    },
+  );
+}
+
+/**
+ * Logs method, raw path (as sent, percent-encoded, no query string), status and duration. Never
+ * headers or bodies.
+ */
 function requestLogger(log: (line: string) => void): MiddlewareHandler {
   return async (c, next) => {
     const start = performance.now();
     await next();
     const ms = (performance.now() - start).toFixed(1);
-    log(`${c.req.method} ${c.req.path} ${c.res.status} ${ms}ms`);
+    log(`${escapeControl(c.req.method)} ${rawPath(c.req.raw)} ${c.res.status} ${ms}ms`);
   };
+}
+
+function rawPath(request: Request): string {
+  const url = request.url;
+  const start = url.indexOf("/", url.indexOf("//") + 2);
+  const path = start < 0 ? "/" : url.slice(start).split(/[?#]/)[0] || "/";
+  return escapeControl(path);
 }
 
 function bearerAuth(token: string): MiddlewareHandler {
@@ -133,7 +200,15 @@ function bearerAuth(token: string): MiddlewareHandler {
  * tests run it in-process with `app.request()`.
  */
 export function createApp(options: CreateAppOptions) {
-  const { session, config, webAssets = {}, log, heartbeatMs = 15_000 } = options;
+  const {
+    session,
+    config,
+    webAssets = {},
+    log,
+    heartbeatMs = 15_000,
+    maxPendingEvents = 100,
+    interfaceHosts,
+  } = options;
 
   const app = new OpenAPIHono({
     defaultHook: (result, c) => {
@@ -147,6 +222,9 @@ export function createApp(options: CreateAppOptions) {
     },
   });
 
+  // Before everything else: a rebinding page must not even read the event stream or the web client.
+  app.use("*", hostGuard(allowedHostNames(config, interfaceHosts)));
+  if (log) app.use("*", requestLogger(log));
   app.use(
     "*",
     secureHeaders({
@@ -163,7 +241,6 @@ export function createApp(options: CreateAppOptions) {
       },
     }),
   );
-  if (log) app.use("*", requestLogger(log));
   if (config.corsOrigins.length > 0) {
     app.use(
       "/api/*",
@@ -175,7 +252,16 @@ export function createApp(options: CreateAppOptions) {
       }),
     );
   }
+  app.use("*", originGuard(config.corsOrigins));
   if (config.apiToken) app.use("/api/*", bearerAuth(config.apiToken));
+  app.use(
+    writeParamRoute.path.replace("{name}", ":name"),
+    jsonBodyGuard({ method: "PUT", emptyBodyIsObject: false }),
+  );
+  app.use(
+    actionRoute.path.replace("{name}", ":name"),
+    jsonBodyGuard({ method: "POST", emptyBodyIsObject: true }),
+  );
 
   app.onError((error, c) => {
     const body = error instanceof HTTPException ? httpProblem(error) : problemFromError(error);
@@ -187,6 +273,15 @@ export function createApp(options: CreateAppOptions) {
 
   app.notFound((c) => {
     const path = c.req.path;
+    const allow = allowedMethods(path);
+    if (allow) {
+      return problemResponse(
+        problem("METHOD_NOT_ALLOWED", `${c.req.method} is not supported on ${path}`, {
+          instance: path,
+        }),
+        { allow: allow.join(", ") },
+      );
+    }
     if (path === "/api" || path.startsWith("/api/") || !SAFE_METHODS.has(c.req.method)) {
       return problemResponse(
         problem("NOT_FOUND", `No route for ${c.req.method} ${path}`, { instance: path }),
@@ -201,13 +296,28 @@ export function createApp(options: CreateAppOptions) {
     description: "Required for PUT/POST only when the server has `CP750_API_TOKEN` set.",
   });
 
-  /** HTTP-side checks before any mutation; the session repeats them. */
-  function guardMutation(name: string, confirm: boolean | undefined): CommandInfo | undefined {
+  /**
+   * HTTP-side checks before any mutation; the session repeats them. Access comes before the
+   * destructive confirmation, so `PUT` on an action says `access`, not `confirmation-required`.
+   */
+  function guardMutation(
+    name: string,
+    operation: Exclude<ParamOperation, "read">,
+    confirm: boolean | undefined,
+  ): CommandInfo | undefined {
     const command = findCommand(session, name);
     const target = command?.name ?? normalizeParamName(name);
     if (config.readOnly || session.state.readOnly) {
       throw new Forbidden(target, "read-only-mode", `${target}: the server is in read-only mode`);
     }
+    // `blocked` only lists operations that apply to the param; the others are an access error.
+    const blocked =
+      command && !command.operations.includes(operation)
+        ? (command.blocked[operation] ?? (command.spec ? "access" : "raw-only"))
+        : undefined;
+    if (blocked === "unavailable")
+      throw new UnknownParameter(target, "is not available on this unit");
+    if (blocked) throw new Forbidden(target, blocked);
     if (command?.spec?.destructive && confirm !== true) {
       throw new Forbidden(
         target,
@@ -234,6 +344,7 @@ export function createApp(options: CreateAppOptions) {
           allowFull: state.allowFull,
           allowInternal: state.allowInternal,
           authRequired: config.apiToken !== undefined,
+          pollMs: config.pollMs,
           lastError: state.lastError,
         },
         200,
@@ -258,20 +369,49 @@ export function createApp(options: CreateAppOptions) {
   app.openapi(writeParamRoute, async (c) => {
     const { name } = c.req.valid("param");
     const { value, confirm } = c.req.valid("json");
-    guardMutation(name, confirm);
+    guardMutation(name, "write", confirm);
     const result = await session.write(name, value, { confirm: confirm === true });
     return c.json(toReading(session, result), 200);
   });
   app.openapi(actionRoute, async (c) => {
     const { name } = c.req.valid("param");
     const body = c.req.valid("json") ?? {};
-    guardMutation(name, body.confirm);
+    guardMutation(name, "action", body.confirm);
     const result = await session.action(name, body.value, { confirm: body.confirm === true });
     return c.json({ name: result.name, value: result.value, raw: result.raw }, 200);
   });
 
+  let streams = 0;
   app.openAPIRegistry.registerPath(eventsRoute);
-  app.get(eventsRoute.path, (c) => streamEvents(c, session, heartbeatMs));
+  app.get(eventsRoute.path, (c) => {
+    // Hono answers HEAD with the GET handler and drops the body, which would leave a stream (and
+    // its session subscription and heartbeat) running forever.
+    if (c.req.method === "HEAD") {
+      return c.body(null, 200, {
+        "content-type": "text/event-stream",
+        "cache-control": "no-cache",
+      });
+    }
+    if (streams >= config.maxSseClients) {
+      return problemResponse(
+        problem(
+          "TOO_MANY_STREAMS",
+          `At most ${config.maxSseClients} event streams may be open at once (CP750_MAX_SSE_CLIENTS)`,
+          { instance: c.req.path },
+        ),
+        { "retry-after": "5" },
+      );
+    }
+    streams++;
+    return streamEvents(c, session, {
+      heartbeatMs,
+      maxPending: maxPendingEvents,
+      onClose: () => {
+        streams--;
+      },
+      onDrop: () => log?.(`events: dropped a client with ${maxPendingEvents} unsent messages`),
+    });
+  });
 
   let document: Record<string, unknown> | undefined;
   app.openAPIRegistry.registerPath(openApiRoute);
@@ -293,7 +433,8 @@ export function openApiDocument(app: OpenAPIHono): Record<string, unknown> {
       title: "CP750 REST gateway",
       version: SERVER_VERSION,
       description:
-        "REST + SSE gateway for the Dolby CP750 Digital Cinema Processor. Param names and value types depend on the unit's firmware: discover them with `GET /api/commands`, which returns each param's JSON Schema. Errors are RFC 9457 `application/problem+json`.",
+        "REST + SSE gateway for the Dolby CP750 Digital Cinema Processor. Param names and value types depend on the unit's firmware: discover them with `GET /api/commands`, which returns each param's JSON Schema. Errors are RFC 9457 `application/problem+json`.\n\n" +
+        "**Request rules.** Every request's `Host` must be localhost, 127.0.0.1, [::1], the listen address or one of `CP750_ALLOWED_HOSTS` (any port), else `421 HOST_NOT_ALLOWED` (DNS-rebinding defence). `PUT` and `POST` must be `Content-Type: application/json`, even with no body (`415 UNSUPPORTED_MEDIA_TYPE`), and at most 4 KiB (`413 PAYLOAD_TOO_LARGE`). They are refused with `403 ORIGIN_NOT_ALLOWED` when the browser marks them cross-site (`Sec-Fetch-Site: cross-site`) or their `Origin` is neither this server nor listed in `CP750_CORS_ORIGIN`. CORS is off unless `CP750_CORS_ORIGIN` lists origins. A known path with an unsupported method is `405 METHOD_NOT_ALLOWED` with `Allow`; an unknown one is `404 NOT_FOUND`.",
       license: { name: "MIT" },
     },
     tags: TAGS,
@@ -307,35 +448,67 @@ export function openApiDocument(app: OpenAPIHono): Record<string, unknown> {
   return { ...root, ...sorted };
 }
 
-function streamEvents(c: Context, session: Cp750Session, heartbeatMs: number): Response {
+interface StreamOptions {
+  heartbeatMs: number;
+  /** Drop the client once this many messages are waiting to be written. */
+  maxPending: number;
+  /** Called exactly once, when the stream ends for any reason. */
+  onClose: () => void;
+  onDrop: () => void;
+}
+
+function streamEvents(c: Context, session: Cp750Session, options: StreamOptions): Response {
+  const { heartbeatMs, maxPending, onClose, onDrop } = options;
   return streamSSE(c, async (stream) => {
     let id = 0;
+    let pending = 0;
     let queue: Promise<void> = Promise.resolve();
-    const send = (event: SessionEvent) => {
+    const enqueue = (write: () => Promise<unknown>) => {
+      if (stream.aborted) return;
+      if (pending >= maxPending) {
+        // The client stopped reading (or reads too slowly): don't buffer for it forever.
+        onDrop();
+        stream.abort();
+        return;
+      }
+      pending++;
       queue = queue
-        .then(() =>
-          stream.writeSSE({ event: event.type, id: String(++id), data: JSON.stringify(event) }),
+        .then(write)
+        .then(
+          () => {},
+          () => {},
         )
-        .catch(() => {});
+        .finally(() => {
+          pending--;
+        });
     };
+    const send = (event: SessionEvent) =>
+      enqueue(() =>
+        stream.writeSSE({ event: event.type, id: String(++id), data: JSON.stringify(event) }),
+      );
 
-    const unsubscribe = session.subscribe(send);
-    const state = session.state;
-    const at = new Date().toISOString();
-    send({ type: "connection", connection: state.connection, error: state.lastError, at });
-    send({ type: "device", firmware: state.firmware, manifest: state.manifest, at });
+    let unsubscribe: (() => void) | undefined;
+    let heartbeat: ReturnType<typeof setInterval> | undefined;
+    try {
+      unsubscribe = session.subscribe(send);
+      const state = session.state;
+      const at = new Date().toISOString();
+      send({ type: "connection", connection: state.connection, error: state.lastError, at });
+      send({ type: "device", firmware: state.firmware, manifest: state.manifest, at });
 
-    const heartbeat = setInterval(() => {
-      queue = queue.then(() => stream.write(": ping\n\n").then(() => {})).catch(() => {});
-    }, heartbeatMs);
+      heartbeat = setInterval(() => enqueue(() => stream.write(": ping\n\n")), heartbeatMs);
 
-    await new Promise<void>((resolve) => {
-      stream.onAbort(resolve);
-      const signal = c.req.raw.signal;
-      if (signal.aborted) resolve();
-      else signal.addEventListener("abort", () => resolve(), { once: true });
-    });
-    clearInterval(heartbeat);
-    unsubscribe();
+      await new Promise<void>((resolve) => {
+        stream.onAbort(resolve);
+        if (stream.aborted) resolve();
+        const signal = c.req.raw.signal;
+        if (signal.aborted) resolve();
+        else signal.addEventListener("abort", () => resolve(), { once: true });
+      });
+    } finally {
+      clearInterval(heartbeat);
+      unsubscribe?.();
+      onClose();
+    }
   });
 }

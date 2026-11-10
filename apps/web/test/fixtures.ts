@@ -70,6 +70,7 @@ export function fixtureDevice(overrides: Partial<Device> = {}): Device {
     allowFull: false,
     allowInternal: false,
     authRequired: false,
+    pollMs: 1000,
     lastError: null,
     ...overrides,
   };

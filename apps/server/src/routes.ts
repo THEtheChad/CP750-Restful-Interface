@@ -9,6 +9,7 @@ import {
   OpenApiDocumentSchema,
   ParamNameSchema,
   ParamReadingSchema,
+  problemEntry,
   problemResponses,
   SessionEventSchema,
   WriteRequestSchema,
@@ -26,6 +27,18 @@ export const TAGS = [
 
 const nameParams = z.object({ name: ParamNameSchema });
 
+/** Every route: the Host check (DNS rebinding) runs before routing. */
+const HOST = problemResponses(421);
+
+/** Mutations: JSON only, small bodies, and no cross-site callers. */
+const MUTATION = {
+  ...problemResponses(400, 401, 404, 413, 415, 421, 500, 503, 504),
+  403: problemEntry(
+    "FORBIDDEN",
+    "Refused by the access policy (`FORBIDDEN`, see `reason`), or a cross-site request whose `Origin` is not allowed (`ORIGIN_NOT_ALLOWED`)",
+  ),
+};
+
 export const healthRoute = createRoute({
   method: "get",
   path: "/api/health",
@@ -35,6 +48,7 @@ export const healthRoute = createRoute({
   description: "Answers as long as the HTTP server runs, whether or not the CP750 is reachable.",
   responses: {
     200: { description: "Alive", content: { "application/json": { schema: HealthSchema } } },
+    ...HOST,
   },
 });
 
@@ -49,6 +63,7 @@ export const deviceRoute = createRoute({
       description: "Current session state",
       content: { "application/json": { schema: DeviceSchema } },
     },
+    ...HOST,
   },
 });
 
@@ -65,6 +80,7 @@ export const commandsRoute = createRoute({
       description: "The command list",
       content: { "application/json": { schema: CommandsSchema } },
     },
+    ...HOST,
   },
 });
 
@@ -81,7 +97,7 @@ export const readParamRoute = createRoute({
       description: "The current value",
       content: { "application/json": { schema: ParamReadingSchema } },
     },
-    ...problemResponses(403, 404, 500, 503, 504),
+    ...problemResponses(400, 403, 404, 421, 500, 503, 504),
   },
 });
 
@@ -106,7 +122,8 @@ export const writeParamRoute = createRoute({
       description: "The value the unit now holds",
       content: { "application/json": { schema: ParamReadingSchema } },
     },
-    ...problemResponses(400, 401, 403, 404, 422, 500, 503, 504),
+    ...MUTATION,
+    ...problemResponses(422),
   },
 });
 
@@ -117,12 +134,14 @@ export const actionRoute = createRoute({
   tags: ["actions"],
   summary: "Trigger an action",
   description:
-    "Sends an `action` param (`cp750.ctrl.*`); `value` defaults to 1. Destructive actions (reboot, default_params, log_erase…) need `confirm: true`.",
+    "Sends an `action` param (`cp750.ctrl.*`); `value` defaults to 1. Destructive actions (reboot, default_params, log_erase…) need `confirm: true`. The request must be `Content-Type: application/json` even without a body; an empty body counts as `{}`.",
   security: MUTATION_SECURITY,
   request: {
     params: nameParams,
     body: {
       required: false,
+      description:
+        "Optional; an empty body counts as `{}`. `Content-Type: application/json` is required either way.",
       content: { "application/json": { schema: ActionRequestSchema } },
     },
   },
@@ -131,7 +150,7 @@ export const actionRoute = createRoute({
       description: "The unit's reply",
       content: { "application/json": { schema: ActionResultSchema } },
     },
-    ...problemResponses(400, 401, 403, 404, 500, 503, 504),
+    ...MUTATION,
   },
 });
 
@@ -142,12 +161,17 @@ export const eventsRoute = createRoute({
   tags: ["events"],
   summary: "Live events (SSE)",
   description:
-    "A `text/event-stream`. On connect it sends a `connection` and a `device` snapshot, then forwards the session's `param`, `connection` and `device` events. Each message's `event` is the type and `data` is a JSON `SessionEvent`. Comment lines (`: ping`) are heartbeats.",
+    "A `text/event-stream`. On connect it sends a `connection` and a `device` snapshot, then forwards the session's `param`, `connection` and `device` events. Each message's `event` is the type and `data` is a JSON `SessionEvent`. Comment lines (`: ping`) are heartbeats. The number of concurrent streams is capped (`CP750_MAX_SSE_CLIENTS`), and a client that stops reading is dropped once its backlog grows past a limit. `HEAD` answers the headers without opening a stream.",
   responses: {
     200: {
       description: "Event stream",
       content: { "text/event-stream": { schema: SessionEventSchema } },
     },
+    ...HOST,
+    503: problemEntry(
+      "TOO_MANY_STREAMS",
+      "Too many event streams are open (`TOO_MANY_STREAMS`); see `CP750_MAX_SSE_CLIENTS`",
+    ),
   },
 });
 
@@ -162,5 +186,6 @@ export const openApiRoute = createRoute({
       description: "OpenAPI 3.1 document",
       content: { "application/json": { schema: OpenApiDocumentSchema } },
     },
+    ...HOST,
   },
 });
