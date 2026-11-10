@@ -1,0 +1,6 @@
+* text=auto eol=lf
+*.png binary
+*.ico binary
+bun.lock linguist-generated=true
+packages/manifests/src/generated/** linguist-generated=true
+openapi/cp750.openapi.json linguist-generated=true

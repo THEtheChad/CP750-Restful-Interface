@@ -1,24 +1,31 @@
 {
-  "name": "CP750-Restful-Interface",
-  "version": "0.0.0",
-  "description": "A RESTful interface for the Dolby CP750 Digital Cinema Processor.",
-  "main": "server.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "name": "cp750",
+  "private": true,
+  "type": "module",
+  "description": "REST + SSE gateway and web client for the Dolby CP750 Digital Cinema Processor.",
   "repository": {
     "type": "git",
     "url": "https://github.com/THEtheChad/CP750-Restful-Interface.git"
   },
   "author": "Chad Elliott",
   "license": "MIT",
-  "readmeFilename": "README.md",
-  "gitHead": "67a6cd7d87a91a989864c55b76e7e621d187a36a",
-  "dependencies": {
-    "koa": "^1.1.2",
-    "koa-logger": "git+https://github.com/MediaLandslide/logger.git",
-    "koa-router": "^5.4.0",
-    "koa-send": "^3.1.0",
-    "telnet-client": "^0.7.0"
+  "packageManager": "bun@1.4.4",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "typecheck": "bun run --filter '*' typecheck",
+    "test": "bun test",
+    "gen": "bun run --filter '*' gen",
+    "gen:check": "bun run --filter '*' gen:check",
+    "check": "bun run lint && bun run typecheck && bun run gen:check && bun run test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.3",
+    "@types/bun": "1.4.4",
+    "typescript": "7.0.2"
   }
 }
