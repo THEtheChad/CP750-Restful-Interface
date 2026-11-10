@@ -11,8 +11,13 @@ import {
 } from "../src/index.ts";
 import { FakeSession } from "../src/testing/index.ts";
 
+// No built-in is verified yet; these tests exercise the verified path with a promoted copy.
+const v1 = builtinManifests().find((m) => m.firmware === "1.0.0.150183");
+if (!v1) throw new Error("missing built-in 1.0.0.150183");
+const verifiedV1 = { ...v1, status: "verified" as const };
+
 async function connected(options: ConstructorParameters<typeof FakeSession>[0] = {}) {
-  const session = new FakeSession(options);
+  const session = new FakeSession({ manifest: verifiedV1, ...options });
   await session.connect();
   return session;
 }
@@ -30,7 +35,7 @@ const draft = builtinManifests().find((m) => m.status === "draft");
 
 describe("FakeSession", () => {
   test("reports state and emits connection and device events", async () => {
-    const session = new FakeSession();
+    const session = new FakeSession({ manifest: verifiedV1 });
     const events: SessionEvent["type"][] = [];
     session.subscribe((e) => events.push(e.type));
     expect(session.state.connection).toBe("idle");

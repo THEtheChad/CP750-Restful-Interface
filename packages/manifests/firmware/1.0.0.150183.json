@@ -2,12 +2,12 @@
   "$schema": "../schema/cp750-manifest.v1.schema.json",
   "manifestVersion": 1,
   "firmware": "1.0.0.150183",
-  "status": "verified",
+  "status": "draft",
   "sources": [
     {
       "kind": "manual",
       "ref": "Dolby 9110270 Issue 4, Tables 6-1/6-2",
-      "notes": "Transcribed from Table 6-1 (normal set) and Table 6-2 (full set). A parameter that appears in Table 6-1 is tier normal; one that appears only in Table 6-2 is tier full. The manual does not mark access, so access is inferred (state/sysinfo readonly, ctrl actions, everything else readwrite) with two deliberate exceptions: internal.save_params is an action, and sys.serial_number is treated as readonly for safety. PDF fixes applied: the Table 6-1 row printed as \"p750.sys.dolby_digital_2_channel_decode_mode_1\" and the Table 6-2 row printed as \"p750.sys.eq_rs_4k\" are cp750.*. Table 7-9 (serial strings) was ignored because it is stale."
+      "notes": "Transcribed from Table 6-1 (normal set) and Table 6-2 (full set). A parameter that appears in Table 6-1 is tier normal; one that appears only in Table 6-2 is tier full. The manual does not mark access, so access is inferred (state/sysinfo readonly, ctrl actions, everything else readwrite) with two deliberate exceptions: internal.save_params is an action, and sys.serial_number is treated as readonly for safety. PDF fixes applied: the Table 6-1 row printed as \"p750.sys.dolby_digital_2_channel_decode_mode_1\" and the Table 6-2 row printed as \"p750.sys.eq_rs_4k\" are cp750.*. Table 7-9 (serial strings) was ignored because it is stale. Draft until a capture of a real 1.0.0.150183 unit is checked in (see docs/ADDING-A-FIRMWARE.md); the manual alone does not meet the bar for verified."
     }
   ],
   "params": {

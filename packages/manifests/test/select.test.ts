@@ -47,7 +47,8 @@ describe("selectManifest", () => {
   test("works on the built-ins", () => {
     const result = selectManifest(" 1.0.0.150183 ", builtinManifests());
     expect(result.match).toBe("exact");
-    expect(result.verified).toBe(true);
+    // Draft until a real-unit capture is checked in.
+    expect(result.verified).toBe(false);
     expect(result.manifest?.firmware).toBe("1.0.0.150183");
   });
 });

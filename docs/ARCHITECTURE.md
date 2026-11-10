@@ -165,7 +165,8 @@ meta-schema, the loader also rejects value schemas that don't compile,
   checked in under `captures/<firmware>/`, `sources` names it
   (`{"kind":"capture","ref":"captures/<firmware>/"}`), and every manifest param
   is in that capture's `help` (normal or full) and vice versa. A test enforces
-  this; 1.0.0.150183 predates the rule and is grandfathered until it is demoted.
+  this. No built-in manifest meets that bar yet, so both ship as `draft`:
+  writes and actions are limited to params the unit's `help` confirms.
 
 ## Session: firmware detection and manifest selection (`@cp750/device`)
 

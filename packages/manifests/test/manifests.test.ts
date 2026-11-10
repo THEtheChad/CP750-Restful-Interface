@@ -19,8 +19,8 @@ describe("1.0.0.150183", () => {
   const m = manifest("1.0.0.150183");
   const names = Object.keys(m.params);
 
-  test("is verified and sourced from Issue 4", () => {
-    expect(m.status).toBe("verified");
+  test("is a draft sourced from Issue 4 (no real-unit capture yet)", () => {
+    expect(m.status).toBe("draft");
     expect(m.sources[0]?.ref).toBe("Dolby 9110270 Issue 4, Tables 6-1/6-2");
   });
 
@@ -142,8 +142,6 @@ describe("1.2.8.3 draft", () => {
  * under `captures/<firmware>/`, named in `sources`, whose `help` lists exactly the manifest's params.
  */
 describe("verified manifests are backed by a checked-in capture", () => {
-  // Verified before this bar existed; due to be demoted to draft. Do not add to this list.
-  const GRANDFATHERED = new Set(["1.0.0.150183"]);
   const capturesDir = join(import.meta.dir, "..", "captures");
   const names = (file: string) =>
     existsSync(file)
@@ -153,7 +151,7 @@ describe("verified manifests are backed by a checked-in capture", () => {
       : [];
 
   for (const m of builtinManifests().filter((m) => m.status === "verified")) {
-    test.skipIf(GRANDFATHERED.has(m.firmware))(m.firmware, () => {
+    test(m.firmware, () => {
       const ref = `captures/${m.firmware}/`;
       expect(m.sources.some((s) => s.kind === "capture" && s.ref === ref)).toBe(true);
       const dir = join(capturesDir, m.firmware);

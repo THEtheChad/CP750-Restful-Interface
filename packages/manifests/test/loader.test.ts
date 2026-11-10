@@ -25,7 +25,7 @@ describe("loadManifests", () => {
     await writeFile(join(dir, "notes.txt"), "ignored");
     const manifests = await loadManifests({ dir });
     expect(manifests.map((m) => [m.firmware, m.status])).toEqual([
-      ["1.0.0.150183", "verified"],
+      ["1.0.0.150183", "draft"],
       ["1.1.0", "draft"],
       ["1.2.8.3", "verified"],
     ]);

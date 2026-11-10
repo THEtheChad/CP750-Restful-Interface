@@ -16,7 +16,7 @@ import {
   WriteRejected,
 } from "../src/index.ts";
 import { startMockCp750 } from "../src/mock/index.ts";
-import { builtin, mock, onCleanup, session, V1, V128, waitFor } from "./helpers.ts";
+import { builtin, mock, onCleanup, session, V1, V128, verified, waitFor } from "./helpers.ts";
 
 function paramEvents(events: SessionEvent[]): SessionEventOf<"param">[] {
   return events.filter((e): e is SessionEventOf<"param"> => e.type === "param");
@@ -164,7 +164,10 @@ describe("session: reads and writes", () => {
 describe("session: firmware detection", () => {
   async function detect(manifest: Manifest, initial?: Record<string, string>) {
     const device = await mock({ manifest, ...(initial && { initial }) });
-    const { session: s, events } = await session(device);
+    // The session chooses between a verified 1.0.0.150183 and the 1.2.8.3 draft.
+    const { session: s, events } = await session(device, {
+      manifests: [verified(V1), builtin(V128)],
+    });
     return { s, events };
   }
 

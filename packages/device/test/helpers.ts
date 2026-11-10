@@ -15,6 +15,14 @@ export function builtin(firmware: string): Manifest {
   return found;
 }
 
+/**
+ * A built-in manifest promoted to `verified`, for tests of verified-path behaviour. No built-in is
+ * verified until a real-unit capture is checked in (docs/ADDING-A-FIRMWARE.md).
+ */
+export function verified(firmware: string): Manifest {
+  return { ...builtin(firmware), status: "verified" };
+}
+
 export const V1 = "1.0.0.150183";
 export const V128 = "1.2.8.3";
 

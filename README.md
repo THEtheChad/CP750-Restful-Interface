@@ -166,7 +166,11 @@ browser can reach a server on localhost. So:
 - reads are always open; every change is an explicit `PUT` or `POST`, gated by the token when set
 - `CP750_READ_ONLY=1` refuses all changes, in the HTTP layer and in the session
 - destructive actions (`reboot`, `default_params`, `log_erase`…) need `"confirm": true`
-- unverified (draft or nearest-match) manifests only allow writes to params the unit's `help` lists
+- unverified (draft or nearest-match) manifests only allow writes to params the unit's `help` lists.
+  Both built-in manifests are drafts (transcribed from Dolby's manual, not yet checked against a
+  real unit), so if a unit's `help` output can't be parsed, the gateway stays read-only. Run
+  `cp750 capture` against your unit and follow [docs/ADDING-A-FIRMWARE.md](docs/ADDING-A-FIRMWARE.md)
+  to get a verified manifest
 - `full`-tier and `internal` params stay off unless explicitly allowed
 - pass the token through the environment, never a flag (argv is visible in `ps`); it is never
   logged
