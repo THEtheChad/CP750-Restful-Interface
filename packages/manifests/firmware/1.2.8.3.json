@@ -7,7 +7,7 @@
     {
       "kind": "manual",
       "ref": "Dolby 9110270 Issue 5, Table 7-1 (partial, unverified)",
-      "notes": "Draft: built from the 1.0.0.150183 manifest plus changes read from a garbled copy of Issue 5 Table 7-1. Not checked against a real unit. Added 4_discrete_sur and surround_ex to every *_2_channel_decode_mode_* enum. Added as tier normal: ctrl.calc_surround_delays, ctrl.log_uptime, sys.output_aux_source, sys.output_wiring_config, sys.pcm_process_mode, sys.pl_surround_delay, sys.serial_number, sys.surround_boost, sys.surround_boost_a, sys.two_channel_decode_mode, sys.non_sync_format, sys.input_7_8_mute, sys.mic_route, sys.log_content. Uncertain value sets were left as plain string or integer schemas: output_aux_source (likely dig_2|none), output_wiring_config (likely bsl_bsr|le_re|none), pl_surround_delay (likely 20..50; Issue 4 section 7.1.5 gives 20-150 ms), non_sync_format, input_7_8_mute (likely n_a|off|on), mic_route, log_content. sys.serial_number moves from full (0 to 2147483647 in Issue 4) to a normal readonly string. Issue 5 may have narrowed the global delay ranges from 0-250 to 0-170 ms; this is unconfirmed, so the Issue 4 ranges are kept."
+      "notes": "Draft: built from the 1.0.0.150183 manifest plus changes read from a garbled copy of Issue 5 Table 7-1. Not checked against a real unit. Added 4_discrete_sur and surround_ex to every *_2_channel_decode_mode_* enum. Added as tier normal: ctrl.calc_surround_delays, ctrl.log_uptime, sys.output_aux_source, sys.output_wiring_config, sys.pcm_process_mode, sys.pl_surround_delay, sys.serial_number, sys.surround_boost, sys.surround_boost_a, sys.two_channel_decode_mode, sys.non_sync_format, sys.input_7_8_mute, sys.mic_route, sys.log_content. Uncertain value sets were left as plain string or integer schemas: output_aux_source (likely dig_2|none), output_wiring_config (likely bsl_bsr|le_re|none), pl_surround_delay (likely 20..50; Issue 4 section 7.1.5 gives 20-150 ms), non_sync_format, input_7_8_mute (likely n_a|off|on), mic_route, log_content. sys.serial_number moves from full (0 to 2147483647 in Issue 4) to a normal readonly string. Issue 5 may have narrowed the global delay ranges from 0-250 to 0-170 ms; this is unconfirmed, so the Issue 4 ranges are kept. sys.mute moves from full to normal: Issue 5 Table 7-1 (normal set) lists it, and third-party automation (Sony TMS, Doremi macros, cp750-java) sends it without enabling full control."
     },
     {
       "kind": "manual",
@@ -3154,7 +3154,7 @@
       "description": "Display label for the Mic input"
     },
     "cp750.sys.mute": {
-      "tier": "full",
+      "tier": "normal",
       "access": "readwrite",
       "accessSource": "inferred",
       "value": {

@@ -937,7 +937,7 @@ export interface ParamValues {
   "cp750.sys.mic_route": string;
   /** Display label for the Mic input (full, readwrite, string) */
   "cp750.sys.mic_text": string;
-  /** Main mute (1 = muted) (full, readwrite, integer) */
+  /** Main mute (1 = muted) (normal, readwrite, integer) */
   "cp750.sys.mute": 0 | 1;
   /** Fade-in time when unmuting (full, readwrite, integer 200..5000, ms) */
   "cp750.sys.mute_fade_in_time": number;
