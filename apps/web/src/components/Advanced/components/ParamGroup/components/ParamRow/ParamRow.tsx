@@ -1,5 +1,5 @@
 import { useId, useRef, useState } from "react";
-import { useParam, useWriteParam } from "../../../../../../api/hooks.ts";
+import { useParam, useWriteParam, useWritePending } from "../../../../../../api/hooks.ts";
 import type { Command, ParamValue } from "../../../../../../api/types.ts";
 import { useInView } from "../../../../../../hooks/useInView.ts";
 import { formatFader } from "../../../../../../lib/fader.ts";
@@ -42,6 +42,7 @@ export function ParamRow({ command, context }: ParamRowProps) {
   const [requested, setRequested] = useState(false);
   const nameId = useId();
   const reasonId = useId();
+  const readId = useId();
 
   const isAction = command.access === "action";
   const writable = command.access === "readwrite";
@@ -52,6 +53,7 @@ export function ParamRow({ command, context }: ParamRowProps) {
 
   const reading = useParam(command.name, { enabled: canRead && (inView || requested) });
   const write = useWriteParam(command.name);
+  const pending = useWritePending(command.name);
   const value = reading.data?.value;
   const hint = unitHint(value, command.unit);
   const reason = isAction ? actionReason : writable ? writeReason : null;
@@ -99,6 +101,7 @@ export function ParamRow({ command, context }: ParamRowProps) {
             schema={command.schema}
             value={value}
             disabled={writeReason !== null || value === undefined}
+            pending={pending}
             labelledBy={nameId}
             {...(shownReason ? { describedBy: reasonId } : {})}
             onCommit={(next) => write.mutateAsync({ value: next }).catch(() => {})}
@@ -111,8 +114,9 @@ export function ParamRow({ command, context }: ParamRowProps) {
           <button
             type="button"
             className={`${controls.button} ${controls.small} ${styles.read}`}
+            id={readId}
             disabled={!canRead || reading.isFetching}
-            aria-describedby={nameId}
+            aria-labelledby={`${readId} ${nameId}`}
             onClick={read}
           >
             {reading.isFetching ? "Reading…" : reading.data ? "Refresh" : "Read"}

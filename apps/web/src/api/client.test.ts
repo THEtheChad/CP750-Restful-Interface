@@ -22,6 +22,23 @@ describe("api client", () => {
     ]);
   });
 
+  test("every mutation is JSON, even an action without a value (the gateway answers 415 otherwise)", async () => {
+    const seen: [string, string | null, string][] = [];
+    const api = createApi({
+      baseUrl,
+      fetch: async (request) => {
+        seen.push([request.method, request.headers.get("content-type"), await request.text()]);
+        return json({ name: "cp750.ctrl.fader_delta", value: 1, raw: "1" });
+      },
+    });
+    await api.triggerAction("cp750.ctrl.fader_delta");
+    await api.writeParam("cp750.sys.fader", 71);
+    expect(seen).toEqual([
+      ["POST", "application/json", "{}"],
+      ["PUT", "application/json", '{"value":71}'],
+    ]);
+  });
+
   test("throws problem details as ApiError", async () => {
     const gateway = createFakeGateway();
     gateway.intercept(() =>

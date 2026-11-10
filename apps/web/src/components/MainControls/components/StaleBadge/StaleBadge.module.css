@@ -1,0 +1,11 @@
+.badge {
+  margin-inline-start: var(--space-2);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--warn-border);
+  border-radius: var(--radius-sm);
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: var(--text-sm);
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}

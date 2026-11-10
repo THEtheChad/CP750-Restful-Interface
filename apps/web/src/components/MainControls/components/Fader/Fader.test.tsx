@@ -36,15 +36,86 @@ describe("Fader", () => {
   test("a drag is throttled and the final value is committed on release", async () => {
     const { gateway } = renderWithGateway(<Fader throttleMs={1_000} />);
     await ready();
-    for (let v = 71; v <= 90; v++) fireEvent.change(slider(), { target: { value: String(v) } });
+    for (let v = 71; v <= 80; v++) fireEvent.change(slider(), { target: { value: String(v) } });
     // The display follows the drag at once…
-    expect(screen.getByTestId("fader-value").textContent).toBe("9.0");
+    expect(screen.getByTestId("fader-value").textContent).toBe("8.0");
     // …but only the first value went out; the rest wait, newest only.
     await waitFor(() => expect(gateway.paramRequests("PUT").length).toBe(1));
     fireEvent.pointerUp(slider());
-    await waitFor(() => expect(gateway.values.get("cp750.sys.fader")).toBe(90));
-    expect(gateway.paramRequests("PUT").map((r) => r.body)).toEqual([{ value: 71 }, { value: 90 }]);
-    await waitFor(() => expect(screen.getByTestId("fader-db").textContent).toBe("+6.7 dB"));
+    await waitFor(() => expect(gateway.values.get("cp750.sys.fader")).toBe(80));
+    expect(gateway.paramRequests("PUT").map((r) => r.body)).toEqual([{ value: 71 }, { value: 80 }]);
+    await waitFor(() => expect(screen.getByTestId("fader-db").textContent).toBe("+3.3 dB"));
+  });
+
+  test("no single send moves more than 1.0: a jump ramps there one page at a time", async () => {
+    const { gateway } = renderWithGateway(<Fader throttleMs={20} />);
+    await ready();
+    // E.g. End on the keyboard: straight to 10.0.
+    fireEvent.change(slider(), { target: { value: "100" } });
+    fireEvent.keyUp(slider());
+    await waitFor(() => expect(gateway.values.get("cp750.sys.fader")).toBe(100));
+    expect(gateway.paramRequests("PUT").map((r) => r.body)).toEqual([
+      { value: 80 },
+      { value: 90 },
+      { value: 100 },
+    ]);
+  });
+
+  test("a click on the track moves one page toward the click, not to it", async () => {
+    const { gateway } = renderWithGateway(<Fader />);
+    await ready();
+    fireEvent.pointerDown(slider());
+    fireEvent.change(slider(), { target: { value: "100" } });
+    // Moving on from there in the same gesture stays within the page.
+    fireEvent.change(slider(), { target: { value: "95" } });
+    fireEvent.pointerUp(slider());
+    await waitFor(() => expect(gateway.values.get("cp750.sys.fader")).toBe(80));
+    expect(screen.getByTestId("fader-value").textContent).toBe("8.0");
+    expect(
+      gateway.paramRequests("PUT").every((r) => (r.body as { value: number }).value <= 80),
+    ).toBe(true);
+
+    // A drag that starts on the thumb is not limited (beyond the per-send cap).
+    fireEvent.pointerDown(slider());
+    for (const v of [81, 82, 85]) fireEvent.change(slider(), { target: { value: String(v) } });
+    fireEvent.pointerUp(slider());
+    await waitFor(() => expect(gateway.values.get("cp750.sys.fader")).toBe(85));
+  });
+
+  test("the wheel cannot change the level", async () => {
+    renderWithGateway(<Fader />);
+    await ready();
+    const wheel = new WheelEvent("wheel", { deltaY: -100, cancelable: true, bubbles: true });
+    slider().dispatchEvent(wheel);
+    expect(wheel.defaultPrevented).toBe(true);
+  });
+
+  test("steps re-read the processor first, so a stale display cannot cause a jump", async () => {
+    const { gateway } = renderWithGateway(<Fader />);
+    await ready();
+    // Someone turns the unit down to 5.0 on the front panel; the display still says 7.0.
+    gateway.values.set("cp750.sys.fader", 50);
+    expect(screen.getByTestId("fader-value").textContent).toBe("7.0");
+    fireEvent.click(screen.getByRole("button", { name: "Fader +0.1" }));
+    await waitFor(() => expect(gateway.values.get("cp750.sys.fader")).toBe(51));
+    expect(gateway.paramRequests("PUT").map((r) => r.body)).toEqual([{ value: 51 }]);
+    const requests = gateway.paramRequests().map((r) => r.method);
+    expect(requests.lastIndexOf("GET")).toBeLessThan(requests.indexOf("PUT"));
+  });
+
+  test("quick repeated steps each start from the previous result", async () => {
+    const { gateway } = renderWithGateway(<Fader />);
+    await ready();
+    const plus = screen.getByRole("button", { name: "Fader +0.1" });
+    fireEvent.click(plus);
+    fireEvent.click(plus);
+    fireEvent.click(plus);
+    await waitFor(() => expect(gateway.values.get("cp750.sys.fader")).toBe(73));
+    expect(gateway.paramRequests("PUT").map((r) => r.body)).toEqual([
+      { value: 71 },
+      { value: 72 },
+      { value: 73 },
+    ]);
   });
 
   test("WRITE_REJECTED shows what the processor kept and rolls the display to it", async () => {

@@ -1,9 +1,10 @@
 import { useId } from "react";
-import { useParam, useParamAccess, useWriteParam } from "../../../../api/hooks.ts";
+import { useParam, useParamAccess, useWriteParam, useWritePending } from "../../../../api/hooks.ts";
 import { humanize } from "../../../../lib/labels.ts";
 import controls from "../../../../styles/controls.module.css";
 import { ProblemMessage } from "../../../ProblemMessage/ProblemMessage.tsx";
 import card from "../../card.module.css";
+import { StaleBadge } from "../StaleBadge/StaleBadge.tsx";
 import styles from "./InputSelector.module.css";
 
 export const INPUT_PARAM = "cp750.sys.input_mode";
@@ -12,12 +13,14 @@ const formatValue = (value: unknown) => humanize(String(value));
 
 /**
  * The input, as a group of toggle buttons (one per enum value from the manifest). Buttons, not
- * radios: arrow keys move focus without switching the processor's input on every keypress.
+ * radios: arrow keys move focus without switching the processor's input on every keypress. While
+ * an input write is pending the buttons are `aria-disabled` and ignore clicks.
  */
 export function InputSelector() {
   const access = useParamAccess(INPUT_PARAM);
   const reading = useParam(INPUT_PARAM, { enabled: access.read === null, live: true });
   const write = useWriteParam(INPUT_PARAM);
+  const pending = useWritePending(INPUT_PARAM);
   const headingId = useId();
   const reasonId = useId();
   const options = (access.command?.schema?.enum ?? []).map(String);
@@ -28,9 +31,11 @@ export function InputSelector() {
     <section className={card.card} aria-labelledby={headingId}>
       <h2 className={card.heading} id={headingId}>
         Input
+        <StaleBadge name={INPUT_PARAM} />
       </h2>
       <fieldset
         className={styles.options}
+        aria-busy={pending || undefined}
         aria-labelledby={headingId}
         aria-describedby={access.write ? reasonId : undefined}
       >
@@ -41,7 +46,8 @@ export function InputSelector() {
             className={styles.option}
             aria-pressed={current === option}
             disabled={disabled}
-            onClick={() => current !== option && write.mutate({ value: option })}
+            aria-disabled={pending || undefined}
+            onClick={() => !pending && current !== option && write.mutate({ value: option })}
           >
             <span className={styles.label}>{humanize(option)}</span>
             <span className={styles.raw} aria-hidden="true">

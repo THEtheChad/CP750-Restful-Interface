@@ -31,4 +31,28 @@ describe("App (root render)", () => {
     );
     expect(window.location.hash).toBe("#advanced");
   });
+
+  test("the stream's opening snapshots do not refetch what was just loaded", async () => {
+    const { gateway, events } = renderWithGateway(<App />);
+    await waitFor(() => expect(screen.getByTestId("fader-value").textContent).toBe("7.0"));
+    const at = new Date().toISOString();
+    // What /api/events sends first: the same state /api/device just returned.
+    events().open();
+    events().emit("connection", {
+      type: "connection",
+      connection: gateway.device.connection,
+      error: gateway.device.lastError,
+      at,
+    });
+    events().emit("device", {
+      type: "device",
+      firmware: gateway.device.firmware,
+      manifest: gateway.device.manifest,
+      at,
+    });
+    await new Promise((r) => setTimeout(r, 50));
+    const count = (path: string) => gateway.requests.filter((r) => r.path === path).length;
+    expect(count("/api/device")).toBe(1);
+    expect(count("/api/commands")).toBe(1);
+  });
 });

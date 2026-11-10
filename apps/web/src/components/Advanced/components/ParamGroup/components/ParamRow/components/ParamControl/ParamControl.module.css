@@ -36,7 +36,8 @@
   cursor: pointer;
 }
 
-.switch:disabled {
+.switch:disabled,
+.switch[aria-disabled="true"] {
   cursor: not-allowed;
   opacity: 0.5;
 }

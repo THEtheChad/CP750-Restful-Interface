@@ -25,7 +25,9 @@ export interface ActionButtonProps {
 
 /**
  * A `ctrl.*` action. Destructive actions need an inline second step ("Yes, reboot") that sends
- * `confirm: true`; the confirmation closes itself after a while, on Escape or on Cancel.
+ * `confirm: true`; the confirmation closes itself after a while, on Escape or on Cancel. However
+ * it closes, focus goes back to the trigger, which is why a pending action marks the trigger
+ * `aria-disabled` rather than `disabled` (a disabled button cannot hold focus).
  */
 export function ActionButton({
   command,
@@ -49,17 +51,22 @@ export function ActionButton({
       : null;
   const disabled = reason !== null || action.isPending;
 
-  useEffect(() => {
-    if (!confirming) return;
-    cancelRef.current?.focus();
-    const timer = setTimeout(() => setConfirming(false), confirmTimeoutMs);
-    return () => clearTimeout(timer);
-  }, [confirming, confirmTimeoutMs]);
-
-  const cancel = () => {
+  /** Closes the confirmation and puts focus back on the trigger. */
+  const close = () => {
     setConfirming(false);
     triggerRef.current?.focus();
   };
+  const closeRef = useRef(close);
+  closeRef.current = close;
+
+  useEffect(() => {
+    if (!confirming) return;
+    cancelRef.current?.focus();
+    const timer = setTimeout(() => closeRef.current(), confirmTimeoutMs);
+    return () => clearTimeout(timer);
+  }, [confirming, confirmTimeoutMs]);
+
+  const cancel = close;
   const onPanelKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Escape") cancel();
   };
@@ -71,11 +78,13 @@ export function ActionButton({
           ref={triggerRef}
           type="button"
           className={`${controls.button} ${controls.danger}`}
-          disabled={disabled}
+          disabled={reason !== null}
+          aria-disabled={action.isPending || undefined}
           aria-expanded={confirming}
           aria-controls={panelId}
           aria-describedby={describedBy}
           onClick={() => {
+            if (action.isPending) return;
             if (confirming) return cancel();
             action.reset();
             setConfirming(true);
@@ -99,7 +108,7 @@ export function ActionButton({
                 type="button"
                 className={`${controls.button} ${controls.dangerSolid}`}
                 onClick={() => {
-                  setConfirming(false);
+                  close();
                   action.mutate({ confirm: true });
                 }}
               >

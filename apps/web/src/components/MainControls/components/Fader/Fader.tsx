@@ -1,11 +1,16 @@
-import { useId, useState } from "react";
-import { useParam, useParamAccess, useWriteParam } from "../../../../api/hooks.ts";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useId, useRef, useState } from "react";
+import { useApi, useParam, useParamAccess, useWriteParam } from "../../../../api/hooks.ts";
 import { type ApiError, asApiError } from "../../../../api/problem.ts";
+import { queryKeys } from "../../../../api/query-keys.ts";
+import type { ParamReading } from "../../../../api/types.ts";
 import { useLatestSender } from "../../../../hooks/useLatestSender.ts";
 import {
+  clampFader,
   FADER_MAX,
   FADER_MIN,
   FADER_NOMINAL,
+  FADER_PAGE,
   formatDb,
   formatFader,
   stepFader,
@@ -13,6 +18,7 @@ import {
 import controls from "../../../../styles/controls.module.css";
 import { ProblemMessage } from "../../../ProblemMessage/ProblemMessage.tsx";
 import card from "../../card.module.css";
+import { StaleBadge } from "../StaleBadge/StaleBadge.tsx";
 import styles from "./Fader.module.css";
 
 export const FADER_PARAM = "cp750.sys.fader";
@@ -26,12 +32,27 @@ const STEPS = [
 
 const formatValue = (value: unknown) => formatFader(Number(value));
 
+/** `value` moved at most `max` away from `from`. */
+function capStep(from: number, value: number, max: number): number {
+  return clampFader(Math.max(from - max, Math.min(from + max, value)));
+}
+
 /**
  * The main fader: a big `7.0` readout with dB from the API, a slider, ±0.1/±1.0 steps and a return
  * to 7.0. Writes are throttled (newest value only, one in flight) and the final value is
- * committed on release.
+ * committed on release. Safety rails, since a wrong level is audible:
+ *
+ * - the step buttons re-read the fader first and step from what the processor holds, not from a
+ *   possibly stale display, one step at a time;
+ * - a click on the track (a pointer gesture that starts away from the thumb) moves one page
+ *   (±1.0) toward the click, not to it;
+ * - the wheel never moves it;
+ * - every send moves at most one page from the last known level; bigger moves (keyboard
+ *   Home/End, a fast drag) ramp there one page per send.
  */
 export function Fader({ throttleMs }: { throttleMs?: number } = {}) {
+  const api = useApi();
+  const queryClient = useQueryClient();
   const access = useParamAccess(FADER_PARAM);
   const reading = useParam(FADER_PARAM, { enabled: access.read === null, live: true });
   const write = useWriteParam(FADER_PARAM);
@@ -40,6 +61,15 @@ export function Fader({ throttleMs }: { throttleMs?: number } = {}) {
   const headingId = useId();
   const reasonId = useId();
   const errorId = useId();
+  const sliderRef = useRef<HTMLInputElement>(null);
+  const gesture = useRef<{ start: number; first: boolean; limited: boolean } | null>(null);
+  const steps = useRef<Promise<void>>(Promise.resolve());
+
+  /** The level the processor last reported (or the optimistic one of a write in flight). */
+  const known = () => {
+    const value = queryClient.getQueryData<ParamReading>(queryKeys.param(FADER_PARAM))?.value;
+    return typeof value === "number" ? value : null;
+  };
 
   const sender = useLatestSender<number>(
     async (value) => {
@@ -52,9 +82,23 @@ export function Fader({ throttleMs }: { throttleMs?: number } = {}) {
     },
     {
       onIdle: () => setDraft(null),
+      // Backstop: no single send moves more than one page from the last known level.
+      limit: (target) => {
+        const from = known();
+        return from === null ? target : capStep(from, target, FADER_PAGE);
+      },
       ...(throttleMs !== undefined ? { intervalMs: throttleMs } : {}),
     },
   );
+
+  // React's onWheel is passive, so preventDefault needs a native listener.
+  useEffect(() => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+    const block = (event: WheelEvent) => event.preventDefault();
+    slider.addEventListener("wheel", block, { passive: false });
+    return () => slider.removeEventListener("wheel", block);
+  }, []);
 
   const committed = typeof reading.data?.value === "number" ? reading.data.value : null;
   const shown = draft ?? committed;
@@ -71,6 +115,43 @@ export function Fader({ throttleMs }: { throttleMs?: number } = {}) {
     sender.flush();
   };
 
+  /** A slider change; limits a gesture that started on the track to one page from its start. */
+  const slide = (value: number) => {
+    const g = gesture.current;
+    if (g) {
+      if (g.first) {
+        g.first = false;
+        g.limited = Math.abs(value - g.start) > FADER_PAGE;
+      }
+      if (g.limited) value = capStep(g.start, value, FADER_PAGE);
+    }
+    change(value);
+  };
+  const endGesture = () => {
+    gesture.current = null;
+    sender.flush();
+  };
+
+  /** ±0.1/±1.0: read the processor, then step from its value. Clicks queue up in order. */
+  const step = (delta: number) => {
+    steps.current = steps.current.then(async () => {
+      try {
+        const fresh = await queryClient.fetchQuery({
+          queryKey: queryKeys.param(FADER_PARAM),
+          queryFn: () => api.readParam(FADER_PARAM),
+          staleTime: 0,
+        });
+        if (typeof fresh.value !== "number") return;
+        sender.cancel();
+        setDraft(null);
+        await write.mutateAsync({ value: stepFader(fresh.value, delta) });
+        setError(null);
+      } catch (e) {
+        setError(asApiError(e));
+      }
+    });
+  };
+
   const valueText =
     shown === null
       ? "unknown"
@@ -85,6 +166,7 @@ export function Fader({ throttleMs }: { throttleMs?: number } = {}) {
     <section className={card.card} aria-labelledby={headingId}>
       <h2 className={card.heading} id={headingId}>
         Fader
+        <StaleBadge name={FADER_PARAM} />
       </h2>
       <div className={styles.readout} aria-hidden="true">
         <span className={styles.value} data-testid="fader-value">
@@ -98,6 +180,7 @@ export function Fader({ throttleMs }: { throttleMs?: number } = {}) {
         </span>
       </div>
       <input
+        ref={sliderRef}
         className={styles.slider}
         type="range"
         min={FADER_MIN}
@@ -108,10 +191,14 @@ export function Fader({ throttleMs }: { throttleMs?: number } = {}) {
         aria-labelledby={headingId}
         aria-valuetext={valueText}
         aria-describedby={describedBy || undefined}
-        onChange={(e) => change(Number(e.currentTarget.value))}
-        onPointerUp={() => sender.flush()}
+        onPointerDown={() => {
+          if (shown !== null) gesture.current = { start: shown, first: true, limited: false };
+        }}
+        onChange={(e) => slide(Number(e.currentTarget.value))}
+        onPointerUp={endGesture}
+        onPointerCancel={endGesture}
         onKeyUp={() => sender.flush()}
-        onBlur={() => sender.flush()}
+        onBlur={endGesture}
       />
       <div className={styles.steps}>
         {STEPS.slice(0, 2).map((s) => (
@@ -121,7 +208,7 @@ export function Fader({ throttleMs }: { throttleMs?: number } = {}) {
             className={controls.button}
             disabled={disabled}
             aria-label={`Fader ${s.label}`}
-            onClick={() => shown !== null && commit(stepFader(shown, s.delta))}
+            onClick={() => step(s.delta)}
           >
             {s.label}
           </button>
@@ -142,7 +229,7 @@ export function Fader({ throttleMs }: { throttleMs?: number } = {}) {
             className={controls.button}
             disabled={disabled}
             aria-label={`Fader ${s.label}`}
-            onClick={() => shown !== null && commit(stepFader(shown, s.delta))}
+            onClick={() => step(s.delta)}
           >
             {s.label}
           </button>

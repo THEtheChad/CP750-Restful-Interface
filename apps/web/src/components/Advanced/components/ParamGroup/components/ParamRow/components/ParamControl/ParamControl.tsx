@@ -8,6 +8,8 @@ export interface ParamControlProps {
   schema: ValueSchema | null;
   value: ParamValue | undefined;
   disabled: boolean;
+  /** A write to this param is in flight: the switch ignores clicks (and says so) meanwhile. */
+  pending?: boolean;
   /** Id of the element naming the param. */
   labelledBy: string;
   describedBy?: string;
@@ -23,6 +25,7 @@ export function ParamControl({
   schema,
   value,
   disabled,
+  pending = false,
   labelledBy,
   describedBy,
   onCommit,
@@ -32,6 +35,8 @@ export function ParamControl({
   const [busy, setBusy] = useState(false);
   const errorId = useId();
   const numberLabelId = useId();
+  const setId = useId();
+  const undoId = useId();
   const current = value === undefined ? "" : String(value);
 
   if (!schema || spec.kind === "none") return <span>{current || "–"}</span>;
@@ -47,7 +52,11 @@ export function ParamControl({
         aria-labelledby={labelledBy}
         aria-describedby={describedBy}
         disabled={disabled || value === undefined}
-        onClick={() => onCommit(on ? 0 : 1)}
+        aria-disabled={pending || undefined}
+        aria-busy={pending || undefined}
+        onClick={() => {
+          if (!pending) onCommit(on ? 0 : 1);
+        }}
       >
         <span className={styles.track} aria-hidden="true">
           <span className={styles.thumb} />
@@ -144,17 +153,22 @@ export function ParamControl({
           {...fieldProps}
         />
       )}
+      {/* "Set cp750.sys.x": every row has these buttons, so each name includes the param. */}
       <button
         type="submit"
+        id={setId}
         className={`${controls.button} ${controls.small} ${controls.primary}`}
         disabled={disabled || !dirty || invalid || busy}
+        aria-labelledby={`${setId} ${labelledBy}`}
       >
         Set
       </button>
       {dirty && (
         <button
           type="button"
+          id={undoId}
           className={`${controls.button} ${controls.small}`}
+          aria-labelledby={`${undoId} ${labelledBy}`}
           onClick={() => setDraft(null)}
         >
           Undo

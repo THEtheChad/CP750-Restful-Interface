@@ -36,12 +36,12 @@ describe("Advanced", () => {
       target: { value: "hostname" },
     });
     const row = screen.getByText("cp750.sys.hostname").closest("li") as HTMLElement;
-    fireEvent.click(within(row).getByRole("button", { name: "Read" }));
+    fireEvent.click(within(row).getByRole("button", { name: "Read cp750.sys.hostname" }));
     await waitFor(() =>
       expect((within(row).getByRole("textbox") as HTMLInputElement).value).toBe("booth-1"),
     );
     expect(gateway.paramRequests().map((r) => r.path)).toEqual(["/api/params/cp750.sys.hostname"]);
-    expect(within(row).getByRole("button", { name: "Refresh" })).toBeTruthy();
+    expect(within(row).getByRole("button", { name: "Refresh cp750.sys.hostname" })).toBeTruthy();
   });
 
   test("search and namespace filter narrow the list", async () => {
