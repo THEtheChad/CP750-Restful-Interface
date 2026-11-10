@@ -64,6 +64,20 @@ describe("codec", () => {
     expect(() => encode(text, 7)).toThrow(ValueCodecError);
   });
 
+  test("refuses anything outside printable ASCII (finding 1)", () => {
+    const route = spec("cp750.sys.dig_1_route");
+    // U+010A, U+010D and U+0100 truncate to LF, CR and NUL on a Latin-1 socket.
+    for (const char of ["\u010a", "\u010d", "\u0100", "\u2028", "\n", "\r", "\u0000", "\t", "é"]) {
+      const value = `[L R C Sw Ls Rs 7 8]${char}cp750.ctrl.reboot 1`;
+      expect(() => encode(route, value)).toThrow(ValueCodecError);
+      expect(() => encode(spec("cp750.sys.theater_name"), `Screen${char}1`)).toThrow(
+        ValueCodecError,
+      );
+    }
+    expect(encode(route, "[L R C Sw Ls Rs 7 8]")).toBe("[L R C Sw Ls Rs 7 8]");
+    expect(encode(spec("cp750.sys.theater_name"), "Screen #1 (east) ~")).toBe("Screen #1 (east) ~");
+  });
+
   test("valuesEqual compares like the unit", () => {
     expect(valuesEqual(spec("cp750.sys.input_mode"), "dig_1", "DIG_1")).toBe(true);
     expect(valuesEqual(spec("cp750.sys.analog_route"), "[L R]", "[ l r ]")).toBe(true);

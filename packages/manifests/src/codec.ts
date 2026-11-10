@@ -11,16 +11,21 @@ export class ValueCodecError extends Error {
 
 type HasValueSchema = Pick<ParamSpec, "value">;
 
-// biome-ignore lint/suspicious/noControlCharactersInRegex: matching control characters is the point
-const CONTROL_CHARS = /[\u0000-\u001f\u007f]/;
+/**
+ * Anything outside printable ASCII (0x20–0x7E). Control characters would end the command line
+ * (CR/LF inject a second command), and anything above 0x7E is not ASCII: a socket writing Latin-1
+ * truncates U+010A to 0x0A (LF), so it would inject a command too.
+ */
+const NOT_PRINTABLE_ASCII = /[^\x20-\x7e]/;
 // biome-ignore lint/suspicious/noControlCharactersInRegex: the unit may pad replies with NULs
 const NUL = /\u0000/g;
 const INTEGER = /^[+-]?\d+$/;
 
 /**
  * Encodes a JSON value as the wire string for `<param> <value>`. Integers are sent as decimal,
- * strings as-is. Rejects anything that could change the meaning of the command line: control
- * characters (CR/LF would inject a second command), empty or padded strings, and a bare `?`
+ * strings as-is. Rejects anything that could change the meaning of the command line: any character
+ * outside printable ASCII 0x20-0x7E (control characters, and non-ASCII characters whose low byte
+ * is a control character), empty or padded strings, and a bare `?`
  * (which would turn the set into a query). Does not check ranges or enums; use `validateValue`.
  */
 export function encode(param: HasValueSchema, value: ParamValue): string {
@@ -33,7 +38,9 @@ export function encode(param: HasValueSchema, value: ParamValue): string {
   if (typeof value !== "string") {
     throw new ValueCodecError(`expected a string, got ${JSON.stringify(value)}`);
   }
-  if (CONTROL_CHARS.test(value)) throw new ValueCodecError("value contains control characters");
+  if (NOT_PRINTABLE_ASCII.test(value)) {
+    throw new ValueCodecError("value contains a character outside printable ASCII (0x20-0x7E)");
+  }
   if (value.trim() === "" || value.trim() === "?") {
     throw new ValueCodecError(`value ${JSON.stringify(value)} cannot be sent as a set`);
   }
