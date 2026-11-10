@@ -24,6 +24,12 @@ export interface AccessPolicy {
   verified: boolean;
   /** Names `help` listed (lowercase), or `null` when `help` yielded none (cross-check skipped). */
   helpNames: ReadonlySet<string> | null;
+  /**
+   * Whether `help` ran with the full command set enabled. When `false`, a `full`-tier param that
+   * `help` did not list is `unchecked` rather than `missing` (the unit hides the full set until
+   * `cp750.ctrl.full_ascii_ctrl` is 1). Default `true`.
+   */
+  helpCoversFull?: boolean;
   allowFull: boolean;
   allowInternal: boolean;
   readOnly: boolean;
@@ -41,9 +47,15 @@ const OPERATIONS: readonly ParamOperation[] = ["read", "write", "action"];
 const PARAM_NAME = /^cp750\.[a-z0-9_]+\.[a-z0-9_]+$/;
 const RAW_COMMANDS = new Set(["help", "status", "dump_log", "dump_log_100"]);
 
-function availabilityOf(policy: AccessPolicy, name: string): Availability {
+function availabilityOf(
+  policy: AccessPolicy,
+  name: string,
+  spec: ParamSpec | null = null,
+): Availability {
   if (!policy.helpNames) return "unchecked";
-  return policy.helpNames.has(name) ? "confirmed" : "missing";
+  if (policy.helpNames.has(name)) return "confirmed";
+  if (spec?.tier === "full" && policy.helpCoversFull === false) return "unchecked";
+  return "missing";
 }
 
 /**
@@ -53,7 +65,11 @@ function availabilityOf(policy: AccessPolicy, name: string): Availability {
 export function resolveName(policy: AccessPolicy, input: string): ResolvedName | null {
   const found = policy.manifest ? findParam(policy.manifest, input) : null;
   if (found) {
-    return { name: found.name, spec: found.spec, availability: availabilityOf(policy, found.name) };
+    return {
+      name: found.name,
+      spec: found.spec,
+      availability: availabilityOf(policy, found.name, found.spec),
+    };
   }
   const name = normalizeParamName(input);
   if (policy.helpNames?.has(name)) return { name, spec: null, availability: "confirmed" };
@@ -122,7 +138,7 @@ export function describeCommands(policy: AccessPolicy): CommandInfo[] {
   const seen = new Set<string>();
   for (const [name, spec] of Object.entries(policy.manifest?.params ?? {})) {
     seen.add(name);
-    targets.push({ name, spec, availability: availabilityOf(policy, name) });
+    targets.push({ name, spec, availability: availabilityOf(policy, name, spec) });
   }
   for (const name of policy.helpNames ?? []) {
     if (!seen.has(name)) targets.push({ name, spec: null, availability: "confirmed" });

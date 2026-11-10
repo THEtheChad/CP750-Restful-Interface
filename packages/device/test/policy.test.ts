@@ -25,6 +25,15 @@ describe("policy", () => {
     expect(check(policy, "cp750.sys.input_mode", "read")).toBe("unavailable");
   });
 
+  test("help taken without full control cannot rule out full-tier params", () => {
+    const helpNames = new Set(["cp750.sys.fader"]);
+    const normalOnly = { ...base, helpNames, helpCoversFull: false };
+    expect(resolveName(normalOnly, "cp750.sys.mute")?.availability).toBe("unchecked");
+    expect(check(normalOnly, "cp750.sys.mute", "read")).toBe("full-tier");
+    expect(check(normalOnly, "cp750.sys.input_mode", "read")).toBe("unavailable");
+    expect(check({ ...base, helpNames }, "cp750.sys.mute", "read")).toBe("unavailable");
+  });
+
   test("internal names are blocked even without a spec", () => {
     const policy = { ...base, manifest: null };
     expect(check(policy, "cp750.internal.whatever", "read")).toBe("internal");

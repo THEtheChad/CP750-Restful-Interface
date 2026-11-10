@@ -40,6 +40,19 @@ export interface SessionTimeouts {
   commandMs?: number;
   /** For multi-line replies (`help`, `status`): the reply ends after this much silence. */
   idleMs?: number;
+  /**
+   * A blank reply means "unknown parameter" only if no matching line follows within this window
+   * (stray blank lines can precede a reply). Default 50.
+   */
+  blankGraceMs?: number;
+  /** Hard cap on one multi-line reply. Default 10000. */
+  multiLineMaxMs?: number;
+}
+
+/** Where the session reports things that are not errors of a call (e.g. a poll param it skips). */
+export interface SessionLogger {
+  warn(message: string): void;
+  debug?(message: string): void;
 }
 
 export interface ReconnectOptions {
@@ -71,6 +84,8 @@ export interface SessionOptions {
   manifestDir?: string;
   /** Use these manifests instead of loading built-ins + `manifestDir` (tests). */
   manifests?: readonly Manifest[];
+  /** Default `console`. */
+  logger?: SessionLogger;
 }
 
 export type ConnectionStatus = "idle" | "connecting" | "connected" | "reconnecting" | "closed";
