@@ -30,7 +30,8 @@ for (const t of targets) {
 }
 
 function run(cmd: string[], cwd = root): void {
-  console.log(`$ ${cmd.map((c) => relative(root, c) || c).join(" ")}`);
+  const shown = cmd.map((c, i) => (i === 0 ? "bun" : relative(root, c) || c));
+  console.log(`$ ${shown.join(" ")}`);
   const result = Bun.spawnSync(cmd, { cwd, stdout: "inherit", stderr: "inherit" });
   if (result.exitCode !== 0) process.exit(result.exitCode ?? 1);
 }
@@ -65,7 +66,6 @@ try {
       "--compile",
       `--target=bun-${target}`,
       "--minify",
-      "--sourcemap",
       "--no-compile-autoload-bunfig",
       "--outfile",
       outfile,

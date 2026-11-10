@@ -215,7 +215,30 @@ Hono with `@hono/zod-openapi`. Errors use RFC 9457 `application/problem+json`.
 
 Because the value type differs per param, the spec types `value` loosely and
 points clients to `GET /api/commands`, which returns each param's JSON Schema
-for validation on the client.
+for validation on the client. The `{name}` path parameter is a plain string
+for the same reason.
+
+Details of the implementation:
+
+- Problem `type`s are `urn:cp750:problem:<code>` and every body carries the
+  stable `code`: `INVALID_VALUE`/`BAD_REQUEST` 400, `UNAUTHORIZED` 401,
+  `FORBIDDEN` 403 (with `reason`), `UNKNOWN_PARAMETER`/`NOT_FOUND` 404,
+  `WRITE_REJECTED` 422 (with `requested`, `actual`, `raw`), `INTERNAL` 500,
+  `NOT_CONNECTED` 503, `TIMEOUT` 504.
+- With `CP750_API_TOKEN` set, every non-GET/HEAD/OPTIONS request under `/api`
+  needs `Authorization: Bearer <token>` (compared in constant time) or gets
+  401. Reads stay open. The token is env-only: no CLI flag, never logged.
+- The HTTP layer repeats two session rules before calling it: read-only mode
+  (403 `read-only-mode`) and the destructive confirmation (403
+  `confirmation-required`).
+- `GET /api/events` starts with a `connection` and a `device` snapshot, then
+  forwards session events. The SSE `event` is the type, `data` is the JSON
+  event, and `: ping` comments are sent every 15 s.
+- `secureHeaders` with a same-origin CSP. CORS is off unless `CORS_ORIGIN`
+  lists origins.
+- Non-`/api` GETs serve the embedded web client: exact files, `index.html` for
+  extension-less paths (SPA routes), 404 for other missing files, and a short
+  HTML notice when the build has no web client.
 
 Config (env, also CLI flags):
 
@@ -233,6 +256,12 @@ Config (env, also CLI flags):
 | `CP750_POLL_MS` | — |
 | `CP750_MANIFEST_DIR` | — |
 | `CP750_MOCK` | off |
+| `CORS_ORIGIN` | unset. Comma-separated origins allowed cross-origin |
+
+Each variable has a flag (`--cp750-host`/`--host`, `--cp750-port`,
+`--listen-host`, `--port`, `--read-only`, `--allow-full`, `--allow-internal`,
+`--eol crlf|lf|cr`, `--poll-ms`, `--manifest-dir`, `--mock`, `--cors-origin`)
+that overrides it, except `CP750_API_TOKEN`.
 
 ## CLI and distribution
 
@@ -241,9 +270,16 @@ Config (env, also CLI flags):
 - `cp750 capture --host <ip> [--out dir]`: connects, records `version`, `help`
   and `status` as raw text, and writes a draft manifest. This is how new
   firmware gets added.
-- `cp750 query <param>`: one-shot read for debugging.
+- `cp750 query <param>`: one-shot read for debugging; prints the reading as
+  JSON (`{name, value, raw, unit?, db?}`).
 - `bun run compile` builds `dist/cp750-<target>` for linux-x64, windows-x64 and
   darwin-arm64.
+- Session construction lives only in `apps/server/src/session-factory.ts`.
+- The web build is embedded through `apps/server/src/generated/web-assets.ts`,
+  generated from `apps/web/dist` as `import … with { type: "file" }`
+  statements. `bun build --compile` embeds those files and resolves them to
+  `/$bunfs/…` paths. The committed module is empty; `bun run compile` fills it
+  and restores it.
 
 ## Safety principles
 
