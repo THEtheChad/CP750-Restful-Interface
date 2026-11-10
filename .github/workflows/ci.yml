@@ -25,3 +25,24 @@ jobs:
           bun-version-file: .bun-version
       - run: bun install --frozen-lockfile
       - run: bun run check
+
+  build:
+    # The web client and the executables: compile all targets, and smoke-test the Linux one.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: .bun-version
+      - run: bun install --frozen-lockfile
+      # Builds apps/web, embeds it, and compiles linux-x64, windows-x64 and darwin-arm64.
+      - run: bun run compile
+      - name: Check every target was written
+        run: ls -l dist/cp750-linux-x64 dist/cp750-windows-x64.exe dist/cp750-darwin-arm64
+      - name: Smoke-test the Linux executable
+        run: scripts/smoke-test.sh dist/cp750-linux-x64
+      - name: The committed web-assets module is restored
+        run: git diff --exit-code -- apps/server/src/generated/web-assets.ts

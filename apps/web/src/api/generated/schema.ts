@@ -13,7 +13,7 @@ export interface paths {
         put?: never;
         /**
          * Trigger an action
-         * @description Sends an `action` param (`cp750.ctrl.*`); `value` defaults to 1. Destructive actions (reboot, default_params, log_erase…) need `confirm: true`.
+         * @description Sends an `action` param (`cp750.ctrl.*`); `value` defaults to 1. Destructive actions (reboot, default_params, log_erase…) need `confirm: true`. The request must be `Content-Type: application/json` even without a body; an empty body counts as `{}`.
          */
         post: operations["triggerAction"];
         delete?: never;
@@ -68,7 +68,7 @@ export interface paths {
         };
         /**
          * Live events (SSE)
-         * @description A `text/event-stream`. On connect it sends a `connection` and a `device` snapshot, then forwards the session's `param`, `connection` and `device` events. Each message's `event` is the type and `data` is a JSON `SessionEvent`. Comment lines (`: ping`) are heartbeats.
+         * @description A `text/event-stream`. On connect it sends a `connection` and a `device` snapshot, then forwards the session's `param`, `connection` and `device` events. Each message's `event` is the type and `data` is a JSON `SessionEvent`. Comment lines (`: ping`) are heartbeats. The number of concurrent streams is capped (`CP750_MAX_SSE_CLIENTS`), and a client that stops reading is dropped once its backlog grows past a limit. `HEAD` answers the headers without opening a stream.
          */
         get: operations["streamEvents"];
         put?: never;
@@ -228,6 +228,11 @@ export interface components {
             host: string;
             lastError: components["schemas"]["SessionError"];
             manifest: components["schemas"]["ManifestInfo"];
+            /**
+             * @description How often (ms) the gateway polls fader, mute and input for front-panel changes; 0 when polling is off
+             * @example 1000
+             */
+            pollMs: number;
             /** @example 61408 */
             port: number;
             readOnly: boolean;
@@ -313,7 +318,7 @@ export interface components {
         Problem: {
             actual?: components["schemas"]["ParamValue"];
             /** @enum {string} */
-            code: "BAD_REQUEST" | "INVALID_VALUE" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "UNKNOWN_PARAMETER" | "METHOD_NOT_ALLOWED" | "WRITE_REJECTED" | "INTERNAL" | "NOT_CONNECTED" | "TIMEOUT";
+            code: "BAD_REQUEST" | "INVALID_VALUE" | "UNAUTHORIZED" | "FORBIDDEN" | "ORIGIN_NOT_ALLOWED" | "NOT_FOUND" | "UNKNOWN_PARAMETER" | "METHOD_NOT_ALLOWED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "HOST_NOT_ALLOWED" | "WRITE_REJECTED" | "INTERNAL" | "NOT_CONNECTED" | "TOO_MANY_STREAMS" | "TIMEOUT";
             detail: string;
             errors?: string[];
             instance?: string;
@@ -385,6 +390,7 @@ export interface operations {
             };
             cookie?: never;
         };
+        /** @description Optional; an empty body counts as `{}`. `Content-Type: application/json` is required either way. */
         requestBody?: {
             content: {
                 "application/json": components["schemas"]["ActionRequest"];
@@ -400,7 +406,7 @@ export interface operations {
                     "application/json": components["schemas"]["ActionResult"];
                 };
             };
-            /** @description Invalid request body or value (`BAD_REQUEST`, `INVALID_VALUE`) */
+            /** @description Invalid request body, value or name (`BAD_REQUEST`, `INVALID_VALUE`) */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -440,7 +446,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Refused by the access policy (`FORBIDDEN`, see `reason`) */
+            /** @description Refused by the access policy (`FORBIDDEN`, see `reason`), or a cross-site request whose `Origin` is not allowed (`ORIGIN_NOT_ALLOWED`) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -460,7 +466,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Unknown parameter (`UNKNOWN_PARAMETER`) */
+            /** @description Unknown parameter or route (`UNKNOWN_PARAMETER`, `NOT_FOUND`) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -474,6 +480,60 @@ export interface operations {
                      *       "status": 404,
                      *       "title": "Unknown parameter",
                      *       "type": "urn:cp750:problem:unknown-parameter"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The request body is larger than the server accepts (`PAYLOAD_TOO_LARGE`) */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "PAYLOAD_TOO_LARGE",
+                     *       "detail": "Request body too large",
+                     *       "status": 413,
+                     *       "title": "Request body too large",
+                     *       "type": "urn:cp750:problem:payload-too-large"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The request body is not `application/json` (`UNSUPPORTED_MEDIA_TYPE`) */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "UNSUPPORTED_MEDIA_TYPE",
+                     *       "detail": "Unsupported media type",
+                     *       "status": 415,
+                     *       "title": "Unsupported media type",
+                     *       "type": "urn:cp750:problem:unsupported-media-type"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The `Host` header is not one this server answers to (`HOST_NOT_ALLOWED`); see `CP750_ALLOWED_HOSTS` */
+            421: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "HOST_NOT_ALLOWED",
+                     *       "detail": "Host not allowed",
+                     *       "status": 421,
+                     *       "title": "Host not allowed",
+                     *       "type": "urn:cp750:problem:host-not-allowed"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -553,6 +613,24 @@ export interface operations {
                     "application/json": components["schemas"]["Commands"];
                 };
             };
+            /** @description The `Host` header is not one this server answers to (`HOST_NOT_ALLOWED`); see `CP750_ALLOWED_HOSTS` */
+            421: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "HOST_NOT_ALLOWED",
+                     *       "detail": "Host not allowed",
+                     *       "status": 421,
+                     *       "title": "Host not allowed",
+                     *       "type": "urn:cp750:problem:host-not-allowed"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
     getDevice: {
@@ -571,6 +649,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Device"];
+                };
+            };
+            /** @description The `Host` header is not one this server answers to (`HOST_NOT_ALLOWED`); see `CP750_ALLOWED_HOSTS` */
+            421: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "HOST_NOT_ALLOWED",
+                     *       "detail": "Host not allowed",
+                     *       "status": 421,
+                     *       "title": "Host not allowed",
+                     *       "type": "urn:cp750:problem:host-not-allowed"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };
@@ -593,6 +689,42 @@ export interface operations {
                     "text/event-stream": components["schemas"]["SessionEvent"];
                 };
             };
+            /** @description The `Host` header is not one this server answers to (`HOST_NOT_ALLOWED`); see `CP750_ALLOWED_HOSTS` */
+            421: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "HOST_NOT_ALLOWED",
+                     *       "detail": "Host not allowed",
+                     *       "status": 421,
+                     *       "title": "Host not allowed",
+                     *       "type": "urn:cp750:problem:host-not-allowed"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Too many event streams are open (`TOO_MANY_STREAMS`); see `CP750_MAX_SSE_CLIENTS` */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "TOO_MANY_STREAMS",
+                     *       "detail": "Too many event streams",
+                     *       "status": 503,
+                     *       "title": "Too many event streams",
+                     *       "type": "urn:cp750:problem:too-many-streams"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
     getHealth: {
@@ -613,6 +745,24 @@ export interface operations {
                     "application/json": components["schemas"]["Health"];
                 };
             };
+            /** @description The `Host` header is not one this server answers to (`HOST_NOT_ALLOWED`); see `CP750_ALLOWED_HOSTS` */
+            421: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "HOST_NOT_ALLOWED",
+                     *       "detail": "Host not allowed",
+                     *       "status": 421,
+                     *       "title": "Host not allowed",
+                     *       "type": "urn:cp750:problem:host-not-allowed"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
     getOpenApi: {
@@ -631,6 +781,24 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OpenApiDocument"];
+                };
+            };
+            /** @description The `Host` header is not one this server answers to (`HOST_NOT_ALLOWED`); see `CP750_ALLOWED_HOSTS` */
+            421: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "HOST_NOT_ALLOWED",
+                     *       "detail": "Host not allowed",
+                     *       "status": 421,
+                     *       "title": "Host not allowed",
+                     *       "type": "urn:cp750:problem:host-not-allowed"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
         };
@@ -656,6 +824,28 @@ export interface operations {
                     "application/json": components["schemas"]["ParamReading"];
                 };
             };
+            /** @description Invalid request body, value or name (`BAD_REQUEST`, `INVALID_VALUE`) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "INVALID_VALUE",
+                     *       "detail": "Invalid value",
+                     *       "errors": [
+                     *         "must be <= 100"
+                     *       ],
+                     *       "param": "cp750.sys.fader",
+                     *       "status": 400,
+                     *       "title": "Invalid value",
+                     *       "type": "urn:cp750:problem:invalid-value"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
             /** @description Refused by the access policy (`FORBIDDEN`, see `reason`) */
             403: {
                 headers: {
@@ -676,7 +866,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Unknown parameter (`UNKNOWN_PARAMETER`) */
+            /** @description Unknown parameter or route (`UNKNOWN_PARAMETER`, `NOT_FOUND`) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -690,6 +880,24 @@ export interface operations {
                      *       "status": 404,
                      *       "title": "Unknown parameter",
                      *       "type": "urn:cp750:problem:unknown-parameter"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The `Host` header is not one this server answers to (`HOST_NOT_ALLOWED`); see `CP750_ALLOWED_HOSTS` */
+            421: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "HOST_NOT_ALLOWED",
+                     *       "detail": "Host not allowed",
+                     *       "status": 421,
+                     *       "title": "Host not allowed",
+                     *       "type": "urn:cp750:problem:host-not-allowed"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -776,7 +984,7 @@ export interface operations {
                     "application/json": components["schemas"]["ParamReading"];
                 };
             };
-            /** @description Invalid request body or value (`BAD_REQUEST`, `INVALID_VALUE`) */
+            /** @description Invalid request body, value or name (`BAD_REQUEST`, `INVALID_VALUE`) */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -816,7 +1024,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Refused by the access policy (`FORBIDDEN`, see `reason`) */
+            /** @description Refused by the access policy (`FORBIDDEN`, see `reason`), or a cross-site request whose `Origin` is not allowed (`ORIGIN_NOT_ALLOWED`) */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -836,7 +1044,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Unknown parameter (`UNKNOWN_PARAMETER`) */
+            /** @description Unknown parameter or route (`UNKNOWN_PARAMETER`, `NOT_FOUND`) */
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -850,6 +1058,60 @@ export interface operations {
                      *       "status": 404,
                      *       "title": "Unknown parameter",
                      *       "type": "urn:cp750:problem:unknown-parameter"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The request body is larger than the server accepts (`PAYLOAD_TOO_LARGE`) */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "PAYLOAD_TOO_LARGE",
+                     *       "detail": "Request body too large",
+                     *       "status": 413,
+                     *       "title": "Request body too large",
+                     *       "type": "urn:cp750:problem:payload-too-large"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The request body is not `application/json` (`UNSUPPORTED_MEDIA_TYPE`) */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "UNSUPPORTED_MEDIA_TYPE",
+                     *       "detail": "Unsupported media type",
+                     *       "status": 415,
+                     *       "title": "Unsupported media type",
+                     *       "type": "urn:cp750:problem:unsupported-media-type"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description The `Host` header is not one this server answers to (`HOST_NOT_ALLOWED`); see `CP750_ALLOWED_HOSTS` */
+            421: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": "HOST_NOT_ALLOWED",
+                     *       "detail": "Host not allowed",
+                     *       "status": 421,
+                     *       "title": "Host not allowed",
+                     *       "type": "urn:cp750:problem:host-not-allowed"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];

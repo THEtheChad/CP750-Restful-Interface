@@ -4,6 +4,7 @@
  *
  *   cp750 serve [--mock]                 run the HTTP API and the embedded web client
  *   cp750 capture --host <ip> [--out d]  record version/help/status and a draft manifest
+ *                                        (see docs/ADDING-A-FIRMWARE.md)
  *   cp750 query <param>                  one-shot read
  */
 import { parseArgs } from "node:util";
@@ -13,12 +14,14 @@ import { writeCapture } from "./capture.ts";
 import {
   CONFIG_FLAG_OPTIONS,
   ConfigError,
+  configWarnings,
   isLoopback,
   loadConfig,
   SETTINGS,
   type ServerConfig,
 } from "./config.ts";
 import { WEB_ASSETS } from "./generated/web-assets.ts";
+import { allowedHostNames, MAX_BODY_BYTES } from "./guards.ts";
 import { toReading } from "./reading.ts";
 import { captureDevice, createSession } from "./session-factory.ts";
 
@@ -41,16 +44,17 @@ const CLI_OPTIONS = {
 function usage(): string {
   const settings = SETTINGS.map((s) => {
     const flag = s.flag ? `--${s.flag}${s.type === "string" ? " <v>" : ""}` : "(env only)";
-    return `  ${flag.padEnd(24)} ${s.env.padEnd(21)} ${s.description} [${s.defaultLabel}]`;
+    return `  ${flag.padEnd(24)} ${s.env.padEnd(22)} ${s.description} [${s.defaultLabel}]`;
   });
   return [
     `cp750 ${SERVER_VERSION}: REST + SSE gateway for the Dolby CP750`,
     "",
     "Usage:",
     "  cp750 serve [--mock] [options]         run the HTTP API and web client",
-    "  cp750 capture --host <ip> [--out <dir>] record version, help and status, and write",
-    "                                         <dir>/<firmware>/{help.txt,status.txt,manifest.json}",
-    "                                         (default dir ./captures)",
+    "  cp750 capture --host <ip> [--out <dir>] record version, help and status (normal and full",
+    "                                         set) into <dir>/<firmware>/*.txt, and a draft",
+    "                                         manifest <dir>/<firmware>.json (default dir ./captures;",
+    "                                         see docs/ADDING-A-FIRMWARE.md)",
     "  cp750 query <param> [options]          read one parameter and print it as JSON",
     "  cp750 --help | --version",
     "",
@@ -106,6 +110,8 @@ async function serve(config: ServerConfig, io: CliIo): Promise<number> {
       hostname: config.listenHost,
       port: config.port,
       fetch: app.fetch,
+      // Mutation bodies are tiny; Bun answers 413 to anything larger before it reaches the app.
+      maxRequestBodySize: MAX_BODY_BYTES,
       // Above the 15 s SSE heartbeat, so idle event streams stay open.
       idleTimeout: 60,
     });
@@ -122,8 +128,12 @@ async function serve(config: ServerConfig, io: CliIo): Promise<number> {
     config.allowFull && "full-tier allowed",
     config.allowInternal && "internal params allowed",
     config.apiToken ? "token required for changes" : "no API token",
+    config.pollMs > 0 ? `polling every ${config.pollMs} ms` : "polling off",
   ].filter(Boolean);
   log(`mode: ${flags.join(", ")}`);
+  log(
+    `answers Host: ${[...allowedHostNames(config)].join(", ")} (add more with CP750_ALLOWED_HOSTS)`,
+  );
   if (Object.keys(WEB_ASSETS).length === 0) log("web client: not embedded in this build");
   if (!isLoopback(config.listenHost) && !config.apiToken && !config.readOnly) {
     io.err(
@@ -173,7 +183,13 @@ async function capture(config: ServerConfig, outDir: string, io: CliIo): Promise
     timeoutMs: CONNECT_TIMEOUT_MS,
   });
   const files = await writeCapture(outDir, result);
-  io.out(`firmware ${result.firmware}: wrote ${files.help}, ${files.status}, ${files.manifest}`);
+  const written = [files.version, files.help, files.status, files.helpFull, files.statusFull];
+  io.out(`firmware ${result.firmware}: wrote ${written.filter(Boolean).join(", ")}`);
+  io.out(`draft manifest: ${files.manifest}`);
+  if (!files.helpFull) io.err("The unit refused full control; only the normal set was recorded.");
+  io.err(
+    `Next: review it (docs/ADDING-A-FIRMWARE.md), or try it now with CP750_MANIFEST_DIR=${outDir}`,
+  );
   return 0;
 }
 
@@ -216,6 +232,7 @@ export async function main(
     }
     throw error;
   }
+  for (const warning of configWarnings(env, config)) io.err(`WARNING: ${warning}`);
 
   const expectArgs = (count: number, what: string): boolean => {
     if (rest.length === count) return true;

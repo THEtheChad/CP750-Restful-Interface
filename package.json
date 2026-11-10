@@ -27,6 +27,7 @@
     "openapi": "bun apps/server/scripts/openapi.ts",
     "openapi:check": "bun apps/server/scripts/openapi.ts --check",
     "compile": "bun apps/server/scripts/compile.ts",
+    "smoke": "scripts/smoke-test.sh dist/cp750-linux-x64",
     "check": "bun run lint && bun run typecheck && bun run gen:check && bun run openapi:check && bun run test"
   },
   "devDependencies": {

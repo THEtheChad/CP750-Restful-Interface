@@ -22,7 +22,8 @@
   color: var(--danger-text);
 }
 
-.mute:disabled {
+.mute:disabled,
+.mute[aria-disabled="true"] {
   cursor: not-allowed;
   opacity: 0.55;
 }

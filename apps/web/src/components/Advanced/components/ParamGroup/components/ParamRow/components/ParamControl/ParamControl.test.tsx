@@ -3,7 +3,12 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import type { ParamValue, ValueSchema } from "../../../../../../../../api/types.ts";
 import { ParamControl } from "./ParamControl.tsx";
 
-function setup(schema: ValueSchema | null, value: ParamValue | undefined, disabled = false) {
+function setup(
+  schema: ValueSchema | null,
+  value: ParamValue | undefined,
+  disabled = false,
+  pending = false,
+) {
   const onCommit = mock((_: ParamValue) => Promise.resolve());
   render(
     <>
@@ -12,6 +17,7 @@ function setup(schema: ValueSchema | null, value: ParamValue | undefined, disabl
         schema={schema}
         value={value}
         disabled={disabled}
+        pending={pending}
         labelledBy="name"
         onCommit={onCommit}
       />
@@ -29,20 +35,35 @@ describe("ParamControl renders the control the schema calls for", () => {
     expect(onCommit).toHaveBeenCalledWith(1);
   });
 
+  test("a switch ignores clicks while a write is pending", () => {
+    const onCommit = setup({ type: "integer", enum: [0, 1] }, 0, false, true);
+    const toggle = screen.getByRole("switch", { name: "cp750.sys.x" });
+    expect(toggle.getAttribute("aria-disabled")).toBe("true");
+    fireEvent.click(toggle);
+    expect(onCommit).not.toHaveBeenCalled();
+  });
+
+  test("Set and Undo are named after the param", () => {
+    setup({ type: "string", maxLength: 16 }, "booth-1");
+    expect(screen.getByRole("button", { name: "Set cp750.sys.x" })).toBeTruthy();
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "booth-2" } });
+    expect(screen.getByRole("button", { name: "Undo cp750.sys.x" })).toBeTruthy();
+  });
+
   test("string enum → a select; the change is only sent with Set", async () => {
     const onCommit = setup({ type: "string", enum: ["off", "on", "n_a"] }, "off");
     const select = screen.getByRole("combobox", { name: "cp750.sys.x" }) as HTMLSelectElement;
     expect([...select.options].map((o) => o.value)).toEqual(["off", "on", "n_a"]);
     fireEvent.change(select, { target: { value: "on" } });
     expect(onCommit).not.toHaveBeenCalled();
-    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Set" })));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Set cp750.sys.x" })));
     expect(onCommit).toHaveBeenCalledWith("on");
   });
 
   test("integer enum values are sent as numbers", async () => {
     const onCommit = setup({ type: "integer", enum: [1, 2, 3] }, 1);
     fireEvent.change(screen.getByRole("combobox"), { target: { value: "3" } });
-    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Set" })));
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Set cp750.sys.x" })));
     expect(onCommit).toHaveBeenCalledWith(3);
   });
 
@@ -64,7 +85,9 @@ describe("ParamControl renders the control the schema calls for", () => {
     fireEvent.change(number, { target: { value: "100" } });
     expect(screen.getByText("Must be 200 or more")).toBeTruthy();
     expect(number.getAttribute("aria-invalid")).toBe("true");
-    expect((screen.getByRole("button", { name: "Set" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(
+      (screen.getByRole("button", { name: "Set cp750.sys.x" }) as HTMLButtonElement).disabled,
+    ).toBe(true);
     fireEvent.submit(number.closest("form") as HTMLFormElement);
     expect(onCommit).not.toHaveBeenCalled();
   });

@@ -3,6 +3,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { FakeEventSource } from "../../test/fake-gateway.ts";
 import { fixtureDevice } from "../../test/fixtures.ts";
 import { applySessionEvent, connectEvents } from "./events.ts";
+import { beginWrite, endWrite } from "./pending-writes.ts";
 import { queryKeys } from "./query-keys.ts";
 import type { Device, ParamReading } from "./types.ts";
 
@@ -79,6 +80,62 @@ describe("SSE → query cache", () => {
     applySessionEvent(qc, { type: "device", firmware: "1.2.9", manifest, at });
     expect(qc.getQueryData<Device>(queryKeys.device)?.manifest).toEqual(manifest);
     expect(qc.getQueryState(queryKeys.commands)?.isInvalidated).toBe(true);
+  });
+});
+
+describe("SSE and pending writes", () => {
+  test("a param event is held back while a write to that param is pending", () => {
+    const qc = new QueryClient();
+    const key = queryKeys.param("cp750.sys.mute");
+    qc.setQueryData<ParamReading>(key, { name: "cp750.sys.mute", value: 1, raw: "1" });
+    beginWrite(qc, "cp750.sys.mute");
+    applySessionEvent(qc, { type: "param", name: "cp750.sys.mute", value: 0, raw: "0", at });
+    // The optimistic value stays…
+    expect(qc.getQueryData<ParamReading>(key)?.value).toBe(1);
+    // …and the settling write gets the held value to compare.
+    expect(endWrite(qc, "cp750.sys.mute")).toEqual({ value: 0 });
+    // Afterwards events apply again.
+    applySessionEvent(qc, { type: "param", name: "cp750.sys.mute", value: 0, raw: "0", at });
+    expect(qc.getQueryData<ParamReading>(key)?.value).toBe(0);
+  });
+
+  test("other params are not held", () => {
+    const qc = new QueryClient();
+    beginWrite(qc, "cp750.sys.mute");
+    applySessionEvent(qc, { type: "param", name: "cp750.sys.fader", value: 5, raw: "5", at });
+    expect(qc.getQueryData<ParamReading>(queryKeys.param("cp750.sys.fader"))?.value).toBe(5);
+  });
+});
+
+describe("snapshots that match the cache", () => {
+  test("connection/device snapshots equal to the cache trigger no refetch", () => {
+    const qc = new QueryClient();
+    const device = fixtureDevice();
+    qc.setQueryData<Device>(queryKeys.device, device);
+    qc.setQueryData(queryKeys.commands, { commands: [] });
+    applySessionEvent(qc, {
+      type: "connection",
+      connection: device.connection,
+      error: device.lastError,
+      at,
+    });
+    applySessionEvent(qc, {
+      type: "device",
+      firmware: device.firmware,
+      manifest: device.manifest ? { ...device.manifest } : null,
+      at,
+    });
+    expect(qc.getQueryState(queryKeys.device)?.isInvalidated).toBe(false);
+    expect(qc.getQueryState(queryKeys.commands)?.isInvalidated).toBe(false);
+    expect(qc.getQueryData(queryKeys.device)).toBe(device);
+  });
+
+  test("before the first fetch, snapshots leave the cache alone", () => {
+    const qc = new QueryClient();
+    applySessionEvent(qc, { type: "connection", connection: "connected", error: null, at });
+    applySessionEvent(qc, { type: "device", firmware: "1.2.8.3", manifest: null, at });
+    expect(qc.getQueryState(queryKeys.device)).toBeUndefined();
+    expect(qc.getQueryState(queryKeys.commands)).toBeUndefined();
   });
 });
 

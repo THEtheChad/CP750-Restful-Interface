@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { loadManifestDir } from "@cp750/manifests";
 import { SERVER_VERSION } from "../src/app.ts";
 import { writeCapture } from "../src/capture.ts";
 import { type CliIo, main } from "../src/cli.ts";
@@ -35,8 +36,8 @@ describe("cli", () => {
       expect(await main(argv, {}, r.io)).toBe(2);
     }
     const r = io();
-    expect(await main(["serve", "--mock"], { PORT: "nope" }, r.io)).toBe(2);
-    expect(r.err[0]).toContain("PORT / --port");
+    expect(await main(["serve", "--mock"], { CP750_LISTEN_PORT: "nope" }, r.io)).toBe(2);
+    expect(r.err[0]).toContain("CP750_LISTEN_PORT / --port");
   });
 
   test("query --mock prints the reading as JSON", async () => {
@@ -103,6 +104,49 @@ describe("cli", () => {
     expect(fetch(new URL("/api/health", url))).rejects.toThrow();
   });
 
+  test("warns about unknown CP750_* variables", async () => {
+    const r = io(Promise.resolve("SIGINT"));
+    expect(await main(["serve", "--mock", "--port", "0"], { CP750_READONLY: "1" }, r.io)).toBe(0);
+    expect(r.err.join("\n")).toContain(
+      "WARNING: unknown environment variable CP750_READONLY is ignored (did you mean CP750_READ_ONLY?)",
+    );
+  });
+
+  test("serve enforces Host, content type and body size over real HTTP", async () => {
+    let stop: (signal: string) => void = () => {};
+    const shutdown = new Promise<string>((resolve) => {
+      stop = resolve;
+    });
+    const r = io(shutdown);
+    const running = main(["serve", "--mock", "--port", "0"], {}, r.io);
+    let url: string | undefined;
+    for (let i = 0; i < 100 && !url; i++) {
+      url = /listening on (\S+)/.exec(r.out.join("\n"))?.[1];
+      if (!url) await Bun.sleep(10);
+    }
+    try {
+      const health = new URL("/api/health", url);
+      expect((await fetch(health)).status).toBe(200);
+      const rebound = await fetch(health, { headers: { host: `evil.example:${health.port}` } });
+      expect(rebound.status).toBe(421);
+      const head = await fetch(new URL("/api/events", url), { method: "HEAD" });
+      expect(head.status).toBe(200);
+      const bare = await fetch(new URL("/api/actions/cp750.ctrl.fader_delta", url), {
+        method: "POST",
+      });
+      expect(bare.status).toBe(415);
+      const huge = await fetch(new URL("/api/params/cp750.sys.hostname", url), {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ value: "x".repeat(64 * 1024) }),
+      });
+      expect(huge.status).toBe(413);
+    } finally {
+      stop("SIGTERM");
+      expect(await running).toBe(0);
+    }
+  });
+
   test("serve warns when exposed without a token", async () => {
     const r = io(Promise.resolve("SIGINT"));
     expect(
@@ -113,27 +157,51 @@ describe("cli", () => {
 });
 
 describe("writeCapture", () => {
-  test("writes help.txt, status.txt and manifest.json under the firmware", async () => {
+  const capture = {
+    firmware: "1.2.8.3",
+    versionLine: "cp750.sysinfo.version 1.2.8.3",
+    help: ["cp750.sys.fader", "cp750.sys.mute"],
+    status: ["cp750.sys.fader : 70"],
+    helpFull: ["cp750.sys.fader", "cp750.sys.mute", "cp750.sys.mute_fade_in_time"],
+    statusFull: ["cp750.sys.fader : 70", "cp750.sys.mute_fade_in_time : 500"],
+    draftManifest: draft,
+  };
+
+  test("writes the raw text under <firmware>/ and the manifest as <firmware>.json", async () => {
     const dir = await mkdtemp(join(tmpdir(), "cp750-capture-"));
     try {
-      const files = await writeCapture(dir, {
-        firmware: "1.2.8.3",
-        help: ["cp750.sys.fader", "cp750.sys.mute"],
-        status: ["cp750.sys.fader : 70"],
-        draftManifest: draft,
-      });
+      const files = await writeCapture(dir, capture);
       expect(files.dir).toBe(join(dir, "1.2.8.3"));
+      expect(await readFile(files.version, "utf8")).toBe("cp750.sysinfo.version 1.2.8.3\n");
       expect(await readFile(files.help, "utf8")).toBe("cp750.sys.fader\ncp750.sys.mute\n");
       expect(await readFile(files.status, "utf8")).toBe("cp750.sys.fader : 70\n");
+      expect(await readFile(files.helpFull as string, "utf8")).toContain("mute_fade_in_time\n");
+      expect(await readFile(files.statusFull as string, "utf8")).toContain("_time : 500\n");
+      expect(files.manifest).toBe(join(dir, "1.2.8.3.json"));
       expect(JSON.parse(await readFile(files.manifest, "utf8"))).toEqual(draft);
+      // The output directory loads as CP750_MANIFEST_DIR as-is.
+      const loaded = await loadManifestDir(dir);
+      expect(loaded.map((m) => m.firmware)).toEqual(["1.2.8.3"]);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
   });
 
-  test("refuses firmware strings that are not safe directory names", async () => {
-    await expect(
-      writeCapture(tmpdir(), { firmware: "../../etc", help: [], status: [], draftManifest: draft }),
-    ).rejects.toThrow(/unexpected firmware/);
+  test("skips the full-set files when the unit refused full control", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "cp750-capture-"));
+    try {
+      const files = await writeCapture(dir, { ...capture, helpFull: null, statusFull: null });
+      expect(files.helpFull).toBeNull();
+      expect(files.statusFull).toBeNull();
+      expect((await readdir(files.dir)).sort()).toEqual(["help.txt", "status.txt", "version.txt"]);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("refuses firmware strings that are not safe file names", async () => {
+    await expect(writeCapture(tmpdir(), { ...capture, firmware: "../../etc" })).rejects.toThrow(
+      /unexpected firmware/,
+    );
   });
 });

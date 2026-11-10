@@ -155,4 +155,63 @@ describe("latest-value sender (fader throttle)", () => {
     await clock.advance(500);
     expect(io.sent).toEqual([1]);
   });
+
+  describe("limit (per-send delta cap)", () => {
+    /** A device that follows every write, and a limit of ±10 from its value. */
+    function ramp(initial: number, follows = true) {
+      const clock = fakeScheduler();
+      let device = initial;
+      const sent: number[] = [];
+      let idle = 0;
+      const sender = createLatestSender({
+        send: async (v: number) => {
+          sent.push(v);
+          if (follows) device = v;
+        },
+        intervalMs: 150,
+        scheduler: clock.scheduler,
+        limit: (target) => Math.max(device - 10, Math.min(device + 10, target)),
+        onIdle: () => idle++,
+      });
+      return { clock, sender, sent, idle: () => idle, device: () => device };
+    }
+
+    test("a big jump is sent as a ramp of capped steps, throttled", async () => {
+      const r = ramp(70);
+      r.sender.push(100);
+      r.sender.flush();
+      await settle();
+      expect(r.sent).toEqual([80]);
+      await r.clock.advance(150);
+      expect(r.sent).toEqual([80, 90]);
+      await r.clock.advance(150);
+      expect(r.sent).toEqual([80, 90, 100]);
+      await r.clock.advance(1_000);
+      expect(r.sent).toEqual([80, 90, 100]);
+      expect(r.idle()).toBe(1);
+    });
+
+    test("a newer target replaces the rest of the ramp", async () => {
+      const r = ramp(70);
+      r.sender.push(100);
+      await settle();
+      r.sender.push(75);
+      await r.clock.advance(150);
+      expect(r.sent).toEqual([80, 75]);
+    });
+
+    test("gives up when the device does not follow a capped step", async () => {
+      const r = ramp(70, false);
+      r.sender.push(100);
+      await settle();
+      await r.clock.advance(1_000);
+      expect(r.sent).toEqual([80]);
+      expect(r.sender.busy).toBe(false);
+      expect(r.idle()).toBe(1);
+      // A new target from the operator starts a new ramp.
+      r.sender.push(100);
+      await settle();
+      expect(r.sent).toEqual([80, 80]);
+    });
+  });
 });

@@ -6,13 +6,25 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { parseSessionEvent } from "./client.ts";
 import type { StreamStatus } from "./context.ts";
+import { holdIfWriting } from "./pending-writes.ts";
 import { queryKeys } from "./query-keys.ts";
 import type { Device, ParamReading, SessionEvent } from "./types.ts";
 
-/** Updates the query cache for one session event. */
+/** Structural equality for the small JSON payloads of `connection`/`device` events. */
+function sameJson(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+}
+
+/**
+ * Updates the query cache for one session event. A `param` event for a param with a write in
+ * flight is held back (the write settles it, see `useWriteParam`). `connection` and `device`
+ * events that match the cache, like the snapshots the stream opens with, change nothing and
+ * trigger no refetch.
+ */
 export function applySessionEvent(queryClient: QueryClient, event: SessionEvent): void {
   switch (event.type) {
     case "param": {
+      if (holdIfWriting(queryClient, event.name, event.value)) return;
       const key = queryKeys.param(event.name);
       const old = queryClient.getQueryData<ParamReading>(key);
       if (old && Object.is(old.value, event.value)) {
@@ -35,9 +47,15 @@ export function applySessionEvent(queryClient: QueryClient, event: SessionEvent)
       return;
     }
     case "connection": {
-      queryClient.setQueryData<Device>(queryKeys.device, (old) =>
-        old ? { ...old, connection: event.connection, lastError: event.error } : old,
-      );
+      const old = queryClient.getQueryData<Device>(queryKeys.device);
+      // Not fetched yet: the first fetch (already under way) reads the current state.
+      if (!old) return;
+      if (old.connection === event.connection && sameJson(old.lastError, event.error)) return;
+      queryClient.setQueryData<Device>(queryKeys.device, {
+        ...old,
+        connection: event.connection,
+        lastError: event.error,
+      });
       void queryClient.invalidateQueries({ queryKey: queryKeys.device });
       if (event.connection === "connected") {
         // Values may have changed while the processor was unreachable.
@@ -47,9 +65,14 @@ export function applySessionEvent(queryClient: QueryClient, event: SessionEvent)
       return;
     }
     case "device": {
-      queryClient.setQueryData<Device>(queryKeys.device, (old) =>
-        old ? { ...old, firmware: event.firmware, manifest: event.manifest } : old,
-      );
+      const old = queryClient.getQueryData<Device>(queryKeys.device);
+      if (!old) return;
+      if (old.firmware === event.firmware && sameJson(old.manifest, event.manifest)) return;
+      queryClient.setQueryData<Device>(queryKeys.device, {
+        ...old,
+        firmware: event.firmware,
+        manifest: event.manifest,
+      });
       void queryClient.invalidateQueries({ queryKey: queryKeys.device });
       void queryClient.invalidateQueries({ queryKey: queryKeys.commands });
       return;

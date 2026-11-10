@@ -15,9 +15,14 @@ import type { ParamValue } from "@cp750/manifests";
 export type HttpErrorCode =
   | "BAD_REQUEST"
   | "UNAUTHORIZED"
+  | "ORIGIN_NOT_ALLOWED"
   | "NOT_FOUND"
   | "METHOD_NOT_ALLOWED"
-  | "INTERNAL";
+  | "PAYLOAD_TOO_LARGE"
+  | "UNSUPPORTED_MEDIA_TYPE"
+  | "HOST_NOT_ALLOWED"
+  | "INTERNAL"
+  | "TOO_MANY_STREAMS";
 
 export type ProblemCode = Cp750ErrorCode | HttpErrorCode;
 
@@ -49,12 +54,17 @@ export const PROBLEMS: Record<ProblemCode, { status: number; title: string }> = 
   INVALID_VALUE: { status: 400, title: "Invalid value" },
   UNAUTHORIZED: { status: 401, title: "Unauthorized" },
   FORBIDDEN: { status: 403, title: "Forbidden" },
+  ORIGIN_NOT_ALLOWED: { status: 403, title: "Cross-origin request refused" },
   NOT_FOUND: { status: 404, title: "Not found" },
   UNKNOWN_PARAMETER: { status: 404, title: "Unknown parameter" },
   METHOD_NOT_ALLOWED: { status: 405, title: "Method not allowed" },
+  PAYLOAD_TOO_LARGE: { status: 413, title: "Request body too large" },
+  UNSUPPORTED_MEDIA_TYPE: { status: 415, title: "Unsupported media type" },
+  HOST_NOT_ALLOWED: { status: 421, title: "Host not allowed" },
   WRITE_REJECTED: { status: 422, title: "Write rejected by the device" },
   INTERNAL: { status: 500, title: "Internal server error" },
   NOT_CONNECTED: { status: 503, title: "Not connected to the CP750" },
+  TOO_MANY_STREAMS: { status: 503, title: "Too many event streams" },
   TIMEOUT: { status: 504, title: "The CP750 did not answer" },
 };
 

@@ -23,6 +23,8 @@ describe("ActionButton: destructive confirmation", () => {
     expect(screen.getByRole("group").textContent).toContain("the sound stops");
 
     fireEvent.click(screen.getByRole("button", { name: "Yes, reboot" }));
+    // Focus returns to the trigger, which stays focusable while the action is pending.
+    expect(document.activeElement).toBe(trigger);
     await waitFor(() => expect(gateway.paramRequests("POST").length).toBe(1));
     const [request] = gateway.paramRequests("POST");
     expect(request?.path).toBe("/api/actions/cp750.ctrl.reboot");
@@ -46,12 +48,15 @@ describe("ActionButton: destructive confirmation", () => {
     expect(gateway.paramRequests().length).toBe(0);
   });
 
-  test("the confirmation expires on its own", async () => {
+  test("the confirmation expires on its own and returns focus to the trigger", async () => {
     renderWithGateway(<ActionButton command={reboot} reason={null} confirmTimeoutMs={20} />);
-    fireEvent.click(screen.getByRole("button", { name: "Reboot…" }));
+    const trigger = screen.getByRole("button", { name: "Reboot…" });
+    fireEvent.click(trigger);
     expect(screen.getByRole("group")).toBeTruthy();
+    expect(document.activeElement).not.toBe(trigger);
     await act(() => new Promise((resolve) => setTimeout(resolve, 60)));
     expect(screen.queryByRole("group")).toBeNull();
+    expect(document.activeElement).toBe(trigger);
   });
 
   test("is disabled, with no way to confirm, when blocked", () => {

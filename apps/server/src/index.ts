@@ -2,6 +2,7 @@ export {
   type App,
   type CreateAppOptions,
   createApp,
+  escapeControl,
   openApiDocument,
   SERVER_VERSION,
   tokensEqual,
@@ -9,12 +10,26 @@ export {
 export { type CaptureFiles, writeCapture } from "./capture.ts";
 export {
   ConfigError,
+  configWarnings,
+  DEFAULT_MAX_SSE_CLIENTS,
+  DEFAULT_POLL_MS,
   isLoopback,
+  isWildcardAddress,
   type LineEnding,
   loadConfig,
+  MIN_TOKEN_LENGTH,
+  normalizeHostname,
   SETTINGS,
   type ServerConfig,
 } from "./config.ts";
+export {
+  allowedHostNames,
+  hostFromHeader,
+  hostGuard,
+  jsonBodyGuard,
+  MAX_BODY_BYTES,
+  originGuard,
+} from "./guards.ts";
 export { sortKeys, stableStringify } from "./json.ts";
 export { buildOpenApiDocument, openApiJson } from "./openapi.ts";
 export {

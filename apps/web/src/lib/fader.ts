@@ -5,6 +5,8 @@
 export const FADER_MIN = 0;
 export const FADER_MAX = 100;
 export const FADER_NOMINAL = 70;
+/** One page: 1.0 on the display (10 raw). The most a track click or a single send may move. */
+export const FADER_PAGE = 10;
 
 /** Typographic minus: easier to read from across a booth than a hyphen. */
 const MINUS = "−";

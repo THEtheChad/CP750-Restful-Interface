@@ -75,6 +75,25 @@ function semanticIssues(manifest: Manifest): ManifestIssue[] {
     if (v.type === "integer" && v.minimum !== undefined && v.maximum !== undefined) {
       if (v.minimum > v.maximum) issues.push({ path: `${at}/value`, message: "minimum > maximum" });
     }
+    if (v.type === "integer" && v.enum) {
+      const outside = v.enum.filter(
+        (n) =>
+          (v.minimum !== undefined && n < v.minimum) || (v.maximum !== undefined && n > v.maximum),
+      );
+      if (outside.length > 0) {
+        issues.push({
+          path: `${at}/value/enum`,
+          message: `members outside minimum/maximum: ${outside.join(", ")}`,
+        });
+      }
+    }
+    // Every unit (fader, ms, us, dB_tenths, feet_or_meters) describes a number.
+    if (spec.unit !== undefined && v.type !== "integer") {
+      issues.push({ path: `${at}/unit`, message: `unit "${spec.unit}" needs an integer value` });
+    }
+    if (spec.destructive === true && spec.access !== "action") {
+      issues.push({ path: `${at}/destructive`, message: "only action params can be destructive" });
+    }
     if (name.startsWith("cp750.internal.") && spec.internal !== true) {
       issues.push({ path: `${at}/internal`, message: "cp750.internal.* params must be internal" });
     }
@@ -94,7 +113,8 @@ function semanticIssues(manifest: Manifest): ManifestIssue[] {
 
 /**
  * Validates untrusted data as a manifest: the meta-schema, then checks the meta-schema cannot
- * express (every value schema compiles, min <= max, `internal` flags, alias collisions).
+ * express (every value schema compiles, min <= max, integer enum members within min/max, units
+ * only on integers, `destructive` only on actions, `internal` flags, alias collisions).
  */
 export function validateManifest(data: unknown): ManifestValidation {
   if (!validateMeta(data)) return { ok: false, issues: toIssues(validateMeta.errors) };

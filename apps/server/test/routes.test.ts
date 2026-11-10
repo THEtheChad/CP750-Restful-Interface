@@ -106,7 +106,7 @@ describe("routes", () => {
     expect(session.sent).toContain("cp750.sys.fader 40");
   });
 
-  test("POST /api/actions/{name} with a value and without a body", async () => {
+  test("POST /api/actions/{name} with a value and with an empty JSON body", async () => {
     const { app, session } = await setup();
     const res = await app.request(post("/api/actions/cp750.ctrl.fader_delta", { value: -5 }));
     expect(res.status).toBe(200);
@@ -133,8 +133,25 @@ describe("routes", () => {
     expect(res.status).toBe(404);
     expect(res.headers.get("content-type")).toBe("application/problem+json");
     expect(await json(res)).toMatchObject({ code: "NOT_FOUND", status: 404 });
+  });
+
+  test("a wrong method on a real route is a 405 with Allow", async () => {
+    const { app } = await setup();
     const del = await app.request("/api/params/cp750.sys.fader", { method: "DELETE" });
-    expect(del.status).toBe(404);
+    expect(del.status).toBe(405);
+    expect(del.headers.get("allow")).toBe("GET, HEAD, PUT");
+    expect(await json(del)).toMatchObject({ code: "METHOD_NOT_ALLOWED", status: 405 });
+    const post = await app.request("/api/params/cp750.sys.fader", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}",
+    });
+    expect(post.status).toBe(405);
+    const getAction = await app.request("/api/actions/cp750.ctrl.reboot");
+    expect(getAction.status).toBe(405);
+    expect(getAction.headers.get("allow")).toBe("POST");
+    const putHealth = await app.request("/api/health", { method: "PUT" });
+    expect(putHealth.status).toBe(405);
   });
 
   test("sets security headers and no CORS by default", async () => {
@@ -145,8 +162,8 @@ describe("routes", () => {
     expect(res.headers.get("access-control-allow-origin")).toBeNull();
   });
 
-  test("CORS_ORIGIN opts in to CORS for listed origins", async () => {
-    const { app } = await setup({ env: { CORS_ORIGIN: "http://booth.local:5173" } });
+  test("CP750_CORS_ORIGIN opts in to CORS for listed origins", async () => {
+    const { app } = await setup({ env: { CP750_CORS_ORIGIN: "http://booth.local:5173" } });
     const ok = await app.request("/api/health", { headers: { origin: "http://booth.local:5173" } });
     expect(ok.headers.get("access-control-allow-origin")).toBe("http://booth.local:5173");
     const other = await app.request("/api/health", { headers: { origin: "https://evil.example" } });

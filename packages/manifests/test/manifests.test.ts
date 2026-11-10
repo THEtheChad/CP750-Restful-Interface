@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { builtinManifests, type Manifest } from "../src/index.ts";
 
 function manifest(firmware: string): Manifest {
@@ -133,4 +135,38 @@ describe("1.2.8.3 draft", () => {
       base.params["cp750.sys.dig_1_global_delay"]?.value,
     );
   });
+});
+
+/**
+ * The bar for `status: "verified"` (docs/ADDING-A-FIRMWARE.md): a capture of a real unit checked in
+ * under `captures/<firmware>/`, named in `sources`, whose `help` lists exactly the manifest's params.
+ */
+describe("verified manifests are backed by a checked-in capture", () => {
+  // Verified before this bar existed; due to be demoted to draft. Do not add to this list.
+  const GRANDFATHERED = new Set(["1.0.0.150183"]);
+  const capturesDir = join(import.meta.dir, "..", "captures");
+  const names = (file: string) =>
+    existsSync(file)
+      ? [...readFileSync(file, "utf8").matchAll(/cp750\.[a-z0-9_]+\.[a-z0-9_]+/gi)].map((m) =>
+          m[0].toLowerCase(),
+        )
+      : [];
+
+  for (const m of builtinManifests().filter((m) => m.status === "verified")) {
+    test.skipIf(GRANDFATHERED.has(m.firmware))(m.firmware, () => {
+      const ref = `captures/${m.firmware}/`;
+      expect(m.sources.some((s) => s.kind === "capture" && s.ref === ref)).toBe(true);
+      const dir = join(capturesDir, m.firmware);
+      for (const file of ["version.txt", "help.txt", "status.txt"]) {
+        expect(existsSync(join(dir, file))).toBe(true);
+      }
+      const listed = new Set([
+        ...names(join(dir, "help.txt")),
+        ...names(join(dir, "help-full.txt")),
+      ]);
+      const params = Object.keys(m.params).filter((n) => n !== "cp750.sysinfo.version");
+      expect(params.filter((n) => !listed.has(n))).toEqual([]);
+      expect([...listed].filter((n) => !(n in m.params))).toEqual([]);
+    });
+  }
 });

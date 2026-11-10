@@ -15,7 +15,8 @@ bun run check   # lint, typecheck, codegen and OpenAPI staleness checks, tests (
 
 Other scripts: `bun run format`, `bun run gen` (regenerate code from the firmware manifests and
 the web client's API types), `bun run openapi` (regenerate `openapi/cp750.openapi.json`),
-`bun run compile`, `bun run test` (all tests; `bun test` alone skips `apps/web`, see below).
+`bun run compile`, `bun run smoke` (smoke-test `dist/cp750-linux-x64`), `bun run test` (all
+tests; `bun test` alone skips `apps/web`, see below).
 
 ## Run
 
@@ -36,9 +37,15 @@ bun apps/server/src/cli.ts serve              # against the real unit at CP750_H
   in `sessionStorage` for the tab). Banners warn when the gateway or the processor is unreachable
   or the manifest is unverified.
 - **Controls**: the fader as a big `7.0` readout with dB from the API, a slider, ±0.1/±1.0 steps and
-  a return to 7.0; mute; the input. Writes are optimistic and roll back on errors; a rejected write
-  (`422`) says what the processor kept. Dragging sends at most one write per 150 ms, never queues a
-  backlog, and commits the final value on release.
+  a return to 7.0; mute; the input. Writes are optimistic and roll back on errors (unless something
+  newer arrived meanwhile); a rejected write (`422`) says what the processor kept. Writes to one
+  param go one at a time, and mute and input ignore clicks while theirs is pending. Each shows
+  **Stale** when live updates have stopped for a few poll intervals.
+- **Fader safety**: the step buttons re-read the processor and step from its value, not from the
+  display. Dragging sends at most one write per 150 ms, never queues a backlog, and commits the
+  final value on release; no single write moves the level more than 1.0 (bigger moves ramp in
+  1.0 steps). A click on the track moves one page (1.0) toward the click. The mouse wheel does
+  nothing.
 - **Advanced**: every param from `/api/commands`, grouped by namespace, with search. Each control
   comes from the param's JSON Schema (switch, select, slider + number, number, text). Values are only
   read for rows on screen, or with Read. Disabled controls say why. Destructive actions need an
@@ -63,19 +70,23 @@ Environment variables, or the matching flag (flags win). Booleans take `1/0`, `t
 |---|---|---|---|
 | `CP750_HOST` | `--cp750-host`, `--host` | `192.168.1.136` | processor address |
 | `CP750_PORT` | `--cp750-port` | `61408` | processor TCP port |
-| `LISTEN_HOST` | `--listen-host` | `127.0.0.1` | HTTP bind address |
-| `PORT` | `--port` | `2222` | HTTP port (`0` picks a free one) |
+| `CP750_LISTEN_HOST` | `--listen-host` | `127.0.0.1` | HTTP bind address |
+| `CP750_LISTEN_PORT` | `--port` | `2222` | HTTP port (`0` picks a free one) |
 | `CP750_READ_ONLY` | `--read-only` | off | refuse every write and action |
 | `CP750_ALLOW_FULL` | `--allow-full` | off | allow `full`-tier params |
 | `CP750_ALLOW_INTERNAL` | `--allow-internal` | off | allow `internal` params |
-| `CP750_API_TOKEN` | (env only) | unset | if set, PUT/POST need `Authorization: Bearer <token>` |
+| `CP750_API_TOKEN` | (env only) | unset | if set, PUT/POST need `Authorization: Bearer <token>`; at least 16 characters |
 | `CP750_EOL` | `--eol` | `crlf` | command terminator: `crlf`, `lf` or `cr` |
-| `CP750_POLL_MS` | `--poll-ms` | off | poll fader/mute/input and emit change events |
+| `CP750_POLL_MS` | `--poll-ms` | `1000` | poll fader/mute/input every N ms so front-panel changes show up; `0` turns it off |
 | `CP750_MANIFEST_DIR` | `--manifest-dir` | none | extra `<firmware>.json` manifests |
 | `CP750_MOCK` | `--mock` | off | run against a built-in mock CP750 (a local TCP server) |
-| `CORS_ORIGIN` | `--cors-origin` | none | comma-separated origins allowed cross-origin |
+| `CP750_CORS_ORIGIN` | `--cors-origin` | none | comma-separated origins allowed cross-origin |
+| `CP750_ALLOWED_HOSTS` | `--allowed-hosts` | none | extra `Host` names to answer, e.g. `booth-pc.local` (see Security) |
+| `CP750_MAX_SSE_CLIENTS` | `--max-sse-clients` | `32` | concurrent `/api/events` streams |
 
-The compiled executable also reads a `.env` file in its working directory.
+Every variable starts with `CP750_`, and an unknown `CP750_*` variable (a typo such as
+`CP750_READONLY`) is reported as a warning at startup. The compiled executable does **not** read
+`.env` files: set variables in the environment (shell, systemd unit, service manager).
 
 ## HTTP API
 
@@ -90,33 +101,44 @@ The compiled executable also reads a `.env` file in its working directory.
 | `GET /api/events` | SSE: `connection` and `device` snapshots, then `param`, `connection`, `device` events |
 | `GET /api/openapi.json` | the OpenAPI 3.1 document (also committed as `openapi/cp750.openapi.json`) |
 
-Names accept aliases and any case. Errors are RFC 9457 `application/problem+json` with a stable
-`code`: `400 INVALID_VALUE`/`BAD_REQUEST`, `401 UNAUTHORIZED`, `403 FORBIDDEN` (with `reason`),
-`404 UNKNOWN_PARAMETER`, `422 WRITE_REJECTED` (with `requested` and `actual`), `503 NOT_CONNECTED`,
-`504 TIMEOUT`.
+Names accept aliases and any case. `PUT` and `POST` must send `Content-Type: application/json`,
+even an action without a body (an empty body counts as `{}`). Errors are RFC 9457
+`application/problem+json` with a stable `code`: `400 INVALID_VALUE`/`BAD_REQUEST`,
+`401 UNAUTHORIZED`, `403 FORBIDDEN` (with `reason`)/`ORIGIN_NOT_ALLOWED`,
+`404 UNKNOWN_PARAMETER`/`NOT_FOUND`, `405 METHOD_NOT_ALLOWED`, `413 PAYLOAD_TOO_LARGE`,
+`415 UNSUPPORTED_MEDIA_TYPE`, `421 HOST_NOT_ALLOWED`, `422 WRITE_REJECTED` (with `requested` and
+`actual`), `503 NOT_CONNECTED`/`TOO_MANY_STREAMS`, `504 TIMEOUT`.
 
 ```sh
 curl localhost:2222/api/params/cp750.sys.fader
 curl -X PUT localhost:2222/api/params/cp750.sys.fader -H 'content-type: application/json' -d '{"value":70}'
 curl -X POST localhost:2222/api/actions/cp750.ctrl.reboot -H 'content-type: application/json' -d '{"confirm":true}'
+curl -X POST localhost:2222/api/actions/cp750.ctrl.fader_delta -H 'content-type: application/json'
 ```
 
 ## CLI
 
 ```
 cp750 serve [--mock] [options]           run the HTTP API and the embedded web client
-cp750 capture --host <ip> [--out <dir>]  record version, help and status into
-                                         <dir>/<firmware>/{help.txt,status.txt,manifest.json}
+cp750 capture --host <ip> [--out <dir>]  record version, help and status (normal and full set)
+                                         into <dir>/<firmware>/*.txt and a draft manifest
+                                         <dir>/<firmware>.json
 cp750 query <param> [options]            read one parameter, print it as JSON
 cp750 --help | --version
 ```
+
+To support a new firmware, capture a unit running it and follow
+[docs/ADDING-A-FIRMWARE.md](docs/ADDING-A-FIRMWARE.md): review the draft, check in the capture,
+and decide between `draft` and `verified`. The capture directory works as `CP750_MANIFEST_DIR`
+right away.
 
 ## Compiling
 
 `bun run compile` builds `apps/web` (when present), embeds its `dist/` into the executable, and
 writes `dist/cp750-linux-x64`, `dist/cp750-windows-x64.exe` and `dist/cp750-darwin-arm64`
 (`--target linux-x64` builds just one). Each is a single ~90–115 MB file with no runtime
-dependencies.
+dependencies, built with `.env` and `bunfig.toml` autoloading off. CI compiles all three and runs
+`scripts/smoke-test.sh` against the Linux one.
 
 The web build is embedded through `apps/server/src/generated/web-assets.ts`, a generated module
 of `import … with { type: "file" }` statements: `bun build --compile` bundles those files and
@@ -124,12 +146,23 @@ resolves them to `/$bunfs/…` paths that `Bun.file` reads. The committed module
 compile script fills it from `apps/web/dist` and restores it afterwards. To serve a local web build
 from source, run `bun apps/server/scripts/web-assets.ts` (and `--empty` to reset it).
 
-## Safety
+## Safety and security
 
-A misfired write during a screening is audible, so:
+A misfired write during a screening is audible, and a hostile web page open in the operator's
+browser can reach a server on localhost. So:
 
 - the server binds to `127.0.0.1` unless told otherwise, and warns when it listens on the network
   without `CP750_API_TOKEN`
+- it only answers requests whose `Host` is `localhost`, `127.0.0.1`, `[::1]`, the listen address
+  or one of `CP750_ALLOWED_HOSTS` (any port); anything else gets `421`. This stops DNS rebinding,
+  where a page re-points its own domain at 127.0.0.1. When listening on `0.0.0.0` the machine's
+  own IP addresses are allowed too; add a hostname such as `booth-pc.local` to
+  `CP750_ALLOWED_HOSTS` to use it
+- `PUT`/`POST` from another site (a foreign `Origin`, or `Sec-Fetch-Site: cross-site`) are refused
+  with `403` unless the origin is in `CP750_CORS_ORIGIN`, and every `PUT`/`POST` must be
+  `application/json` (`415` otherwise), which a page cannot send cross-site without a CORS
+  preflight
+- request bodies are limited to 4 KiB, event streams to `CP750_MAX_SSE_CLIENTS`
 - reads are always open; every change is an explicit `PUT` or `POST`, gated by the token when set
 - `CP750_READ_ONLY=1` refuses all changes, in the HTTP layer and in the session
 - destructive actions (`reboot`, `default_params`, `log_erase`…) need `"confirm": true`

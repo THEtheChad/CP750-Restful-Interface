@@ -66,6 +66,9 @@ try {
       "--compile",
       `--target=bun-${target}`,
       "--minify",
+      // The executable reads its config from the real environment only: no stray .env/.env.local
+      // (with `$` expansion) or bunfig.toml from whatever directory it is started in.
+      "--no-compile-autoload-dotenv",
       "--no-compile-autoload-bunfig",
       "--outfile",
       outfile,
