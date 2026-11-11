@@ -1,21 +1,19 @@
-import { useId } from "react";
 import { useFreshness } from "../../../../api/hooks.ts";
+import { Icon } from "../../../Icon/Icon.tsx";
 import styles from "./StaleBadge.module.css";
 
 /**
- * "Stale" next to a main control's heading when its value may no longer match the processor
- * (see `useFreshness`), with the reason as text for screen readers and as a tooltip.
+ * A visible "Stale" next to a main control when its value may no longer match the processor (see
+ * `useFreshness`). The reason is part of the text for screen readers and a tooltip for the mouse.
  */
 export function StaleBadge({ name }: { name: string }) {
   const { stale, reason } = useFreshness(name);
-  const reasonId = useId();
   if (!stale) return null;
   return (
-    <span className={styles.badge} title={reason ?? undefined} aria-describedby={reasonId}>
+    <span className={styles.badge} title={reason ?? undefined}>
+      <Icon name="alert" />
       Stale
-      <span id={reasonId} className="visually-hidden">
-        {reason}
-      </span>
+      {reason && <span className="visually-hidden">: {reason}</span>}
     </span>
   );
 }

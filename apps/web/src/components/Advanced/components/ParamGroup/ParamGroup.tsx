@@ -1,6 +1,7 @@
 import { useId } from "react";
 import type { Command } from "../../../../api/types.ts";
 import type { BlockContext } from "../../../../lib/reasons.ts";
+import { Icon } from "../../../Icon/Icon.tsx";
 import { ParamRow } from "./components/ParamRow/ParamRow.tsx";
 import styles from "./ParamGroup.module.css";
 
@@ -26,7 +27,7 @@ export function ParamGroup({
   const listId = useId();
   const inner = (
     <>
-      {onToggle && <span className={styles.chevron} aria-hidden="true" />}
+      {onToggle && <Icon name="chevron" className={styles.chevron} />}
       <span>{label}</span>
       <span className={styles.prefix}>cp750.{namespace}.*</span>
       <span className={styles.count}>

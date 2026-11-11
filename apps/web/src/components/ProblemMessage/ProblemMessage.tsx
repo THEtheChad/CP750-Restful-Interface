@@ -1,6 +1,7 @@
 import type { ApiError } from "../../api/problem.ts";
 import type { ParamValue } from "../../api/types.ts";
 import { describeProblem } from "../../lib/problem-text.ts";
+import { Icon } from "../Icon/Icon.tsx";
 import styles from "./ProblemMessage.module.css";
 
 export interface ProblemMessageProps {
@@ -16,11 +17,14 @@ export function ProblemMessage({ error, formatValue, id }: ProblemMessageProps) 
   const { title, detail, code } = describeProblem(error.problem, formatValue);
   return (
     <div className={styles.problem} role="alert" id={id}>
-      <strong className={styles.title}>
-        {title}
-        <span className={styles.code}>{code}</span>
-      </strong>
-      {detail && <p className={styles.detail}>{detail}</p>}
+      <Icon name="alert" className={styles.icon} />
+      <div>
+        <strong className={styles.title}>
+          {title}
+          <span className={styles.code}>{code}</span>
+        </strong>
+        {detail && <p className={styles.detail}>{detail}</p>}
+      </div>
     </div>
   );
 }

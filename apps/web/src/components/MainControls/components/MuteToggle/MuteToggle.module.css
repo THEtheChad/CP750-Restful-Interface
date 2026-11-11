@@ -1,36 +1,83 @@
 .mute {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
+  gap: var(--space-3);
   width: 100%;
-  min-height: 5rem;
+  min-height: 4.5rem;
+  margin-bottom: var(--space-2);
   padding: 0 var(--space-5);
-  border: 2px solid var(--border-strong);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--text);
   font-size: var(--text-xl);
-  font-weight: 800;
+  font-weight: 600;
+  text-align: left;
   cursor: pointer;
   touch-action: manipulation;
+  transition:
+    background-color 150ms ease-out,
+    border-color 150ms ease-out;
 }
 
-.mute[aria-pressed="true"] {
+.mute:hover:not(:disabled, [aria-disabled="true"]) {
+  background: var(--surface-2);
+}
+
+.icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.label {
+  flex: 1;
+}
+
+.state {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* Confirmed muted: the one solid danger surface on the screen. */
+.mute[data-tone="muted"] {
   background: var(--danger);
   border-color: var(--danger);
   color: var(--danger-text);
 }
 
-.mute:disabled,
-.mute[aria-disabled="true"] {
-  cursor: not-allowed;
-  opacity: 0.55;
+.mute[data-tone="muted"]:hover:not(:disabled, [aria-disabled="true"]) {
+  background: var(--danger);
+  filter: brightness(1.08);
 }
 
-.state {
-  font-size: var(--text-lg);
+.mute[data-tone="muted"] .state {
+  color: var(--danger-text);
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+}
+
+/* Sent, not yet confirmed. */
+.mute[data-tone="pending"] {
+  border: 2px dashed var(--danger);
+  background: var(--danger-soft);
+  cursor: progress;
+}
+
+.mute[data-tone="pending"] .state {
+  color: var(--text);
+}
+
+/* Disabled never hides that audio is muted: only the unmuted/unknown look greys out. */
+.mute:disabled {
+  cursor: not-allowed;
+}
+
+.mute:disabled:not([data-tone="muted"]) {
+  border-color: var(--disabled-border);
+  background: var(--disabled-bg);
+  color: var(--disabled-text);
+}
+
+.mute:disabled:not([data-tone="muted"]) .state {
+  color: var(--disabled-text);
 }

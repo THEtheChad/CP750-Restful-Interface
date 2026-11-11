@@ -2,20 +2,27 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: var(--space-2);
 }
 
 .slider {
-  width: min(16rem, 100%);
-  accent-color: var(--accent);
+  composes: range from "../../../../../../../../styles/range.module.css";
+  --thumb: 1.375rem;
+  flex: 1 1 8rem;
+  min-width: 8rem;
+  max-width: 14rem;
 }
 
 .number {
-  width: 8rem;
+  width: 6.5rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .text {
-  width: min(20rem, 100%);
+  flex: 1 1 12rem;
+  min-width: 0;
+  max-width: 20rem;
 }
 
 .invalid {
@@ -32,14 +39,14 @@
   padding: 0 var(--space-2);
   border: 0;
   background: none;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .switch:disabled,
 .switch[aria-disabled="true"] {
+  color: var(--disabled-text);
   cursor: not-allowed;
-  opacity: 0.5;
 }
 
 .track {
@@ -49,7 +56,7 @@
   border: 2px solid var(--border-strong);
   border-radius: 999px;
   background: var(--surface-2);
-  transition: background 0.15s;
+  transition: background-color 150ms ease-out;
 }
 
 .thumb {
@@ -60,12 +67,23 @@
   height: 1.25rem;
   border-radius: 50%;
   background: var(--text-muted);
-  transition: transform 0.15s;
+  transition: transform 150ms ease-out;
 }
 
 .switch[aria-checked="true"] .track {
   background: var(--accent);
   border-color: var(--accent);
+}
+
+.switch[aria-checked="true"] .thumb {
+  background: var(--accent-text);
+  transform: translateX(1.5rem);
+}
+
+/* Disabled greys the track only when off: a disabled switch still shows that it is on. */
+.switch:disabled:not([aria-checked="true"]) .track {
+  border-color: var(--disabled-border);
+  background: var(--disabled-bg);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -75,7 +93,18 @@
   }
 }
 
-.switch[aria-checked="true"] .thumb {
-  background: var(--accent-text);
-  transform: translateX(1.5rem);
+@media (max-width: 40rem) {
+  .form {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .slider {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .text {
+    max-width: none;
+  }
 }

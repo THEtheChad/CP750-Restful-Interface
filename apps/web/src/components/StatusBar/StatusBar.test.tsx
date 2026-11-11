@@ -17,7 +17,7 @@ describe("StatusBar", () => {
     });
     renderWithGateway(<StatusBar />, { gateway });
     await screen.findByText("nearest match");
-    expect(screen.getByText("⚠ unverified (draft)")).toBeTruthy();
+    expect(screen.getByText("Unverified (draft)")).toBeTruthy();
     expect(banner("manifest")).toContain("nearest older one (1.2.8.3)");
   });
 

@@ -1,72 +1,131 @@
 /*
- * Design tokens and base styles. Light by default; dark follows the OS (`prefers-color-scheme`).
- * Sizes are generous on purpose: this is read from across a projection booth.
+ * Design tokens and base styles. See apps/web/DESIGN.md for the rules behind them.
+ *
+ * Dark is the default: the use scene is a dim projection booth. `data-theme` on <html> is
+ * "dark", "light" or "system" (follows the OS); it is set before first paint by index.html.
+ * Every text pair is >= 4.5:1 and every control boundary (`--border-strong`) >= 3:1 against the
+ * surfaces it sits on, in both themes. `--border` is a hairline separator only, never the sole
+ * edge of a control.
  */
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
 
-  --bg: #f4f5f7;
-  --surface: #ffffff;
-  --surface-2: #eceef2;
-  --text: #11151c;
-  --text-muted: #4a5261;
-  --border: #c9ced8;
-  --border-strong: #8a93a3;
-  --accent: #1557c0;
-  --accent-text: #ffffff;
-  --accent-soft: #dbe7fb;
-  --ok: #157a3c;
-  --ok-soft: #dcf3e4;
-  --warn: #8a4b00;
-  --warn-soft: #fff1d6;
-  --warn-border: #e8a33d;
-  --danger: #b3261e;
-  --danger-text: #ffffff;
-  --danger-soft: #fde4e1;
-  --focus: #1557c0;
+  /* Ground and surfaces */
+  --bg: #0b0f16;
+  --surface: #121823;
+  --surface-2: #1a2230;
+  --text: #eef2f7;
+  --text-muted: #a3adbd;
+  --border: #263040;
+  --border-strong: #6b7588;
 
-  --radius: 10px;
-  --radius-sm: 6px;
+  /* The ink shell (header). Same in both themes. */
+  --chrome: #070a10;
+  --chrome-text: #e8edf5;
+  --chrome-muted: #9aa6b8;
+  --chrome-border: #222b3a;
+  --chrome-ok: #4fd18b;
+  --chrome-warn: #ffbf47;
+  --chrome-danger: #ff7a70;
+
+  /* Colour jobs: accent = selection + primary action; danger = muted + destructive;
+     warn = above reference, stale, degraded; ok = connected only. */
+  --accent: #5cb8ff;
+  --accent-text: #04111f;
+  --accent-soft: #10263d;
+  --ok: #4fd18b;
+  --warn: #ffbf47;
+  --warn-soft: #2b2009;
+  --danger: #ff6b61;
+  --danger-text: #1d0605;
+  --danger-soft: #3a1412;
+  --focus: #8cc8ff;
+
+  /* Disabled: explicit colours, never opacity. */
+  --disabled-bg: #151b26;
+  --disabled-text: #737e90;
+  --disabled-border: #2c3646;
+
+  /* Shape and space */
+  --radius: 12px;
+  --radius-sm: 8px;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
   --space-5: 1.5rem;
   --space-6: 2rem;
+  --space-7: 3rem;
 
+  /* Type: one sans family, ~1.2 ratio, fixed rem. Mono only for cp750.* identifiers. */
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  --text-xs: 0.8125rem;
   --text-sm: 0.9375rem;
   --text-base: 1.0625rem;
   --text-lg: 1.25rem;
   --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-display: 5.5rem;
 
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 2px 8px rgb(0 0 0 / 0.06);
   --control-height: 3rem;
+  --target-min: 2.75rem;
 }
 
-@media (prefers-color-scheme: dark) {
+/* Light, chosen explicitly or via the OS when the setting is "system". */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #eef1f5;
+  --surface: #ffffff;
+  --surface-2: #e6eaf0;
+  --text: #0f1620;
+  --text-muted: #475166;
+  --border: #d3d9e2;
+  --border-strong: #737d8f;
+  --accent: #0a5fb4;
+  --accent-text: #ffffff;
+  --accent-soft: #dce9f8;
+  --ok: #13703a;
+  --warn: #8a4b00;
+  --warn-soft: #fff1d6;
+  --danger: #b3261e;
+  --danger-text: #ffffff;
+  --danger-soft: #fde4e1;
+  --focus: #0a5fb4;
+  --disabled-bg: #e9edf2;
+  --disabled-text: #6b7485;
+  --disabled-border: #c9d0da;
+}
+
+@media (prefers-color-scheme: light) {
+  :root[data-theme="system"] {
+    color-scheme: light;
+    --bg: #eef1f5;
+    --surface: #ffffff;
+    --surface-2: #e6eaf0;
+    --text: #0f1620;
+    --text-muted: #475166;
+    --border: #d3d9e2;
+    --border-strong: #737d8f;
+    --accent: #0a5fb4;
+    --accent-text: #ffffff;
+    --accent-soft: #dce9f8;
+    --ok: #13703a;
+    --warn: #8a4b00;
+    --warn-soft: #fff1d6;
+    --danger: #b3261e;
+    --danger-text: #ffffff;
+    --danger-soft: #fde4e1;
+    --focus: #0a5fb4;
+    --disabled-bg: #e9edf2;
+    --disabled-text: #6b7485;
+    --disabled-border: #c9d0da;
+  }
+}
+
+@media (max-width: 40rem) {
   :root {
-    --bg: #0e1015;
-    --surface: #171a21;
-    --surface-2: #1f232c;
-    --text: #f2f4f8;
-    --text-muted: #a9b1c0;
-    --border: #2f3542;
-    --border-strong: #5b6578;
-    --accent: #6ea8ff;
-    --accent-text: #0b1220;
-    --accent-soft: #1b2a45;
-    --ok: #5ad48a;
-    --ok-soft: #12301f;
-    --warn: #ffc566;
-    --warn-soft: #33250b;
-    --warn-border: #a8731d;
-    --danger: #ff7a70;
-    --danger-text: #1d0907;
-    --danger-soft: #3a1513;
-    --focus: #8cbcff;
-    --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+    --text-display: 4rem;
   }
 }
 
@@ -79,6 +138,8 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  accent-color: var(--accent);
+  scrollbar-color: var(--border-strong) var(--bg);
 }
 
 body {
@@ -87,7 +148,14 @@ body {
   color: var(--text);
   font-family: var(--font-sans);
   font-size: var(--text-base);
+  font-weight: 400;
   line-height: 1.45;
+  caret-color: var(--accent);
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-text);
 }
 
 button,
@@ -103,7 +171,7 @@ code {
 }
 
 :focus-visible {
-  outline: 3px solid var(--focus);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 

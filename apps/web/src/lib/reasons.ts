@@ -36,29 +36,96 @@ export interface BlockContext {
   hasToken: boolean;
 }
 
+/** Client-side conditions, on top of the server's `BlockedReason`s. */
+export type BlockCode =
+  | BlockedReason
+  | "waiting"
+  | "missing"
+  | "not-supported"
+  | "offline"
+  | "token";
+
+export interface BlockInfo {
+  code: BlockCode;
+  /** The full, plain-language explanation. */
+  text: string;
+  /** A two- or three-word label for dense lists ("Full set", "Offline"). */
+  short: string;
+  /**
+   * Already explained once on screen (a status banner, or the full-set notice atop the parameter
+   * list), so dense lists can show `short` and keep `text` for assistive tech only.
+   */
+  explainedElsewhere: boolean;
+}
+
+const SHORT: Record<BlockCode, string> = {
+  "full-tier": "Full set",
+  internal: "Internal",
+  access: "Not supported",
+  "read-only-mode": "Read-only mode",
+  unverified: "Unverified",
+  "confirmation-required": "Needs confirmation",
+  "raw-only": "Read only",
+  "raw-command": "Read only",
+  unavailable: "Not in help",
+  waiting: "Waiting",
+  missing: "Not in firmware",
+  "not-supported": "Not supported",
+  offline: "Offline",
+  token: "Needs token",
+};
+
+/** Explained by a banner (StatusBanners) or by the Advanced view's full-set notice. */
+const EXPLAINED_ELSEWHERE = new Set<BlockCode>([
+  "full-tier",
+  "read-only-mode",
+  "waiting",
+  "offline",
+  "token",
+]);
+
+function info(code: BlockCode, text: string): BlockInfo {
+  return { code, text, short: SHORT[code], explainedElsewhere: EXPLAINED_ELSEWHERE.has(code) };
+}
+
 /**
  * Why `op` on `command` is disabled right now, or `null` if the control can be used. The server's
  * own `blocked` reason wins; then the global conditions.
  */
-export function blockReason(
+export function blockInfo(
   command: Command | undefined,
   op: Operation,
   { device, hasToken }: BlockContext,
-): string | null {
-  if (!device) return "Waiting for the gateway…";
+): BlockInfo | null {
+  if (!device) return info("waiting", "Waiting for the gateway…");
   if (!command) {
     return device.manifest
-      ? "This firmware doesn't have this parameter."
-      : "Waiting for firmware detection…";
+      ? info("missing", "This firmware doesn't have this parameter.")
+      : info("waiting", "Waiting for firmware detection…");
   }
   const blocked = command.blocked[op];
-  if (blocked) return reasonText(blocked, op);
+  if (blocked) return info(blocked, reasonText(blocked, op));
   if (!command.operations.includes(op)) {
-    return op === "read" ? "This parameter can't be read." : "This parameter can't be changed.";
+    return info(
+      "not-supported",
+      op === "read" ? "This parameter can't be read." : "This parameter can't be changed.",
+    );
   }
-  if (op === "read") return device.connection === "connected" ? null : "The processor is offline.";
-  if (device.readOnly) return reasonText("read-only-mode", op);
-  if (device.connection !== "connected") return "The processor is offline.";
-  if (device.authRequired && !hasToken) return "Enter the API token to make changes.";
+  if (op === "read") {
+    return device.connection === "connected" ? null : info("offline", "The processor is offline.");
+  }
+  if (device.readOnly) return info("read-only-mode", reasonText("read-only-mode", op));
+  if (device.connection !== "connected") return info("offline", "The processor is offline.");
+  if (device.authRequired && !hasToken)
+    return info("token", "Enter the API token to make changes.");
   return null;
+}
+
+/** `blockInfo` as just its text. */
+export function blockReason(
+  command: Command | undefined,
+  op: Operation,
+  context: BlockContext,
+): string | null {
+  return blockInfo(command, op, context)?.text ?? null;
 }

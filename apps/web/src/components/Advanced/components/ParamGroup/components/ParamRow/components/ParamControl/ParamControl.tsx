@@ -1,4 +1,4 @@
-import { type FormEvent, type KeyboardEvent, useId, useState } from "react";
+import { type CSSProperties, type FormEvent, type KeyboardEvent, useId, useState } from "react";
 import type { ParamValue, ValueSchema } from "../../../../../../../../api/types.ts";
 import { controlFor, parseInput } from "../../../../../../../../lib/schema-control.ts";
 import controls from "../../../../../../../../styles/controls.module.css";
@@ -118,6 +118,14 @@ export function ParamControl({
           max={spec.max}
           step={1}
           value={text === "" || Number.isNaN(Number(text)) ? spec.min : Number(text)}
+          style={
+            {
+              "--p":
+                text === "" || Number.isNaN(Number(text))
+                  ? 0
+                  : (Number(text) - spec.min) / (spec.max - spec.min || 1),
+            } as CSSProperties
+          }
           onChange={(e) => setDraft(e.target.value)}
           {...fieldProps}
         />

@@ -24,7 +24,7 @@ describe("Fader", () => {
     await waitFor(() => expect(screen.getByTestId("fader-value").textContent).toBe("7.1"));
     fireEvent.click(screen.getByRole("button", { name: "Fader −1.0" }));
     await waitFor(() => expect(gateway.values.get("cp750.sys.fader")).toBe(61));
-    fireEvent.click(screen.getByRole("button", { name: "Return fader to 7.0 (0 dB)" }));
+    fireEvent.click(screen.getByRole("button", { name: "Reset to 7.0" }));
     await waitFor(() => expect(gateway.values.get("cp750.sys.fader")).toBe(70));
     expect(gateway.paramRequests("PUT").map((r) => r.body)).toEqual([
       { value: 71 },

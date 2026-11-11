@@ -1,19 +1,26 @@
+/* Compact, full-width strips under the shell. Persistent while the condition holds. */
 .banners {
   display: grid;
-  gap: 1px;
-  background: var(--border);
 }
 
 .banner {
   margin: 0;
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
   font-weight: 600;
+  line-height: 1.35;
 }
 
-.banner > span {
-  display: block;
+.inner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
   max-width: 80rem;
   margin: 0 auto;
+}
+
+.icon {
+  margin-top: 0.05em;
 }
 
 .danger {
@@ -24,10 +31,11 @@
 .warn {
   background: var(--warn-soft);
   color: var(--warn);
-  border-top: 1px solid var(--warn-border);
+  border-bottom: 1px solid var(--border);
 }
 
 .info {
   background: var(--accent-soft);
   color: var(--text);
+  border-bottom: 1px solid var(--border);
 }

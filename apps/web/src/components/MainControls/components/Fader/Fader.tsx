@@ -1,6 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useId, useRef, useState } from "react";
-import { useApi, useParam, useParamAccess, useWriteParam } from "../../../../api/hooks.ts";
+import { type CSSProperties, useEffect, useId, useRef, useState } from "react";
+import {
+  useApi,
+  useFreshness,
+  useParam,
+  useParamAccess,
+  useWriteParam,
+  useWritePending,
+} from "../../../../api/hooks.ts";
 import { type ApiError, asApiError } from "../../../../api/problem.ts";
 import { queryKeys } from "../../../../api/query-keys.ts";
 import type { ParamReading } from "../../../../api/types.ts";
@@ -16,8 +23,9 @@ import {
   stepFader,
 } from "../../../../lib/fader.ts";
 import controls from "../../../../styles/controls.module.css";
+import { BlockedNote } from "../../../BlockedNote/BlockedNote.tsx";
 import { ProblemMessage } from "../../../ProblemMessage/ProblemMessage.tsx";
-import card from "../../card.module.css";
+import section from "../../section.module.css";
 import { StaleBadge } from "../StaleBadge/StaleBadge.tsx";
 import styles from "./Fader.module.css";
 
@@ -31,6 +39,13 @@ const STEPS = [
 ] as const;
 
 const formatValue = (value: unknown) => formatFader(Number(value));
+
+/** Scale positions 0–10 (display units); 7 is the Dolby reference level. */
+const SCALE = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
+const REFERENCE = FADER_NOMINAL / 10;
+
+/** Where a raw fader value sits on the track, 0–1. */
+const fraction = (raw: number) => (raw - FADER_MIN) / (FADER_MAX - FADER_MIN);
 
 /** `value` moved at most `max` away from `from`. */
 function capStep(from: number, value: number, max: number): number {
@@ -56,6 +71,8 @@ export function Fader({ throttleMs }: { throttleMs?: number } = {}) {
   const access = useParamAccess(FADER_PARAM);
   const reading = useParam(FADER_PARAM, { enabled: access.read === null, live: true });
   const write = useWriteParam(FADER_PARAM);
+  const pending = useWritePending(FADER_PARAM);
+  const { stale } = useFreshness(FADER_PARAM);
   const [draft, setDraft] = useState<number | null>(null);
   const [error, setError] = useState<ApiError | null>(null);
   const headingId = useId();
@@ -152,6 +169,18 @@ export function Fader({ throttleMs }: { throttleMs?: number } = {}) {
     });
   };
 
+  // Only a level the processor has confirmed (no draft, nothing in flight, not stale) is
+  // described relative to reference; anything else says it is still being set.
+  const confirmed = committed !== null && settled && !pending && !stale;
+  const relation = (() => {
+    if (shown === null) return null;
+    if (pending || !settled) return `Setting ${formatFader(shown)}…`;
+    if (!confirmed) return null; // stale: the Stale label says why
+    if (shown === FADER_NOMINAL) return "reference";
+    return shown > FADER_NOMINAL ? "above reference" : "below reference";
+  })();
+  const above = shown !== null && shown > FADER_NOMINAL;
+
   const valueText =
     shown === null
       ? "unknown"
@@ -161,85 +190,111 @@ export function Fader({ throttleMs }: { throttleMs?: number } = {}) {
   const describedBy = [access.write ? reasonId : null, error ? errorId : null]
     .filter(Boolean)
     .join(" ");
+  const trackStyle = { "--p": fraction(shown ?? FADER_NOMINAL) } as CSSProperties;
+
+  const stepButton = (s: (typeof STEPS)[number]) => (
+    <button
+      key={s.label}
+      type="button"
+      className={controls.button}
+      disabled={disabled}
+      aria-label={`Fader ${s.label}`}
+      onClick={() => step(s.delta)}
+    >
+      {s.label}
+    </button>
+  );
 
   return (
-    <section className={card.card} aria-labelledby={headingId}>
-      <h2 className={card.heading} id={headingId}>
-        Fader
+    <section className={section.section} aria-labelledby={headingId}>
+      <div className={section.header}>
+        <h2 className={section.heading} id={headingId}>
+          Fader
+        </h2>
         <StaleBadge name={FADER_PARAM} />
-      </h2>
-      <div className={styles.readout} aria-hidden="true">
+      </div>
+      <div
+        className={stale ? `${styles.readout} ${styles.stale}` : styles.readout}
+        aria-hidden="true"
+      >
         <span className={styles.value} data-testid="fader-value">
           {shown === null ? "–.–" : formatFader(shown)}
         </span>
-        <span
-          className={settled ? styles.db : `${styles.db} ${styles.pending}`}
-          data-testid="fader-db"
-        >
-          {formatDb(db)}
+        <span className={styles.level}>
+          <span
+            className={settled ? styles.db : `${styles.db} ${styles.pending}`}
+            data-testid="fader-db"
+          >
+            {formatDb(db)}
+          </span>
+          {relation && (
+            <span
+              className={
+                !confirmed
+                  ? styles.setting
+                  : above
+                    ? `${styles.relation} ${styles.above}`
+                    : styles.relation
+              }
+            >
+              {relation}
+            </span>
+          )}
         </span>
       </div>
-      <input
-        ref={sliderRef}
-        className={styles.slider}
-        type="range"
-        min={FADER_MIN}
-        max={FADER_MAX}
-        step={1}
-        value={shown ?? FADER_NOMINAL}
-        disabled={disabled}
-        aria-labelledby={headingId}
-        aria-valuetext={valueText}
-        aria-describedby={describedBy || undefined}
-        onPointerDown={() => {
-          if (shown !== null) gesture.current = { start: shown, first: true, limited: false };
-        }}
-        onChange={(e) => slide(Number(e.currentTarget.value))}
-        onPointerUp={endGesture}
-        onPointerCancel={endGesture}
-        onKeyUp={() => sender.flush()}
-        onBlur={endGesture}
-      />
-      <div className={styles.steps}>
-        {STEPS.slice(0, 2).map((s) => (
-          <button
-            key={s.label}
-            type="button"
-            className={controls.button}
-            disabled={disabled}
-            aria-label={`Fader ${s.label}`}
-            onClick={() => step(s.delta)}
-          >
-            {s.label}
-          </button>
-        ))}
-        <button
-          type="button"
-          className={`${controls.button} ${controls.primary} ${styles.nominal}`}
-          disabled={disabled || shown === FADER_NOMINAL}
-          aria-label="Return fader to 7.0 (0 dB)"
-          onClick={() => commit(FADER_NOMINAL)}
-        >
-          7.0
-        </button>
-        {STEPS.slice(2).map((s) => (
-          <button
-            key={s.label}
-            type="button"
-            className={controls.button}
-            disabled={disabled}
-            aria-label={`Fader ${s.label}`}
-            onClick={() => step(s.delta)}
-          >
-            {s.label}
-          </button>
-        ))}
+      <div className={styles.track}>
+        <input
+          ref={sliderRef}
+          className={above ? `${styles.slider} ${styles.sliderAbove}` : styles.slider}
+          style={trackStyle}
+          type="range"
+          min={FADER_MIN}
+          max={FADER_MAX}
+          step={1}
+          value={shown ?? FADER_NOMINAL}
+          disabled={disabled}
+          aria-labelledby={headingId}
+          aria-valuetext={valueText}
+          aria-describedby={describedBy || undefined}
+          onPointerDown={() => {
+            if (shown !== null) gesture.current = { start: shown, first: true, limited: false };
+          }}
+          onChange={(e) => slide(Number(e.currentTarget.value))}
+          onPointerUp={endGesture}
+          onPointerCancel={endGesture}
+          onKeyUp={() => sender.flush()}
+          onBlur={endGesture}
+        />
+        {/* Decorative: never intercepts the track's pointer handling. */}
+        <div className={styles.scale} aria-hidden="true">
+          {SCALE.map((n) => (
+            <span
+              key={n}
+              className={n === REFERENCE ? `${styles.tick} ${styles.reference}` : styles.tick}
+              style={{ "--at": n / 10 } as CSSProperties}
+            >
+              {n}
+            </span>
+          ))}
+        </div>
       </div>
-      {access.write && (
-        <p className={controls.reason} id={reasonId}>
-          {access.write}
-        </p>
-      )}
+      <div className={styles.steps}>
+        {STEPS.slice(0, 2).map(stepButton)}
+        {confirmed && shown === FADER_NOMINAL ? (
+          <span className={styles.atReference}>At reference</span>
+        ) : (
+          <button
+            type="button"
+            className={`${controls.button} ${controls.primary} ${styles.nominal}`}
+            disabled={disabled || shown === FADER_NOMINAL}
+            onClick={() => commit(FADER_NOMINAL)}
+          >
+            Reset to 7.0
+          </button>
+        )}
+        {STEPS.slice(2).map(stepButton)}
+      </div>
+      {access.write && <BlockedNote id={reasonId}>{access.write}</BlockedNote>}
       <ProblemMessage error={error} formatValue={formatValue} id={errorId} />
       {!error && <ProblemMessage error={reading.error} />}
     </section>

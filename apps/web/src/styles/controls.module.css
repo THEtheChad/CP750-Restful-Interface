@@ -1,4 +1,8 @@
-/* Shared control styles (buttons, fields), composed by the components that use them. */
+/*
+ * Shared control styles (buttons, fields), composed by the components that use them. One state
+ * vocabulary everywhere: default, hover, active, focus-visible (global), disabled (explicit
+ * colours), selected (accent), pending (aria-busy, set by the component).
+ */
 .button {
   display: inline-flex;
   align-items: center;
@@ -14,16 +18,25 @@
   font-weight: 600;
   cursor: pointer;
   touch-action: manipulation;
+  transition:
+    background-color 150ms ease-out,
+    border-color 150ms ease-out;
 }
 
-.button:hover:not(:disabled) {
+.button:hover:not(:disabled, [aria-disabled="true"]) {
   background: var(--surface-2);
+}
+
+.button:active:not(:disabled, [aria-disabled="true"]) {
+  border-color: var(--text-muted);
 }
 
 .button:disabled,
 .button[aria-disabled="true"] {
+  border-color: var(--disabled-border);
+  background: var(--disabled-bg);
+  color: var(--disabled-text);
   cursor: not-allowed;
-  opacity: 0.5;
 }
 
 .primary {
@@ -32,7 +45,7 @@
   color: var(--accent-text);
 }
 
-.primary:hover:not(:disabled) {
+.primary:hover:not(:disabled, [aria-disabled="true"]) {
   background: var(--accent);
   filter: brightness(1.08);
 }
@@ -48,18 +61,20 @@
   color: var(--danger-text);
 }
 
-.dangerSolid:hover:not(:disabled) {
+.dangerSolid:hover:not(:disabled, [aria-disabled="true"]) {
   background: var(--danger);
   filter: brightness(1.08);
 }
 
+/* Compact, but never under the 44px touch minimum. */
 .small {
-  min-height: 2.25rem;
-  min-width: 2.25rem;
+  min-height: var(--target-min);
+  min-width: var(--target-min);
   padding: 0 var(--space-3);
   font-size: var(--text-sm);
 }
 
+/* Text inputs and selects stay >= 16px so phones don't zoom on focus. */
 .field {
   min-height: var(--control-height);
   padding: 0 var(--space-3);
@@ -67,24 +82,23 @@
   border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--text);
+  font-size: var(--text-base);
   min-width: 0;
 }
 
 .field:disabled {
-  opacity: 0.6;
+  border-color: var(--disabled-border);
+  background: var(--disabled-bg);
+  color: var(--disabled-text);
   cursor: not-allowed;
 }
 
 .fieldSmall {
-  min-height: 2.25rem;
+  min-height: var(--target-min);
 }
 
 .reason {
   margin: var(--space-2) 0 0;
   color: var(--text-muted);
   font-size: var(--text-sm);
-}
-
-.reason::before {
-  content: "🔒 ";
 }

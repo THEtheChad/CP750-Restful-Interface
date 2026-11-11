@@ -1,20 +1,21 @@
+/* Sits on the ink shell, so it uses the chrome status colours. Shape differs per state too. */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .dot {
-  width: 0.85rem;
-  height: 0.85rem;
+  width: 0.75rem;
+  height: 0.75rem;
   border-radius: 50%;
   border: 2px solid currentColor;
   flex: none;
 }
 
 .ok {
-  color: var(--ok);
+  color: var(--chrome-ok);
 }
 
 .ok .dot {
@@ -22,13 +23,14 @@
 }
 
 .pending {
-  color: var(--warn);
+  color: var(--chrome-warn);
 }
 
 .down {
-  color: var(--danger);
+  color: var(--chrome-danger);
 }
 
 .down .dot {
   border-radius: 2px;
+  background: currentColor;
 }

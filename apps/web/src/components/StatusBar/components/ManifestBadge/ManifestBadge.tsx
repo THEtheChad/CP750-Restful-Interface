@@ -1,4 +1,5 @@
 import type { ManifestInfo } from "../../../../api/types.ts";
+import { Icon } from "../../../Icon/Icon.tsx";
 import styles from "./ManifestBadge.module.css";
 
 const MATCH: Record<NonNullable<ManifestInfo>["match"], string> = {
@@ -17,17 +18,23 @@ export interface ManifestBadgeProps {
 export function ManifestBadge({ manifest, known }: ManifestBadgeProps) {
   if (!known) return <>–</>;
   if (!manifest || manifest.match === "none" || !manifest.firmware) {
-    return <span className={styles.unverified}>None</span>;
+    return (
+      <span className={styles.unverified}>
+        <Icon name="alert" /> None
+      </span>
+    );
   }
   return (
     <span className={styles.manifest}>
       <span className={styles.firmware}>{manifest.firmware}</span>
       <span className={styles.match}>{MATCH[manifest.match]}</span>
       {manifest.verified ? (
-        <span className={styles.verified}>✓ verified</span>
+        <span className={styles.verified}>
+          <Icon name="check" /> Verified
+        </span>
       ) : (
         <span className={styles.unverified}>
-          ⚠ unverified{manifest.status === "draft" ? " (draft)" : ""}
+          <Icon name="alert" /> {manifest.status === "draft" ? "Unverified (draft)" : "Unverified"}
         </span>
       )}
     </span>

@@ -1,95 +1,123 @@
+/* The ink shell: the same committed dark bar in both themes. */
 .bar {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  background: var(--chrome);
+  color: var(--chrome-text);
 }
 
 .inner {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3) var(--space-5);
+  gap: var(--space-2) var(--space-5);
   max-width: 80rem;
+  min-height: 3.5rem;
   margin: 0 auto;
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-1) var(--space-4);
 }
 
 .brand {
   margin: 0;
-  font-size: var(--text-xl);
-  font-weight: 800;
-  letter-spacing: 0.02em;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
-.facts {
+.summary {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2) var(--space-5);
+  align-items: baseline;
+  gap: 0 var(--space-3);
   margin: 0;
-  flex: 1 1 auto;
-}
-
-.fact {
-  display: flex;
-  flex-direction: column;
   min-width: 0;
 }
 
-.fact dt {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.fact dd {
-  margin: 0;
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-.mono {
+.host {
   font-family: var(--font-mono);
-  font-weight: 500;
+  font-size: var(--text-sm);
+  color: var(--chrome-text);
+  overflow-wrap: anywhere;
 }
 
 .modes {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1) var(--space-2);
+  gap: var(--space-2);
+  margin: 0;
 }
 
+/* Only non-default modes get a chip: absence means normal operation. */
 .chip {
-  display: inline-block;
-  padding: 0 var(--space-2);
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
+  padding: 0.125rem var(--space-2);
+  border: 1px solid var(--chrome-warn);
+  border-radius: var(--radius-sm);
+  color: var(--chrome-warn);
   font-size: var(--text-sm);
   font-weight: 600;
   white-space: nowrap;
 }
 
-.chipWarn {
-  border-color: var(--warn-border);
-  background: var(--warn-soft);
-  color: var(--warn);
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+}
+
+.disclosure {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--target-min);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--chrome-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--chrome-text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.disclosure:hover {
+  border-color: var(--chrome-muted);
+}
+
+.chevron {
+  transform: rotate(90deg);
+  transition: transform 150ms ease-out;
+}
+
+.disclosure[aria-expanded="true"] .chevron {
+  transform: rotate(-90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
 }
 
 @media (max-width: 40rem) {
-  /* On a phone a sticky header would cover half the screen. */
+  /* On a phone a sticky header would cover the controls. */
   .bar {
     position: static;
   }
 
   .inner {
-    gap: var(--space-2) var(--space-4);
+    gap: var(--space-1) var(--space-3);
   }
 
-  .facts {
-    gap: var(--space-2) var(--space-4);
+  /* Status over host, so the row fits beside the brand and Details. */
+  .summary {
+    flex-direction: column;
+    gap: 0;
+    font-size: var(--text-sm);
+  }
+
+  .host {
+    font-size: var(--text-xs);
   }
 }

@@ -1,6 +1,7 @@
 import type { StreamStatus } from "../../../../api/context.ts";
 import { useToken } from "../../../../api/hooks.ts";
 import type { Device } from "../../../../api/types.ts";
+import { Icon, type IconName } from "../../../Icon/Icon.tsx";
 import styles from "./StatusBanners.module.css";
 
 export interface StatusBannersProps {
@@ -74,6 +75,8 @@ export function bannersFor(
   return out;
 }
 
+const ICONS: Record<Banner["tone"], IconName> = { danger: "alert", warn: "alert", info: "info" };
+
 /** Warnings under the status bar: gateway or processor down, unverified manifest, modes. */
 export function StatusBanners({ device, gatewayError, stream }: StatusBannersProps) {
   const hasToken = useToken() !== null;
@@ -83,9 +86,9 @@ export function StatusBanners({ device, gatewayError, stream }: StatusBannersPro
     <div className={styles.banners} role="status" aria-live="polite">
       {banners.map((b) => (
         <p key={b.key} className={`${styles.banner} ${styles[b.tone]}`} data-banner={b.key}>
-          <span>
-            {b.tone === "danger" ? "⚠ " : ""}
-            {b.text}
+          <span className={styles.inner}>
+            <Icon name={ICONS[b.tone]} className={styles.icon} />
+            <span>{b.text}</span>
           </span>
         </p>
       ))}
