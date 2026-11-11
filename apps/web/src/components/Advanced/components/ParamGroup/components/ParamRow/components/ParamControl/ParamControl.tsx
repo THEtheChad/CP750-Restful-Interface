@@ -8,8 +8,6 @@ export interface ParamControlProps {
   schema: ValueSchema | null;
   value: ParamValue | undefined;
   disabled: boolean;
-  /** A write to this param is in flight: the switch ignores clicks (and says so) meanwhile. */
-  pending?: boolean;
   /** Id of the element naming the param. */
   labelledBy: string;
   describedBy?: string;
@@ -18,14 +16,14 @@ export interface ParamControlProps {
 }
 
 /**
- * The control a value schema calls for (see `controlFor`). Switches commit on click; every other
- * control edits a draft that is only sent with Set (or Enter). Escape discards the draft.
+ * The draft-and-Set control for entries and long lists (see `functionOf`; toggles, short choices
+ * and levels have their own shared surfaces). Edits a draft that is only sent with Set (or
+ * Enter). Escape discards the draft.
  */
 export function ParamControl({
   schema,
   value,
   disabled,
-  pending = false,
   labelledBy,
   describedBy,
   onCommit,
@@ -39,31 +37,8 @@ export function ParamControl({
   const undoId = useId();
   const current = value === undefined ? "" : String(value);
 
-  if (!schema || spec.kind === "none") return <span>{current || "–"}</span>;
-
-  if (spec.kind === "switch") {
-    const on = value === 1;
-    return (
-      <button
-        type="button"
-        role="switch"
-        className={styles.switch}
-        aria-checked={value === undefined ? undefined : on}
-        aria-labelledby={labelledBy}
-        aria-describedby={describedBy}
-        disabled={disabled || value === undefined}
-        aria-disabled={pending || undefined}
-        aria-busy={pending || undefined}
-        onClick={() => {
-          if (!pending) onCommit(on ? 0 : 1);
-        }}
-      >
-        <span className={styles.track} aria-hidden="true">
-          <span className={styles.thumb} />
-        </span>
-        <span aria-hidden="true">{value === undefined ? "–" : on ? "On" : "Off"}</span>
-      </button>
-    );
+  if (!schema || spec.kind === "none" || spec.kind === "switch") {
+    return <span>{current || "–"}</span>;
   }
 
   const text = draft ?? current;

@@ -3,12 +3,13 @@ import { useParam, useWriteParam, useWritePending } from "../../../../../../api/
 import type { Command, ParamValue } from "../../../../../../api/types.ts";
 import { useInView } from "../../../../../../hooks/useInView.ts";
 import { formatFader } from "../../../../../../lib/fader.ts";
+import { formatValueFor, functionOf } from "../../../../../../lib/param-function.ts";
 import { type BlockContext, type BlockInfo, blockInfo } from "../../../../../../lib/reasons.ts";
 import controls from "../../../../../../styles/controls.module.css";
 import { Icon } from "../../../../../Icon/Icon.tsx";
 import { ProblemMessage } from "../../../../../ProblemMessage/ProblemMessage.tsx";
 import { ActionButton } from "./components/ActionButton/ActionButton.tsx";
-import { ParamControl } from "./components/ParamControl/ParamControl.tsx";
+import { ParamSurface } from "./components/ParamSurface/ParamSurface.tsx";
 import styles from "./ParamRow.module.css";
 
 /** The value in the param's unit, when that says more than the raw number. */
@@ -118,6 +119,7 @@ export function ParamRow({ command, context }: ParamRowProps) {
   const pending = useWritePending(command.name);
   const value = reading.data?.value;
   const hint = unitHint(value, command.unit);
+  const fn = functionOf(command);
   const block =
     (isAction ? actionBlock : writable ? writeBlock : null) ?? (isAction ? null : readBlock);
   const describedBy = block ? { describedBy: reasonId } : {};
@@ -160,20 +162,21 @@ export function ParamRow({ command, context }: ParamRowProps) {
         {isAction ? (
           <ActionButton command={command} reason={actionBlock?.text ?? null} {...describedBy} />
         ) : writable && writeBlock === null ? (
-          <ParamControl
-            schema={command.schema}
+          <ParamSurface
+            command={command}
+            fn={fn}
             value={value}
-            disabled={value === undefined}
+            db={reading.data?.db}
             pending={pending}
-            labelledBy={nameId}
-            onCommit={(next) => write.mutateAsync({ value: next }).catch(() => {})}
+            nameId={nameId}
+            write={write}
           />
         ) : (
           <span className={offersRead ? styles.value : styles.unreadable}>
-            {!offersRead ? "Not readable" : value === undefined ? "–" : String(value)}
+            {!offersRead ? "Not readable" : value === undefined ? "–" : formatValueFor(fn, value)}
           </span>
         )}
-        {hint && <span className={styles.hint}>{hint}</span>}
+        {hint && fn.kind !== "level" && <span className={styles.hint}>{hint}</span>}
       </div>
       {offersRead && (
         <button

@@ -1,42 +1,23 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { type CSSProperties, useEffect, useId, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useId, useRef } from "react";
+import { useFreshness, useParam, useParamAccess, useWritePending } from "../../../../api/hooks.ts";
+import { capStep, useLevelWriter } from "../../../../hooks/useLevelWriter.ts";
 import {
-  useApi,
-  useFreshness,
-  useParam,
-  useParamAccess,
-  useWriteParam,
-  useWritePending,
-} from "../../../../api/hooks.ts";
-import { type ApiError, asApiError } from "../../../../api/problem.ts";
-import { queryKeys } from "../../../../api/query-keys.ts";
-import type { ParamReading } from "../../../../api/types.ts";
-import { useLatestSender } from "../../../../hooks/useLatestSender.ts";
-import {
-  clampFader,
   FADER_MAX,
   FADER_MIN,
   FADER_NOMINAL,
   FADER_PAGE,
   formatDb,
   formatFader,
-  stepFader,
 } from "../../../../lib/fader.ts";
-import controls from "../../../../styles/controls.module.css";
+import { MAIN_PARAMS } from "../../../../lib/param-function.ts";
 import { BlockedNote } from "../../../BlockedNote/BlockedNote.tsx";
+import { LevelSteps } from "../../../LevelSteps/LevelSteps.tsx";
 import { ProblemMessage } from "../../../ProblemMessage/ProblemMessage.tsx";
 import section from "../../section.module.css";
 import { StaleBadge } from "../StaleBadge/StaleBadge.tsx";
 import styles from "./Fader.module.css";
 
-export const FADER_PARAM = "cp750.sys.fader";
-
-const STEPS = [
-  { delta: -1, label: "−1.0" },
-  { delta: -0.1, label: "−0.1" },
-  { delta: 0.1, label: "+0.1" },
-  { delta: 1, label: "+1.0" },
-] as const;
+export const FADER_PARAM = MAIN_PARAMS.fader;
 
 const formatValue = (value: unknown) => formatFader(Number(value));
 
@@ -46,11 +27,6 @@ const REFERENCE = FADER_NOMINAL / 10;
 
 /** Where a raw fader value sits on the track, 0–1. */
 const fraction = (raw: number) => (raw - FADER_MIN) / (FADER_MAX - FADER_MIN);
-
-/** `value` moved at most `max` away from `from`. */
-function capStep(from: number, value: number, max: number): number {
-  return clampFader(Math.max(from - max, Math.min(from + max, value)));
-}
 
 /**
  * The main fader: a big `7.0` readout with dB from the API, a slider, ±0.1/±1.0 steps and a return
@@ -66,47 +42,18 @@ function capStep(from: number, value: number, max: number): number {
  *   Home/End, a fast drag) ramp there one page per send.
  */
 export function Fader({ throttleMs }: { throttleMs?: number } = {}) {
-  const api = useApi();
-  const queryClient = useQueryClient();
   const access = useParamAccess(FADER_PARAM);
   const reading = useParam(FADER_PARAM, { enabled: access.read === null, live: true });
-  const write = useWriteParam(FADER_PARAM);
   const pending = useWritePending(FADER_PARAM);
   const { stale } = useFreshness(FADER_PARAM);
-  const [draft, setDraft] = useState<number | null>(null);
-  const [error, setError] = useState<ApiError | null>(null);
+  const { draft, error, change, commit, flush, step } = useLevelWriter(FADER_PARAM, {
+    ...(throttleMs !== undefined ? { throttleMs } : {}),
+  });
   const headingId = useId();
   const reasonId = useId();
   const errorId = useId();
   const sliderRef = useRef<HTMLInputElement>(null);
   const gesture = useRef<{ start: number; first: boolean; limited: boolean } | null>(null);
-  const steps = useRef<Promise<void>>(Promise.resolve());
-
-  /** The level the processor last reported (or the optimistic one of a write in flight). */
-  const known = () => {
-    const value = queryClient.getQueryData<ParamReading>(queryKeys.param(FADER_PARAM))?.value;
-    return typeof value === "number" ? value : null;
-  };
-
-  const sender = useLatestSender<number>(
-    async (value) => {
-      try {
-        await write.mutateAsync({ value });
-        setError(null);
-      } catch (e) {
-        setError(asApiError(e));
-      }
-    },
-    {
-      onIdle: () => setDraft(null),
-      // Backstop: no single send moves more than one page from the last known level.
-      limit: (target) => {
-        const from = known();
-        return from === null ? target : capStep(from, target, FADER_PAGE);
-      },
-      ...(throttleMs !== undefined ? { intervalMs: throttleMs } : {}),
-    },
-  );
 
   // React's onWheel is passive, so preventDefault needs a native listener.
   useEffect(() => {
@@ -123,15 +70,6 @@ export function Fader({ throttleMs }: { throttleMs?: number } = {}) {
   const db = reading.data?.db;
   const disabled = access.write !== null || shown === null;
 
-  const change = (value: number) => {
-    setDraft(value);
-    sender.push(value);
-  };
-  const commit = (value: number) => {
-    change(value);
-    sender.flush();
-  };
-
   /** A slider change; limits a gesture that started on the track to one page from its start. */
   const slide = (value: number) => {
     const g = gesture.current;
@@ -146,27 +84,7 @@ export function Fader({ throttleMs }: { throttleMs?: number } = {}) {
   };
   const endGesture = () => {
     gesture.current = null;
-    sender.flush();
-  };
-
-  /** ±0.1/±1.0: read the processor, then step from its value. Clicks queue up in order. */
-  const step = (delta: number) => {
-    steps.current = steps.current.then(async () => {
-      try {
-        const fresh = await queryClient.fetchQuery({
-          queryKey: queryKeys.param(FADER_PARAM),
-          queryFn: () => api.readParam(FADER_PARAM),
-          staleTime: 0,
-        });
-        if (typeof fresh.value !== "number") return;
-        sender.cancel();
-        setDraft(null);
-        await write.mutateAsync({ value: stepFader(fresh.value, delta) });
-        setError(null);
-      } catch (e) {
-        setError(asApiError(e));
-      }
-    });
+    flush();
   };
 
   // Only a level the processor has confirmed (no draft, nothing in flight, not stale) is
@@ -191,19 +109,6 @@ export function Fader({ throttleMs }: { throttleMs?: number } = {}) {
     .filter(Boolean)
     .join(" ");
   const trackStyle = { "--p": fraction(shown ?? FADER_NOMINAL) } as CSSProperties;
-
-  const stepButton = (s: (typeof STEPS)[number]) => (
-    <button
-      key={s.label}
-      type="button"
-      className={controls.button}
-      disabled={disabled}
-      aria-label={`Fader ${s.label}`}
-      onClick={() => step(s.delta)}
-    >
-      {s.label}
-    </button>
-  );
 
   return (
     <section className={section.section} aria-labelledby={headingId}>
@@ -262,7 +167,7 @@ export function Fader({ throttleMs }: { throttleMs?: number } = {}) {
           onChange={(e) => slide(Number(e.currentTarget.value))}
           onPointerUp={endGesture}
           onPointerCancel={endGesture}
-          onKeyUp={() => sender.flush()}
+          onKeyUp={flush}
           onBlur={endGesture}
         />
         {/* Decorative: never intercepts the track's pointer handling. */}
@@ -278,22 +183,15 @@ export function Fader({ throttleMs }: { throttleMs?: number } = {}) {
           ))}
         </div>
       </div>
-      <div className={styles.steps}>
-        {STEPS.slice(0, 2).map(stepButton)}
-        {confirmed && shown === FADER_NOMINAL ? (
-          <span className={styles.atReference}>At reference</span>
-        ) : (
-          <button
-            type="button"
-            className={`${controls.button} ${controls.primary} ${styles.nominal}`}
-            disabled={disabled || shown === FADER_NOMINAL}
-            onClick={() => commit(FADER_NOMINAL)}
-          >
-            Reset to 7.0
-          </button>
-        )}
-        {STEPS.slice(2).map(stepButton)}
-      </div>
+      <LevelSteps
+        size="glance"
+        name={{ label: "Fader" }}
+        disabled={disabled}
+        atReference={confirmed && shown === FADER_NOMINAL}
+        resetDisabled={shown === FADER_NOMINAL}
+        onStep={step}
+        onReset={() => commit(FADER_NOMINAL)}
+      />
       {access.write && <BlockedNote id={reasonId}>{access.write}</BlockedNote>}
       <ProblemMessage error={error} formatValue={formatValue} id={errorId} />
       {!error && <ProblemMessage error={reading.error} />}
