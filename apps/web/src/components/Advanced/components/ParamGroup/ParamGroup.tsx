@@ -6,7 +6,8 @@ import { ParamRow } from "./components/ParamRow/ParamRow.tsx";
 import styles from "./ParamGroup.module.css";
 
 export interface ParamGroupProps {
-  namespace: string;
+  /** The names it covers, e.g. `cp750.sys.eq_l_*`. */
+  prefix: string;
   label: string;
   commands: Command[];
   context: BlockContext;
@@ -15,9 +16,9 @@ export interface ParamGroupProps {
   onToggle?: () => void;
 }
 
-/** One namespace. Rows are only rendered (and so only read) while expanded. */
+/** One section of the list (a namespace, or a group of `sys`). Rows are only rendered (and so only read) while expanded. */
 export function ParamGroup({
-  namespace,
+  prefix,
   label,
   commands,
   context,
@@ -29,7 +30,7 @@ export function ParamGroup({
     <>
       {onToggle && <Icon name="chevron" className={styles.chevron} />}
       <span>{label}</span>
-      <span className={styles.prefix}>cp750.{namespace}.*</span>
+      <span className={styles.prefix}>{prefix}</span>
       <span className={styles.count}>
         {commands.length}
         <span className="visually-hidden"> parameters</span>

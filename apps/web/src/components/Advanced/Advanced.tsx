@@ -7,7 +7,7 @@ import styles from "./Advanced.module.css";
 import { ParamGroup } from "./components/ParamGroup/ParamGroup.tsx";
 import {
   filterCommands,
-  groupByNamespace,
+  groupCommands,
   inScope,
   NAMESPACE_LABELS,
   namespacesOf,
@@ -23,7 +23,8 @@ const SCOPE_LABELS: Record<Scope, string> = {
 };
 
 /**
- * Every parameter of the active manifest, grouped by namespace, with search and a scope
+ * Every parameter of the active manifest, grouped (by namespace; `sys` by what its params do, the
+ * equalizer per channel), with search and a scope
  * (Available / Locked / All; Available by default, so the full-set params the gateway refuses
  * don't bury the ones that can be used). Values are read lazily: a row reads its value once it has
  * been on screen for a moment, or on demand.
@@ -65,7 +66,7 @@ export function Advanced() {
     () => (scope === "all" ? filtered.length : filterCommands(all, query, namespace).length),
     [all, query, namespace, scope, filtered.length],
   );
-  const groups = useMemo(() => groupByNamespace(filtered), [filtered]);
+  const groups = useMemo(() => groupCommands(filtered), [filtered]);
   const filtering = query.trim() !== "" || namespace !== "all";
   const outOfScope = matchesAnyScope - filtered.length;
 
@@ -209,13 +210,13 @@ export function Advanced() {
       <div className={styles.groups}>
         {groups.map((g) => (
           <ParamGroup
-            key={g.namespace}
-            namespace={g.namespace}
-            label={NAMESPACE_LABELS[g.namespace] ?? g.namespace}
+            key={g.key}
+            prefix={g.prefix}
+            label={g.label}
             commands={g.commands}
             context={context}
-            expanded={filtering || expanded.has(g.namespace)}
-            {...(filtering ? {} : { onToggle: () => toggle(g.namespace) })}
+            expanded={filtering || expanded.has(g.key)}
+            {...(filtering ? {} : { onToggle: () => toggle(g.key) })}
           />
         ))}
       </div>

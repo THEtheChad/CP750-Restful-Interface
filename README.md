@@ -48,7 +48,9 @@ monitor, with the keyboard. Design rules: [`apps/web/DESIGN.md`](apps/web/DESIGN
   final value on release; no single write moves the level more than 1.0 (bigger moves ramp in
   1.0 steps). A click on the track moves one page (1.0) toward the click. The mouse wheel does
   nothing.
-- **Advanced**: every param from `/api/commands`, grouped by namespace, with search and a scope:
+- **Advanced**: every param from `/api/commands`, grouped by namespace (the ~310 `cp750.sys.*`
+  params by what they do: Fader & mute, Inputs, Decoding, Equalizer per channel with bands low to
+  high, Room calibration, Unit & network), with search and a scope:
   Available (default), Locked (refused by the gateway, e.g. the full command set) or All. Each
   control comes from the param's JSON Schema (switch, select, slider + number, number, text); a
   param that can't be changed shows its value as text with a short reason. Values are only read

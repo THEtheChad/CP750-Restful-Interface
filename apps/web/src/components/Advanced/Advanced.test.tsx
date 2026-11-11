@@ -25,15 +25,16 @@ function manyCommands() {
 }
 
 describe("Advanced", () => {
-  test("lists params by namespace without reading any of them up front", async () => {
+  test("lists params by group without reading any of them up front", async () => {
     const gateway = createFakeGateway({ commands: manyCommands() });
     renderWithGateway(<Advanced />, { gateway });
     await screen.findByText("350 parameters");
-    const system = screen.getByRole("button", { name: /System cp750\.sys\.\*/ });
-    expect(system.getAttribute("aria-expanded")).toBe("false");
-    fireEvent.click(system);
-    expect(system.getAttribute("aria-expanded")).toBe("true");
-    expect(screen.getAllByRole("listitem").length).toBe(346);
+    // The 340 extra `cp750.sys.level_*` params are room calibration.
+    const calibration = screen.getByRole("button", { name: /Room calibration cp750\.sys\.\*/ });
+    expect(calibration.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(calibration);
+    expect(calibration.getAttribute("aria-expanded")).toBe("true");
+    expect(screen.getAllByRole("listitem").length).toBe(340);
     // Nothing is on screen in happy-dom (no layout), so nothing has been read.
     await new Promise((r) => setTimeout(r, 400));
     expect(gateway.paramRequests().length).toBe(0);
@@ -91,8 +92,8 @@ describe("Advanced", () => {
   test("hides full-set params by default and explains them once", async () => {
     const commands = [
       ...fixtureCommands(),
-      ...["a", "b", "c"].map((n) =>
-        command(`cp750.sys.eq_${n}`, {
+      ...["63", "80", "100"].map((n) =>
+        command(`cp750.sys.eq_l_${n}`, {
           tier: "full",
           operations: [],
           blocked: { read: "full-tier", write: "full-tier" },
@@ -107,8 +108,8 @@ describe("Advanced", () => {
     fireEvent.click(within(notice).getByRole("button", { name: "Show locked" }));
     expect(screen.getByText("3 of 13 parameters")).toBeTruthy();
     expect((screen.getByRole("radio", { name: /Locked/ }) as HTMLInputElement).checked).toBe(true);
-    fireEvent.click(screen.getByRole("button", { name: /System cp750\.sys\.\*/ }));
-    const row = rowOf("cp750.sys.eq_a");
+    fireEvent.click(screen.getByRole("button", { name: /Equalizer · L cp750\.sys\.eq_l_\*/ }));
+    const row = rowOf("cp750.sys.eq_l_63");
     // The short label is visible; the full sentence (said once above) stays for screen readers.
     expect(within(row).getByText("Full set")).toBeTruthy();
     expect(within(row).getByText(/CP750_ALLOW_FULL=1/).className).toBe("visually-hidden");
@@ -167,5 +168,33 @@ describe("Advanced", () => {
     fireEvent.click(within(input).getByRole("button", { name: "Read cp750.sys.input_mode" }));
     await within(input).findByRole("button", { name: /dig_1/, pressed: true });
     expect(within(input).queryByRole("combobox")).toBeNull();
+  });
+
+  test("splits cp750.sys.* by what the params do, and the equalizer per channel, low to high", async () => {
+    const eq = (name: string) =>
+      command(`cp750.sys.${name}`, { schema: { type: "integer", minimum: -60, maximum: 60 } });
+    const commands = [
+      ...fixtureCommands(),
+      eq("eq_c_100"),
+      eq("eq_l_1_25k"),
+      eq("eq_l_63"),
+      eq("eq_l_1k"),
+    ];
+    renderWithGateway(<Advanced />, { gateway: createFakeGateway({ commands }) });
+    await screen.findByText("14 parameters");
+    const sections = screen
+      .getAllByRole("button", { expanded: false })
+      .map((b) => b.textContent?.replace(/\d+ parameters$/, "").trim());
+    expect(sections.slice(0, 4)).toEqual([
+      "Fader & mutecp750.sys.*",
+      "Inputscp750.sys.*",
+      "Equalizer · Lcp750.sys.eq_l_*",
+      "Equalizer · Ccp750.sys.eq_c_*",
+    ]);
+    fireEvent.click(screen.getByRole("button", { name: /Equalizer · L/ }));
+    const bands = screen
+      .getAllByRole("listitem")
+      .map((li) => li.querySelector("code [aria-hidden]")?.textContent);
+    expect(bands).toEqual(["cp750.sys.eq_l_63", "cp750.sys.eq_l_1k", "cp750.sys.eq_l_1_25k"]);
   });
 });
