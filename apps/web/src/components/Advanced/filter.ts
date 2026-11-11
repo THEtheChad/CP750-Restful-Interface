@@ -1,5 +1,13 @@
 /** Search, namespace filter and grouping for the advanced parameter list. */
 import type { Command, Operation } from "../../api/types.ts";
+import {
+  eqBandOf,
+  eqChannelLabel,
+  eqChannelRank,
+  OTHER_GROUP,
+  SYS_GROUP_RULES,
+  sysGroupOf,
+} from "../../lib/param-groups.ts";
 import { namespaceOf } from "../../lib/schema-control.ts";
 
 /** Namespaces in a sensible reading order; unknown ones follow alphabetically. */
@@ -85,4 +93,73 @@ export function namespacesOf(commands: Command[]): { namespace: string; count: n
     namespace: g.namespace,
     count: g.commands.length,
   }));
+}
+
+/** A section of the parameter list: a namespace, or for `sys` one of its groups. */
+export interface DisplayGroup {
+  key: string;
+  label: string;
+  /** The names it covers, as shown next to the label (`cp750.sys.eq_l_*`). */
+  prefix: string;
+  commands: Command[];
+}
+
+const SYS_ORDER = [...SYS_GROUP_RULES.map((r) => r.key), OTHER_GROUP.key];
+
+/** `sys` split by `sysGroupOf`; the equalizer split per channel, bands low to high. */
+function sysGroups(commands: Command[]): DisplayGroup[] {
+  const byKey = new Map<string, { label: string; commands: Command[] }>();
+  for (const c of commands) {
+    const g = sysGroupOf(c.name) ?? OTHER_GROUP;
+    const entry = byKey.get(g.key) ?? { label: g.label, commands: [] };
+    entry.commands.push(c);
+    byKey.set(g.key, entry);
+  }
+  const out: DisplayGroup[] = [];
+  for (const key of SYS_ORDER) {
+    const entry = byKey.get(key);
+    if (!entry) continue;
+    if (key !== "eq") {
+      out.push({
+        key: `sys:${key}`,
+        label: entry.label,
+        prefix: "cp750.sys.*",
+        commands: entry.commands,
+      });
+      continue;
+    }
+    const channels = new Map<string, Command[]>();
+    for (const c of entry.commands) {
+      const channel = eqBandOf(c.name)?.channel ?? "";
+      channels.set(channel, [...(channels.get(channel) ?? []), c]);
+    }
+    const hz = (c: Command) => eqBandOf(c.name)?.hz ?? -1;
+    [...channels.entries()]
+      .sort(([a], [b]) => eqChannelRank(a) - eqChannelRank(b) || a.localeCompare(b))
+      .forEach(([channel, list]) => {
+        out.push({
+          key: `sys:eq:${channel}`,
+          label: channel ? `Equalizer · ${eqChannelLabel(channel)}` : "Equalizer",
+          prefix: channel ? `cp750.sys.eq_${channel}_*` : "cp750.sys.eq_*",
+          commands: [...list].sort((a, b) => hz(a) - hz(b)),
+        });
+      });
+  }
+  return out;
+}
+
+/** The list's sections in reading order: `sys` by group, then the other namespaces. */
+export function groupCommands(commands: Command[]): DisplayGroup[] {
+  return groupByNamespace(commands).flatMap((g) =>
+    g.namespace === "sys"
+      ? sysGroups(g.commands)
+      : [
+          {
+            key: g.namespace,
+            label: NAMESPACE_LABELS[g.namespace] ?? g.namespace,
+            prefix: `cp750.${g.namespace}.*`,
+            commands: g.commands,
+          },
+        ],
+  );
 }

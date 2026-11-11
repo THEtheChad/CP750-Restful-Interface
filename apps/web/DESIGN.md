@@ -36,7 +36,10 @@ A new param kind gets a function and a surface here, not a one-off control.
 
 - **Controls, "glance":** fader, mute and input. Big, few, no cards; regions are separated by
   space and one hairline.
-- **Advanced, "desk":** the full manifest as dense rows: [name + description + why it's blocked]
+- **Advanced, "desk":** sections are namespaces, except that `cp750.sys.*` is split by what the
+  params do (`src/lib/param-groups.ts`, an ordered first-match table tested against every shipped
+  manifest; unknown names land in Other), and the equalizer per channel, bands low to high. The
+  full manifest is shown as dense rows: [name + description + why it's blocked]
   [value or control] [Read]. Names wrap at `_` and are never truncated. Phones stack to
   [name · Read] [control].
 
