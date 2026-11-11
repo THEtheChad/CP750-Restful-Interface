@@ -17,6 +17,21 @@ glance at the screen; mistakes are audible to an audience. Consequences:
 - No decorative motion. Transitions are 150 ms, ease-out, state only, and respect
   `prefers-reduced-motion`.
 
+## Control surfaces by function
+
+A param's control comes from what it does (`functionOf` in `src/lib/param-function.ts`), not from
+its schema shape or from where it appears. The main controls and the Advanced list use the same
+surfaces, in a glance size and a desk size:
+
+| Function | Surface | Used by |
+|---|---|---|
+| level: fader unit | `LevelSteps` on `useLevelWriter`. Steps start from a fresh read, every send moves at most one page, and Reset ramps. Never free-form entry. | main fader, `fader_preset_*` |
+| toggle: 0/1 | `ToggleButton`. Stable name, `aria-pressed`, state words from a vocabulary (mute's or On/Off) | main mute, every 0/1 param |
+| choice: enum | `ChoiceGroup`, one press chooses. In dense lists only when the options fit on one line (≤ 4, ≤ 40 chars); otherwise a list sent with Set. | input selector, short enums |
+| entry: number, range, text | `ParamControl`: a draft, sent with Set | everything else |
+
+A new param kind gets a function and a surface here, not a one-off control.
+
 ## Two densities
 
 - **Controls, "glance":** fader, mute and input. Big, few, no cards; regions are separated by

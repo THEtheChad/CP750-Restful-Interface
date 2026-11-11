@@ -3,12 +3,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import type { ParamValue, ValueSchema } from "../../../../../../../../api/types.ts";
 import { ParamControl } from "./ParamControl.tsx";
 
-function setup(
-  schema: ValueSchema | null,
-  value: ParamValue | undefined,
-  disabled = false,
-  pending = false,
-) {
+function setup(schema: ValueSchema | null, value: ParamValue | undefined, disabled = false) {
   const onCommit = mock((_: ParamValue) => Promise.resolve());
   render(
     <>
@@ -17,7 +12,6 @@ function setup(
         schema={schema}
         value={value}
         disabled={disabled}
-        pending={pending}
         labelledBy="name"
         onCommit={onCommit}
       />
@@ -26,23 +20,7 @@ function setup(
   return onCommit;
 }
 
-describe("ParamControl renders the control the schema calls for", () => {
-  test("0/1 enum → a switch that commits on click", () => {
-    const onCommit = setup({ type: "integer", enum: [0, 1] }, 0);
-    const toggle = screen.getByRole("switch", { name: "cp750.sys.x" });
-    expect(toggle.getAttribute("aria-checked")).toBe("false");
-    fireEvent.click(toggle);
-    expect(onCommit).toHaveBeenCalledWith(1);
-  });
-
-  test("a switch ignores clicks while a write is pending", () => {
-    const onCommit = setup({ type: "integer", enum: [0, 1] }, 0, false, true);
-    const toggle = screen.getByRole("switch", { name: "cp750.sys.x" });
-    expect(toggle.getAttribute("aria-disabled")).toBe("true");
-    fireEvent.click(toggle);
-    expect(onCommit).not.toHaveBeenCalled();
-  });
-
+describe("ParamControl renders the entry the schema calls for", () => {
   test("Set and Undo are named after the param", () => {
     setup({ type: "string", maxLength: 16 }, "booth-1");
     expect(screen.getByRole("button", { name: "Set cp750.sys.x" })).toBeTruthy();
@@ -102,7 +80,10 @@ describe("ParamControl renders the control the schema calls for", () => {
   });
 
   test("disabled controls can't be used", () => {
-    setup({ type: "integer", enum: [0, 1] }, 1, true);
-    expect((screen.getByRole("switch") as HTMLButtonElement).disabled).toBe(true);
+    setup({ type: "string" }, "booth-1", true);
+    expect((screen.getByRole("textbox") as HTMLInputElement).disabled).toBe(true);
+    expect(
+      (screen.getByRole("button", { name: "Set cp750.sys.x" }) as HTMLButtonElement).disabled,
+    ).toBe(true);
   });
 });

@@ -125,4 +125,47 @@ describe("Advanced", () => {
     expect((search as HTMLInputElement).value).toBe("");
     expect(document.activeElement).toBe(search);
   });
+
+  test("a fader-unit param steps like the main fader: no free-form entry, reset ramps", async () => {
+    const gateway = createFakeGateway({ values: { "cp750.sys.fader": 20 } });
+    renderWithGateway(<Advanced />, { gateway });
+    fireEvent.change(await screen.findByRole("searchbox", { name: "Search" }), {
+      target: { value: "main fader" },
+    });
+    const row = rowOf("cp750.sys.fader");
+    fireEvent.click(within(row).getByRole("button", { name: "Read cp750.sys.fader" }));
+    await waitFor(() => expect(row.textContent).toContain("2.0"));
+    expect(within(row).queryByRole("slider")).toBeNull();
+    expect(within(row).queryByRole("spinbutton")).toBeNull();
+    expect(within(row).getByRole("button", { name: "+1.0 cp750.sys.fader" })).toBeTruthy();
+
+    fireEvent.click(within(row).getByRole("button", { name: "Reset to 7.0 cp750.sys.fader" }));
+    const sent = () => gateway.paramRequests("PUT").map((r) => (r.body as { value: number }).value);
+    await waitFor(() => expect(sent().at(-1)).toBe(70), { timeout: 3000 });
+    // Never more than one page (1.0 on the display) per write.
+    [20, ...sent()].reduce((from, to) => {
+      expect(Math.abs(to - from)).toBeLessThanOrEqual(10);
+      return to;
+    });
+  });
+
+  test("0/1 params and short enums use the main controls' toggle and choice surfaces", async () => {
+    renderWithGateway(<Advanced />);
+    fireEvent.change(await screen.findByRole("searchbox", { name: "Search" }), {
+      target: { value: "cp750.sys" },
+    });
+    const mute = rowOf("cp750.sys.mute");
+    fireEvent.click(within(mute).getByRole("button", { name: "Read cp750.sys.mute" }));
+    const toggle = await within(mute).findByRole("button", {
+      name: "cp750.sys.mute",
+      pressed: false,
+    });
+    expect(toggle.textContent).toContain("Audio on");
+
+    // The fixture's four short inputs fit one line: the input selector's choice surface.
+    const input = rowOf("cp750.sys.input_mode");
+    fireEvent.click(within(input).getByRole("button", { name: "Read cp750.sys.input_mode" }));
+    await within(input).findByRole("button", { name: /dig_1/, pressed: true });
+    expect(within(input).queryByRole("combobox")).toBeNull();
+  });
 });
