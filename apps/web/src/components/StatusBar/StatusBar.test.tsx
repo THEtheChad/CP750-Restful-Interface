@@ -16,9 +16,9 @@ describe("StatusBar", () => {
       },
     });
     renderWithGateway(<StatusBar />, { gateway });
-    await screen.findByText("nearest match");
-    expect(screen.getByText("Unverified (draft)")).toBeTruthy();
-    expect(banner("manifest")).toContain("nearest older one (1.2.8.3)");
+    await waitFor(() => expect(banner("manifest")).toContain("nearest older one (1.2.8.3)"));
+    // Phones get a one-line version that still names the manifest in use.
+    expect(banner("manifest")).toContain("Nearest manifest (1.2.8.3)");
   });
 
   test("warns loudly when the processor is down, and follows connection events", async () => {

@@ -61,6 +61,7 @@ describe("ToggleButton (every 0/1 param)", () => {
     const mute = screen.getByRole("button", { name: "Mute" });
     expect(mute.getAttribute("aria-pressed")).toBe("true");
     expect(mute.getAttribute("data-tone")).toBe("on");
-    expect(mute.textContent).toContain("Muted");
+    // At glance size the state word sits under the key, outside its name.
+    expect(mute.parentElement?.textContent).toContain("Muted");
   });
 });

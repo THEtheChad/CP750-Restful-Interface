@@ -5,6 +5,7 @@ import { ChoiceGroup } from "../../../../../../../ChoiceGroup/ChoiceGroup.tsx";
 import { ToggleButton } from "../../../../../../../ToggleButton/ToggleButton.tsx";
 import { ParamControl } from "../ParamControl/ParamControl.tsx";
 import { LevelControl } from "./components/LevelControl/LevelControl.tsx";
+import { TrimControl } from "./components/TrimControl/TrimControl.tsx";
 
 export interface ParamSurfaceProps {
   command: Command;
@@ -21,7 +22,8 @@ export interface ParamSurfaceProps {
 /**
  * A writable param's control, chosen by what it does (`functionOf`), so it matches the main
  * controls: levels step like the fader, 0/1 params toggle like mute, short enums choose like the
- * input selector. Entries and long lists edit a draft sent with Set.
+ * input selector, bipolar trims get a knob beside their typed entry. Entries and long lists edit
+ * a draft sent with Set.
  */
 export function ParamSurface({
   command,
@@ -54,6 +56,17 @@ export function ParamSurface({
           pending={pending}
           disabled={unread}
           onToggle={(next) => write.mutate({ value: next })}
+        />
+      );
+    case "trim":
+      return (
+        <TrimControl
+          command={command}
+          min={fn.min}
+          max={fn.max}
+          value={value}
+          nameId={nameId}
+          write={write}
         />
       );
     case "choice":

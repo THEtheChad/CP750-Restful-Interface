@@ -1,41 +1,65 @@
-/* Compact, full-width strips under the shell. Persistent while the condition holds. */
+/* Full-width strips under the status bar. Persistent while the condition holds. */
 .banners {
   display: grid;
 }
 
 .banner {
   margin: 0;
-  padding: var(--space-2) var(--space-4);
+  padding: var(--space-2) var(--space-6);
   font-size: var(--text-sm);
-  font-weight: 600;
-  line-height: 1.35;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 .inner {
   display: flex;
   align-items: flex-start;
   gap: var(--space-2);
-  max-width: 80rem;
-  margin: 0 auto;
 }
 
 .icon {
-  margin-top: 0.05em;
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.short {
+  display: none;
 }
 
 .danger {
-  background: var(--danger);
-  color: var(--danger-text);
+  background: var(--key-danger);
+  color: var(--ink);
+  font-weight: 600;
 }
 
 .warn {
   background: var(--warn-soft);
+  border-bottom: 1px solid #3a2c0c;
   color: var(--warn);
-  border-bottom: 1px solid var(--border);
 }
 
 .info {
-  background: var(--accent-soft);
+  background: var(--level-soft);
+  border-bottom: 1px solid #1d3550;
   color: var(--text);
-  border-bottom: 1px solid var(--border);
+}
+
+@media (max-width: 43.75rem) {
+  .banner {
+    padding: var(--space-2) var(--space-4);
+  }
+
+  /* Phones get the one-line version; the full sentence stays for screen readers. */
+  .long {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .short {
+    display: inline;
+  }
 }

@@ -1,34 +1,34 @@
+/* Master strip | input keys | processor facts; the facts drop below on narrower screens. */
 .controls {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(18rem, 2fr);
+  grid-template-columns: minmax(0, 27rem) minmax(15rem, 18rem) minmax(14rem, 20rem);
   gap: var(--space-7);
   align-items: start;
 }
 
-.side {
-  display: grid;
-  gap: var(--space-6);
-  padding-inline-start: var(--space-7);
-  border-inline-start: 1px solid var(--border);
+.facts {
+  padding-top: 0;
 }
 
-/* Input sits under mute, separated by a hairline. */
-.side > * + * {
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--border);
+@media (max-width: 75rem) {
+  .controls {
+    grid-template-columns: minmax(0, 27rem) minmax(15rem, 20rem);
+  }
+
+  .facts {
+    grid-column: 1 / -1;
+    max-width: 40rem;
+  }
 }
 
-@media (max-width: 56rem) {
+@media (max-width: 43.75rem) {
   .controls {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-5);
   }
 
-  .side {
-    gap: var(--space-5);
-    padding-inline-start: 0;
-    padding-top: var(--space-5);
-    border-inline-start: 0;
-    border-top: 1px solid var(--border);
+  /* The full facts are under Settings; Home stays on the controls. */
+  .facts {
+    display: none;
   }
 }

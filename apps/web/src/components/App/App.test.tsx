@@ -9,8 +9,10 @@ describe("App (root render)", () => {
     const header = screen.getByRole("banner");
     await waitFor(() => expect(within(header).getByText("192.168.1.136:61408")).toBeTruthy());
     expect(within(header).getByText("Connected")).toBeTruthy();
-    expect(within(header).getByText("Verified")).toBeTruthy();
-    expect(within(header).getByText("exact match")).toBeTruthy();
+    // Firmware and manifest facts sit beside the controls on Home (and under Settings).
+    const main = screen.getByRole("tabpanel");
+    expect(within(main).getByText("Verified")).toBeTruthy();
+    expect(within(main).getByText("exact match")).toBeTruthy();
 
     await waitFor(() => expect(screen.getByTestId("fader-value").textContent).toBe("7.0"));
     expect(screen.getByTestId("fader-db").textContent).toBe("0.0 dB");

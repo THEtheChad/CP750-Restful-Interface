@@ -31,6 +31,7 @@
       "name": "@cp750/web",
       "version": "0.1.0",
       "dependencies": {
+        "@fontsource-variable/inter": "5.2.5",
         "@tanstack/react-query": "5.105.0",
         "openapi-fetch": "0.17.0",
         "react": "19.3.1",
@@ -103,6 +104,8 @@
     "@cp750/server": ["@cp750/server@workspace:apps/server"],
 
     "@cp750/web": ["@cp750/web@workspace:apps/web"],
+
+    "@fontsource-variable/inter": ["@fontsource-variable/inter@5.2.5", "", {}, "sha512-TrWffUAFOnT8zroE9YmGybagoOgM/HjRqMQ8k9R0vVgXlnUh/vnpbGPAS/Caz1KIlOPnPGh6fvJbb7DHbFCncA=="],
 
     "@happy-dom/global-registrator": ["@happy-dom/global-registrator@21.0.4", "", { "dependencies": { "@types/node": ">=20.0.0", "happy-dom": "^21.0.4" } }, "sha512-Bbr0hW9hhDhBf3Jp0EyDlkCbFgbr0z2jd3BMKYOYW+fOkPM4Nx195GMXyCtRCGEgoNn6i09FabXrSkNFm2ONzg=="],
 

@@ -5,8 +5,8 @@
  */
 .range {
   --thumb: 1.75rem;
-  --rail: var(--surface-2);
-  --fill: var(--accent);
+  --rail: var(--raised);
+  --fill: var(--level);
   --at: calc(var(--thumb) / 2 + (100% - var(--thumb)) * var(--p, 0));
   display: block;
   width: 100%;
@@ -20,14 +20,14 @@
 
 .range::-webkit-slider-runnable-track {
   height: 0.5rem;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--edge);
   border-radius: 999px;
   background: linear-gradient(to right, var(--fill) 0 var(--at), var(--rail) var(--at) 100%);
 }
 
 .range::-moz-range-track {
   height: 0.5rem;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--edge);
   border-radius: 999px;
   background: linear-gradient(to right, var(--fill) 0 var(--at), var(--rail) var(--at) 100%);
 }
@@ -37,7 +37,7 @@
   width: var(--thumb);
   height: var(--thumb);
   margin-top: calc((0.5rem - 2px - var(--thumb)) / 2);
-  border: 2px solid var(--bg);
+  border: 2px solid var(--ground);
   border-radius: 50%;
   background: var(--text);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.4);
@@ -46,7 +46,7 @@
 .range::-moz-range-thumb {
   width: var(--thumb);
   height: var(--thumb);
-  border: 2px solid var(--bg);
+  border: 2px solid var(--ground);
   border-radius: 50%;
   background: var(--text);
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.4);

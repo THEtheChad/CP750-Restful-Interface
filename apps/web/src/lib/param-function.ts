@@ -8,11 +8,16 @@
  * - `choice`: an enum. In the dense Advanced list, options that fit on one line (≤ 4, short) are
  *   segmented buttons, one press chooses, like the input selector; longer enums are a list sent
  *   with Set. (The main input selector, with room to spare, always uses segments.)
+ * - `trim`: a bipolar integer range (level, bass, treble trims; EQ bands): a knob that moves at
+ *   most `TRIM_GESTURE_LIMIT` per gesture, with typed entry beside it.
  * - `entry`: a number, range or text, edited as a draft and sent with Set.
  */
 import type { Command, ParamValue } from "../api/types.ts";
 import { formatFader } from "./fader.ts";
 import { controlFor } from "./schema-control.ts";
+
+/** The most one knob gesture may move a trim (raw units), from where the gesture started. */
+export const TRIM_GESTURE_LIMIT = 10;
 
 export const MAIN_PARAMS = {
   fader: "cp750.sys.fader",
@@ -54,6 +59,7 @@ export type ParamFunction =
   | { kind: "level" }
   | { kind: "toggle"; vocabulary: ToggleVocabulary }
   | { kind: "choice"; options: (string | number)[]; layout: "segments" | "list" }
+  | { kind: "trim"; min: number; max: number }
   | { kind: "entry" }
   | { kind: "none" };
 
@@ -76,6 +82,12 @@ export function functionOf(command: Pick<Command, "name" | "unit" | "schema">): 
     }
     case "none":
       return { kind: "none" };
+    case "range":
+      // A bipolar trim (level, bass, treble, EQ band): a knob, with typed entry beside it.
+      // Unipolar ranges (delays in ms, counts) stay typed entries.
+      return spec.min < 0 && spec.max > 0 && (command.unit === null || command.unit === "dB_tenths")
+        ? { kind: "trim", min: spec.min, max: spec.max }
+        : { kind: "entry" };
     default:
       return { kind: "entry" };
   }

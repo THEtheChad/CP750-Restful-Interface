@@ -17,7 +17,7 @@
 }
 
 .db {
-  color: var(--text-muted);
+  color: var(--muted);
   font-size: var(--text-sm);
 }
 

@@ -1,64 +1,58 @@
-.steps {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(0, 1.4fr) repeat(2, minmax(0, 1fr));
-  gap: var(--space-2);
-}
-
 .steps button {
   font-variant-numeric: tabular-nums;
 }
 
-.glance button {
-  min-height: 3.5rem;
-  font-size: var(--text-lg);
+.glance {
+  display: grid;
+  gap: var(--space-2);
 }
 
-.glance .reset {
-  font-size: var(--text-base);
+.tray {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.glance button {
+  min-height: 3.25rem;
+  font-size: var(--text-md);
+  font-variant-numeric: tabular-nums;
 }
 
 .desk {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
+  gap: var(--space-2);
 }
 
-/* Holds the reset button's cell at reference, so nothing shifts under the operator's finger. */
+.desk button {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Holds the reset key's place at reference, so nothing shifts under the operator's finger. */
 .atReference {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0 var(--space-3);
-  border: 1px dashed var(--border-strong);
+  border: 1px dashed var(--edge);
   border-radius: var(--radius-sm);
-  color: var(--text-muted);
+  color: var(--muted);
   font-size: var(--text-sm);
   font-weight: 600;
   text-align: center;
 }
 
 .glance .atReference {
-  min-height: 3.5rem;
+  min-height: 3.25rem;
 }
 
 .desk .atReference {
   min-height: var(--target-min);
 }
 
-@media (max-width: 30rem) {
-  .glance {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .glance .reset,
-  .glance .atReference {
-    grid-column: 1 / -1;
-    order: 5;
-    min-height: var(--control-height);
-  }
-}
-
-@media (max-width: 40rem) {
+@media (max-width: 43.75rem) {
   .desk {
     justify-content: flex-start;
   }

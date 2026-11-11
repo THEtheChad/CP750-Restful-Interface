@@ -23,7 +23,7 @@ export function AuthControl() {
     <div className={styles.auth}>
       <button
         type="button"
-        className={styles.trigger}
+        className={`${controls.button} ${controls.small}`}
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((o) => !o)}

@@ -6,11 +6,11 @@
 }
 
 .firmware {
-  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .match {
-  color: var(--chrome-muted);
+  color: var(--muted);
 }
 
 .verified,
@@ -22,9 +22,9 @@
 }
 
 .verified {
-  color: var(--chrome-ok);
+  color: var(--ok);
 }
 
 .unverified {
-  color: var(--chrome-warn);
+  color: var(--warn);
 }

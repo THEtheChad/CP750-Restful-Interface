@@ -1,4 +1,4 @@
-/* A main-controls region: no card, separated from its neighbours by space and a hairline. */
+/* A Home region: no card; regions are separated by space. */
 .section {
   min-width: 0;
 }
@@ -13,7 +13,7 @@
 
 .heading {
   margin: 0;
-  font-size: var(--text-base);
-  font-weight: 600;
-  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--muted);
 }

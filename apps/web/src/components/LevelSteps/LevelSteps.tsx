@@ -24,7 +24,10 @@ export interface LevelStepsProps {
   name: { label: string } | { labelledBy: string };
 }
 
-/** The level step row: −1.0 −0.1 [Reset to 7.0] +0.1 +1.0. Every level surface uses it. */
+/**
+ * The level steps every level surface uses: at glance size a 2×2 tray (louder on top) with the
+ * reset beneath; at desk size one row, −1.0 −0.1 [Reset to 7.0] +0.1 +1.0.
+ */
 export function LevelSteps({
   size,
   disabled,
@@ -56,28 +59,44 @@ export function LevelSteps({
     );
   };
   const resetId = `${base}reset`;
+  const reset = atReference ? (
+    <span className={styles.atReference}>At reference</span>
+  ) : (
+    <button
+      id={resetId}
+      type="button"
+      // A lit key at glance size; in a dense list a lit reset on every row is noise.
+      className={
+        size === "desk"
+          ? `${controls.button} ${controls.small} ${styles.reset}`
+          : `${controls.button} ${styles.reset}`
+      }
+      disabled={disabled || resetDisabled}
+      {...("labelledBy" in name ? { "aria-labelledby": `${resetId} ${name.labelledBy}` } : {})}
+      onClick={onReset}
+    >
+      Reset to 7.0
+    </button>
+  );
+  if (size === "glance") {
+    // Up means louder: +0.1 +1.0 above −0.1 −1.0, fine steps nearest the fader; reset beneath.
+    const [down1, down01, up01, up1] = STEPS;
+    return (
+      <div className={styles.glance}>
+        <div className={`${controls.tray} ${styles.tray}`}>
+          {stepButton(up01)}
+          {stepButton(up1)}
+          {stepButton(down01)}
+          {stepButton(down1)}
+        </div>
+        {reset}
+      </div>
+    );
+  }
   return (
-    <div className={`${styles.steps} ${styles[size]}`}>
+    <div className={styles.desk}>
       {STEPS.slice(0, 2).map(stepButton)}
-      {atReference ? (
-        <span className={styles.atReference}>At reference</span>
-      ) : (
-        <button
-          id={resetId}
-          type="button"
-          // Primary at glance size only: in a dense list a blue reset on every row is noise.
-          className={
-            size === "desk"
-              ? `${controls.button} ${controls.small} ${styles.reset}`
-              : `${controls.button} ${controls.primary} ${styles.reset}`
-          }
-          disabled={disabled || resetDisabled}
-          {...("labelledBy" in name ? { "aria-labelledby": `${resetId} ${name.labelledBy}` } : {})}
-          onClick={onReset}
-        >
-          Reset to 7.0
-        </button>
-      )}
+      {reset}
       {STEPS.slice(2).map(stepButton)}
     </div>
   );

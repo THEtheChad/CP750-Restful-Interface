@@ -13,6 +13,8 @@ export interface ParamControlProps {
   describedBy?: string;
   /** May return a promise; the draft is kept until it settles. */
   onCommit: (value: ParamValue) => unknown;
+  /** Draw a slider for small ranges (default); off when a knob already sits beside it. */
+  slider?: boolean;
 }
 
 /**
@@ -27,6 +29,7 @@ export function ParamControl({
   labelledBy,
   describedBy,
   onCommit,
+  slider = true,
 }: ParamControlProps) {
   const spec = controlFor(schema);
   const [draft, setDraft] = useState<string | null>(null);
@@ -85,7 +88,7 @@ export function ParamControl({
           ))}
         </select>
       )}
-      {spec.kind === "range" && (
+      {spec.kind === "range" && slider && (
         <input
           className={styles.slider}
           type="range"

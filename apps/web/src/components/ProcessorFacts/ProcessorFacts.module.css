@@ -1,26 +1,20 @@
-.details {
-  border-top: 1px solid var(--chrome-border);
-}
-
 .facts {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: var(--space-3) var(--space-7);
-  max-width: 80rem;
-  margin: 0 auto;
-  padding: var(--space-3) var(--space-4) var(--space-4);
+  display: grid;
+  margin: 0;
+  border-top: 1px solid var(--hairline);
 }
 
 .fact {
   display: grid;
-  gap: var(--space-1);
-  min-width: 0;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--hairline);
+  font-size: var(--text-base);
 }
 
 .fact dt {
-  font-size: var(--text-sm);
-  color: var(--chrome-muted);
+  color: var(--muted);
 }
 
 .fact dd {
@@ -28,6 +22,10 @@
   overflow-wrap: anywhere;
 }
 
-.mono {
-  font-family: var(--font-mono);
+.figures {
+  font-variant-numeric: tabular-nums;
+}
+
+.quiet {
+  color: var(--muted);
 }
