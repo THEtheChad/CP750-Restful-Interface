@@ -4,7 +4,26 @@ import { createFakeGateway, problem } from "../../../../../test/fake-gateway.ts"
 import { renderWithGateway } from "../../../../../test/render.tsx";
 import { Fader } from "./Fader.tsx";
 
-const slider = () => screen.getByRole("slider") as HTMLInputElement;
+const slider = () => screen.getByRole("slider") as HTMLElement;
+/** happy-dom has no layout: give the fader a 400px track (raw 100 at the top, 0 at the bottom). */
+const TRACK = 400;
+const yOf = (raw: number) => TRACK - (raw / 100) * TRACK;
+function layout() {
+  slider().getBoundingClientRect = () =>
+    ({
+      top: 0,
+      left: 0,
+      right: 112,
+      bottom: TRACK,
+      width: 112,
+      height: TRACK,
+      x: 0,
+      y: 0,
+    }) as DOMRect;
+}
+const press = (raw: number) => fireEvent.pointerDown(slider(), { clientY: yOf(raw), pointerId: 1 });
+const move = (raw: number) => fireEvent.pointerMove(slider(), { clientY: yOf(raw), pointerId: 1 });
+const release = (raw: number) => fireEvent.pointerUp(slider(), { clientY: yOf(raw), pointerId: 1 });
 const ready = () =>
   waitFor(() => expect(screen.getByTestId("fader-value").textContent).toBe("7.0"));
 
@@ -33,26 +52,31 @@ describe("Fader", () => {
     ]);
   });
 
-  test("a drag is throttled and the final value is committed on release", async () => {
+  test("a drag from the cap follows at once, throttled, and commits on release", async () => {
     const { gateway } = renderWithGateway(<Fader throttleMs={1_000} />);
     await ready();
-    for (let v = 71; v <= 80; v++) fireEvent.change(slider(), { target: { value: String(v) } });
-    // The display follows the drag at once…
-    expect(screen.getByTestId("fader-value").textContent).toBe("8.0");
-    // …but only the first value went out; the rest wait, newest only.
+    layout();
+    press(70);
+    for (let v = 71; v <= 80; v++) move(v);
+    // The cap follows the drag at once (dashed, as a target); the readout stays on what the
+    // processor confirmed and says where it is going.
+    expect(slider().getAttribute("aria-valuenow")).toBe("8");
+    expect(screen.getByText("Setting 8.0…")).toBeTruthy();
+    // Only the first value went out; the rest wait, newest only.
     await waitFor(() => expect(gateway.paramRequests("PUT").length).toBe(1));
-    fireEvent.pointerUp(slider());
+    release(80);
     await waitFor(() => expect(gateway.values.get("cp750.sys.fader")).toBe(80));
     expect(gateway.paramRequests("PUT").map((r) => r.body)).toEqual([{ value: 71 }, { value: 80 }]);
+    await waitFor(() => expect(screen.getByTestId("fader-value").textContent).toBe("8.0"));
     await waitFor(() => expect(screen.getByTestId("fader-db").textContent).toBe("+3.3 dB"));
   });
 
   test("no single send moves more than 1.0: a jump ramps there one page at a time", async () => {
     const { gateway } = renderWithGateway(<Fader throttleMs={20} />);
     await ready();
-    // E.g. End on the keyboard: straight to 10.0.
-    fireEvent.change(slider(), { target: { value: "100" } });
-    fireEvent.keyUp(slider());
+    // End on the keyboard: straight to 10.0.
+    fireEvent.keyDown(slider(), { key: "End" });
+    fireEvent.keyUp(slider(), { key: "End" });
     await waitFor(() => expect(gateway.values.get("cp750.sys.fader")).toBe(100));
     expect(gateway.paramRequests("PUT").map((r) => r.body)).toEqual([
       { value: 80 },
@@ -61,33 +85,71 @@ describe("Fader", () => {
     ]);
   });
 
-  test("a click on the track moves one page toward the click, not to it", async () => {
+  test("a failed send stops the move: the rest of a ramp is dropped, not retried", async () => {
+    const gateway = createFakeGateway();
+    gateway.intercept((r) =>
+      r.method === "PUT"
+        ? problem(504, "TIMEOUT", { title: "The CP750 did not answer" })
+        : undefined,
+    );
+    renderWithGateway(<Fader throttleMs={20} />, { gateway });
+    await ready();
+    fireEvent.keyDown(slider(), { key: "End" });
+    fireEvent.keyUp(slider(), { key: "End" });
+    expect((await screen.findByRole("alert")).textContent).toContain("didn't answer in time");
+    await new Promise((r) => setTimeout(r, 200));
+    // One attempt (7.0 → 8.0) failed; 9.0 and 10.0 were never sent.
+    expect(gateway.paramRequests("PUT").map((r) => r.body)).toEqual([{ value: 80 }]);
+    await waitFor(() => expect(screen.getByTestId("fader-value").textContent).toBe("7.0"));
+  });
+
+  test("a tap on the track moves one page toward it; a drag only starts on the cap", async () => {
     const { gateway } = renderWithGateway(<Fader />);
     await ready();
-    fireEvent.pointerDown(slider());
-    fireEvent.change(slider(), { target: { value: "100" } });
-    // Moving on from there in the same gesture stays within the page.
-    fireEvent.change(slider(), { target: { value: "95" } });
-    fireEvent.pointerUp(slider());
+    layout();
+    // A tap near the top of the track (far from the cap at 7.0): one page up, not to 10.0.
+    press(100);
+    release(100);
     await waitFor(() => expect(gateway.values.get("cp750.sys.fader")).toBe(80));
-    expect(screen.getByTestId("fader-value").textContent).toBe("8.0");
-    expect(
-      gateway.paramRequests("PUT").every((r) => (r.body as { value: number }).value <= 80),
-    ).toBe(true);
+    expect(gateway.paramRequests("PUT").map((r) => r.body)).toEqual([{ value: 80 }]);
 
-    // A drag that starts on the thumb is not limited (beyond the per-send cap).
-    fireEvent.pointerDown(slider());
-    for (const v of [81, 82, 85]) fireEvent.change(slider(), { target: { value: String(v) } });
-    fireEvent.pointerUp(slider());
+    // A swipe that starts on the track (a scroll that landed there) never sets the level.
+    press(20);
+    move(40);
+    move(60);
+    release(60);
+    await new Promise((r) => setTimeout(r, 300));
+    expect(gateway.paramRequests("PUT").length).toBe(1);
+
+    // A drag that starts on the cap follows (within the per-send cap).
+    press(80);
+    for (const v of [81, 82, 85]) move(v);
+    release(85);
     await waitFor(() => expect(gateway.values.get("cp750.sys.fader")).toBe(85));
   });
 
-  test("the wheel cannot change the level", async () => {
-    renderWithGateway(<Fader />);
+  test("a cancelled drag drops what is queued instead of sending it", async () => {
+    const { gateway } = renderWithGateway(<Fader throttleMs={1_000} />);
     await ready();
-    const wheel = new WheelEvent("wheel", { deltaY: -100, cancelable: true, bubbles: true });
-    slider().dispatchEvent(wheel);
-    expect(wheel.defaultPrevented).toBe(true);
+    layout();
+    press(70);
+    move(75);
+    move(79);
+    fireEvent.pointerCancel(slider(), { pointerId: 1 });
+    await new Promise((r) => setTimeout(r, 50));
+    // The first move had already gone out; the queued 79 is dropped.
+    expect(gateway.paramRequests("PUT").map((r) => r.body)).toEqual([{ value: 75 }]);
+  });
+
+  test("the wheel cannot change the level", async () => {
+    const { gateway } = renderWithGateway(<Fader />);
+    await ready();
+    slider().dispatchEvent(
+      new WheelEvent("wheel", { deltaY: -100, cancelable: true, bubbles: true }),
+    );
+    await new Promise((r) => setTimeout(r, 50));
+    expect(gateway.paramRequests("PUT").length).toBe(0);
+    expect(slider().getAttribute("aria-valuenow")).toBe("7");
   });
 
   test("steps re-read the processor first, so a stale display cannot cause a jump", async () => {
@@ -158,7 +220,7 @@ describe("Fader", () => {
     const gateway = createFakeGateway({ device: { readOnly: true } });
     renderWithGateway(<Fader />, { gateway });
     await ready();
-    await waitFor(() => expect(slider().disabled).toBe(true));
+    await waitFor(() => expect(slider().getAttribute("aria-disabled")).toBe("true"));
     for (const button of screen.getAllByRole("button"))
       expect((button as HTMLButtonElement).disabled).toBe(true);
     expect(screen.getByText("The gateway is in read-only mode.")).toBeTruthy();

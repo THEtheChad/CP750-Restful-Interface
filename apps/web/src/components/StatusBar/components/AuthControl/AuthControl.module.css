@@ -2,26 +2,6 @@
   position: relative;
 }
 
-/* Matches the Details disclosure: an outlined control on the ink shell. */
-.trigger {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  min-height: var(--target-min);
-  padding: 0 var(--space-3);
-  border: 1px solid var(--chrome-border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--chrome-text);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.trigger:hover {
-  border-color: var(--chrome-muted);
-}
-
 .panel {
   position: absolute;
   right: 0;
@@ -29,11 +9,10 @@
   z-index: 20;
   width: min(22rem, calc(100vw - 2rem));
   padding: var(--space-4);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--edge);
   border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+  background: var(--strip);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.6);
 }
 
 .form {
@@ -52,19 +31,19 @@
 
 .note {
   margin: 0;
-  color: var(--text-muted);
+  color: var(--muted);
   font-size: var(--text-sm);
 }
 
 .set {
-  color: var(--chrome-ok);
+  color: var(--ok);
 }
 
 .unset {
-  color: var(--chrome-warn);
+  color: var(--warn);
 }
 
-@media (max-width: 40rem) {
+@media (max-width: 43.75rem) {
   .panel {
     position: fixed;
     left: var(--space-4);

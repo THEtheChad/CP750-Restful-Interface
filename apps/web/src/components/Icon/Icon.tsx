@@ -10,6 +10,29 @@ const PATHS = {
     </>
   ),
   check: <path d="M20 6 9 17l-5-5" />,
+  home: (
+    <>
+      <path d="M3 11 12 4l9 7" />
+      <path d="M5 10v10h14V10" />
+    </>
+  ),
+  sliders: (
+    <>
+      <path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12" />
+      <circle cx="16" cy="6" r="2" />
+      <circle cx="10" cy="12" r="2" />
+      <circle cx="18" cy="18" r="2" />
+    </>
+  ),
+  eq: <path d="M3 15c3 0 3-6 6-6s3 8 6 8 3-5 6-5" />,
+  settings: (
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
+    </>
+  ),
+  prev: <path d="m15 6-6 6 6 6" />,
+  next: <path d="m9 6 6 6-6 6" />,
   chevron: <path d="m9 6 6 6-6 6" />,
   lock: (
     <>

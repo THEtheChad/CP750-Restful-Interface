@@ -1,0 +1,129 @@
+.eq {
+  display: grid;
+  /* minmax(0, …): the scrolling key rows must not widen the column. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  margin-bottom: var(--space-2);
+}
+
+.heading {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.keyrow {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Composes controls.button: a lit key when chosen. */
+.key {
+  min-width: 2.75rem;
+}
+
+.key[aria-pressed="true"],
+.chip[aria-pressed="true"] {
+  border-color: var(--key-lit-edge);
+  background: var(--key-lit);
+  box-shadow: var(--key-lit-depth);
+  color: var(--ink);
+}
+
+.arm {
+  margin-left: auto;
+}
+
+.chips {
+  display: none;
+}
+
+.locked {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  color: var(--muted);
+}
+
+.locked p {
+  margin: 0;
+}
+
+.note {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.list {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-base);
+}
+
+.list th,
+.list td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--hairline);
+  text-align: left;
+}
+
+.list th {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: var(--text-sm);
+}
+
+.list tr[aria-current] td {
+  background: var(--raised);
+}
+
+.list code {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 43.75rem) {
+  .arm {
+    margin-left: 0;
+  }
+
+  .keyrow {
+    flex-wrap: nowrap;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 2px 2px 6px;
+  }
+
+  /* Phones: 27 bands are ~13px apart, too close to touch; pick them from a row of keys. */
+  .chips {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 2px 2px 6px;
+  }
+
+  .chip {
+    flex: none;
+    border-radius: 22px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .list code {
+    display: none;
+  }
+}

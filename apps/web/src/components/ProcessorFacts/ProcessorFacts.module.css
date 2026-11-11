@@ -1,0 +1,31 @@
+.facts {
+  display: grid;
+  margin: 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.fact {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--hairline);
+  font-size: var(--text-base);
+}
+
+.fact dt {
+  color: var(--muted);
+}
+
+.fact dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.figures {
+  font-variant-numeric: tabular-nums;
+}
+
+.quiet {
+  color: var(--muted);
+}

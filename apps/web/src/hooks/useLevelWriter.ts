@@ -16,12 +16,14 @@ export interface LevelWriter {
   /** The level being sent (a drag or ramp in progress), or `null` when idle. */
   draft: number | null;
   error: ApiError | null;
-  /** Queue `value` (throttled, newest only, ramped one page per send). */
-  change: (value: number) => void;
+  /** Queue `value` (throttled, newest only, ramped one page per send). False if refused. */
+  change: (value: number) => boolean;
   /** `change`, then send now. */
   commit: (value: number) => void;
-  /** Send whatever is queued now. */
+  /** Send whatever is queued now (pointer or key release). */
   flush: () => void;
+  /** Drop whatever is queued (a cancelled gesture); a send in flight still completes. */
+  cancel: () => void;
   /** Re-read the processor, then step from its value. Calls queue up in order. */
   step: (displayDelta: number) => void;
 }
@@ -33,7 +35,10 @@ export interface LevelWriter {
  * - steps re-read the processor and step from what it holds, one at a time;
  * - writes are throttled (newest value only, one in flight);
  * - no single send moves more than one page (±1.0) from the last known level; bigger moves
- *   ramp there one page per send.
+ *   ramp there one page per send, each measured from what the previous send left (the cache
+ *   holds the processor's answer, or the rollback, by the time the next send is computed);
+ * - nothing is queued until the processor's level is known, so no send is ever uncapped;
+ * - a failed send stops the ramp: the rest of the move is dropped, not retried.
  */
 export function useLevelWriter(
   name: string,
@@ -54,11 +59,20 @@ export function useLevelWriter(
 
   const sender = useLatestSender<number>(
     async (value) => {
+      // Never send uncapped: with no known level there is nothing to measure one page from.
+      if (known() === null) {
+        sender.cancel();
+        setDraft(null);
+        return;
+      }
       try {
         await write.mutateAsync({ value });
         setError(null);
       } catch (e) {
         setError(asApiError(e));
+        // Stop here: the operator sees the error and the level the processor kept.
+        sender.cancel();
+        setDraft(null);
       }
     },
     {
@@ -66,15 +80,19 @@ export function useLevelWriter(
       // Backstop: no single send moves more than one page from the last known level.
       limit: (target) => {
         const from = known();
+        // `change` never queues without a known level; if it was lost since, the send below drops it.
         return from === null ? target : capStep(from, target, FADER_PAGE);
       },
       ...(throttleMs !== undefined ? { intervalMs: throttleMs } : {}),
     },
   );
 
-  const change = (value: number) => {
+  /** Queues `value`; refused while the processor's level is unknown (no baseline to cap from). */
+  const change = (value: number): boolean => {
+    if (known() === null) return false;
     setDraft(value);
     sender.push(value);
+    return true;
   };
 
   return {
@@ -82,10 +100,13 @@ export function useLevelWriter(
     error,
     change,
     commit: (value) => {
-      change(value);
-      sender.flush();
+      if (change(value)) sender.flush();
     },
     flush: () => sender.flush(),
+    cancel: () => {
+      sender.cancel();
+      setDraft(null);
+    },
     step: (displayDelta) => {
       steps.current = steps.current.then(async () => {
         try {

@@ -1,0 +1,97 @@
+/* The plot sits in a recessed tray, like Pro-Q's display window. */
+.wrap {
+  min-width: 0;
+  border-radius: var(--radius);
+  background: #07080b;
+  box-shadow: var(--tray-inset);
+  overflow: hidden;
+}
+
+/* Never wider than its container: the viewBox follows the measured width. */
+.plot {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+  user-select: none;
+}
+
+.grid {
+  stroke: var(--hairline);
+  stroke-width: 1;
+}
+
+.zero {
+  stroke: var(--edge);
+  stroke-width: 1;
+}
+
+.axis {
+  fill: var(--muted);
+  font: 500 12px var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.column {
+  fill: #fff;
+  fill-opacity: 0.06;
+}
+
+.curve {
+  fill: none;
+  stroke: var(--level);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.area {
+  fill: var(--level);
+  fill-opacity: 0.14;
+}
+
+.node {
+  fill: var(--strip);
+  stroke: var(--edge);
+  stroke-width: 2;
+  cursor: pointer;
+}
+
+.selected {
+  fill: var(--readout);
+  stroke: var(--level);
+}
+
+.plot[data-armed] .selected {
+  cursor: ns-resize;
+}
+
+.node:focus {
+  outline: none;
+}
+
+.node:focus-visible {
+  stroke: var(--focus);
+  stroke-width: 3;
+}
+
+.node[data-pending] {
+  stroke-dasharray: 3 2;
+  stroke: var(--level);
+}
+
+@media (forced-colors: active) {
+  .curve,
+  .selected {
+    stroke: Highlight;
+  }
+
+  .node {
+    stroke: CanvasText;
+    fill: Canvas;
+  }
+
+  .area,
+  .column {
+    display: none;
+  }
+}

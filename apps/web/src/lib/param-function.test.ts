@@ -49,6 +49,24 @@ describe("functionOf", () => {
     expect(choice("x", many)).toMatchObject({ layout: "list" });
   });
 
+  test("bipolar integer ranges are trims (knobs); unipolar ones stay entries", () => {
+    expect(functionOf({ name: "cp750.sys.level_l", unit: null, schema: int(-160, 160) })).toEqual({
+      kind: "trim",
+      min: -160,
+      max: 160,
+    });
+    expect(
+      functionOf({ name: "cp750.sys.eq_l_1k", unit: null, schema: int(-60, 60) }),
+    ).toMatchObject({
+      kind: "trim",
+    });
+    expect(
+      functionOf({ name: "cp750.sys.analog_global_delay", unit: "ms", schema: int(-10, 300) }),
+    ).toEqual({
+      kind: "entry",
+    });
+  });
+
   test("numbers, ranges and text are entries; no schema is none", () => {
     expect(functionOf({ name: "x", unit: "ms", schema: int(0, 300) })).toEqual({ kind: "entry" });
     expect(functionOf({ name: "x", unit: null, schema: { type: "string" } })).toEqual({

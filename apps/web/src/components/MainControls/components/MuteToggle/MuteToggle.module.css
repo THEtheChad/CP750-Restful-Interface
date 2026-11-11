@@ -1,0 +1,9 @@
+/* Beside the readout: the key, its state word, and (only when needed) why it is locked. */
+.mute {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  flex: none;
+  max-width: 9rem;
+  text-align: center;
+}

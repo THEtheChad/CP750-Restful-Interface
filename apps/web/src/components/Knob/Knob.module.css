@@ -1,0 +1,76 @@
+/* Not scrolled by a drag once selected; until then a touch scrolls the page. */
+.knob {
+  display: inline-grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  touch-action: pan-y;
+  cursor: ns-resize;
+  user-select: none;
+}
+
+.knob[data-armed],
+.knob:focus-visible {
+  touch-action: none;
+}
+
+.knob[data-armed] {
+  box-shadow: 0 0 0 2px var(--level);
+}
+
+.knob[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.knob svg {
+  width: 100%;
+  height: 100%;
+}
+
+.track {
+  fill: none;
+  stroke: var(--edge);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.value {
+  fill: none;
+  stroke: var(--level);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.zeroTick {
+  stroke: var(--text);
+  stroke-width: 2;
+}
+
+.cap {
+  fill: var(--raised);
+  stroke: #000;
+  stroke-width: 1;
+}
+
+.pointer {
+  stroke: var(--readout);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.knob[aria-disabled="true"] .value,
+.knob[aria-disabled="true"] .pointer {
+  stroke: var(--disabled-text);
+}
+
+@media (forced-colors: active) {
+  .track,
+  .cap {
+    stroke: CanvasText;
+  }
+
+  .value,
+  .pointer {
+    stroke: Highlight;
+  }
+}

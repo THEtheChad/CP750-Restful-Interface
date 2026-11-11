@@ -1,121 +1,102 @@
+/* Composes controls.button (the key). */
 .toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-3);
-  border: 1px solid var(--border-strong);
-  background: var(--surface);
-  color: var(--text);
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
-  touch-action: manipulation;
-  transition:
-    background-color 150ms ease-out,
-    border-color 150ms ease-out;
+  gap: var(--space-2);
+}
+
+.lamp {
+  flex: none;
+  width: 16px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--lamp-off);
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.6);
+}
+
+/* Glance: a square key, lamp on top, icon, label; the state word sits under the key. */
+.glanceWrap {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
 }
 
 .glance {
-  display: flex;
-  width: 100%;
-  min-height: 4.5rem;
-  margin-bottom: var(--space-2);
-  padding: 0 var(--space-5);
-  border-radius: var(--radius);
-  font-size: var(--text-xl);
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 6rem;
+  height: 6rem;
+  padding: var(--space-3) 0;
+  font-size: var(--text-base);
 }
 
-.desk {
-  min-height: var(--target-min);
-  padding: 0 var(--space-3);
-  border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
-}
-
-.toggle:hover:not(:disabled, [aria-disabled="true"]) {
-  background: var(--surface-2);
+.glance .lamp {
+  width: 28px;
 }
 
 .icon {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.75rem;
+  height: 1.75rem;
 }
 
-.label {
-  flex: 1;
+.caption {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.caption[data-tone="on"][data-on-tone="danger"] {
+  color: var(--danger);
+}
+
+.caption[data-tone="pending"] {
+  color: var(--text);
+}
+
+/* Desk: a compact key, lamp then the state word. */
+.desk {
+  min-height: var(--target-min);
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+  justify-content: flex-start;
 }
 
 .state {
-  font-size: var(--text-base);
-  color: var(--text-muted);
+  min-width: 5rem;
+  text-align: left;
+  color: var(--muted);
 }
 
-.desk .state {
-  min-width: 5.5rem;
-  font-size: var(--text-sm);
-}
-
-/* Sent, not yet confirmed: the state word reads at full contrast on the soft tint. */
 .toggle[data-tone="pending"] .state {
   color: var(--text);
 }
 
-.track {
-  position: relative;
-  flex: none;
-  width: 2.5rem;
-  height: 1.375rem;
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  background: var(--surface-2);
-}
-
-.thumb {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 1rem;
-  height: 1rem;
-  border-radius: 50%;
-  background: var(--text-muted);
-  transition: transform 150ms ease-out;
-}
-
-/* Confirmed on. Mute's on is the danger state; any other toggle's is accent. */
+/* Confirmed on. Mute's on is the danger state: the whole key lights red, with ink text. */
 .toggle[data-tone="on"][data-on-tone="danger"] {
-  background: var(--danger);
-  border-color: var(--danger);
-  color: var(--danger-text);
+  border-color: #ff8a80;
+  background: var(--key-danger);
+  color: var(--ink);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.35),
+    0 1px 0 rgb(0 0 0 / 0.9),
+    0 3px 6px rgb(0 0 0 / 0.5);
 }
 
-.toggle[data-tone="on"][data-on-tone="danger"] .state {
-  color: var(--danger-text);
-  font-weight: 700;
+.toggle[data-tone="on"][data-on-tone="danger"] .lamp {
+  background: #ffe1de;
 }
 
-.toggle[data-tone="on"][data-on-tone="danger"]:hover:not(:disabled, [aria-disabled="true"]) {
-  background: var(--danger);
-  filter: brightness(1.08);
-}
-
-.toggle[data-tone="on"][data-on-tone="accent"] .track {
-  border-color: var(--accent);
-  background: var(--accent);
+/* Any other toggle on: the lamp lights; the face stays (a dense list of lit faces is noise). */
+.toggle[data-tone="on"][data-on-tone="accent"] .lamp {
+  background: var(--level);
 }
 
 .toggle[data-tone="on"][data-on-tone="accent"] .state {
   color: var(--text);
 }
 
-.toggle[data-tone="on"] .thumb,
-.toggle[data-tone="pending"][aria-pressed="true"] .thumb {
-  background: var(--accent-text);
-  transform: translateX(1.125rem);
-}
-
 /* Sent, not yet confirmed. */
 .toggle[data-tone="pending"] {
-  border: 2px dashed var(--accent);
-  background: var(--accent-soft);
+  border: 2px dashed var(--level);
+  background: var(--level-soft);
   cursor: progress;
 }
 
@@ -124,23 +105,16 @@
   background: var(--danger-soft);
 }
 
-/* Disabled never hides that it is on: only the off/unknown look greys out. */
-.toggle:disabled {
-  cursor: not-allowed;
+/* Disabled never hides that it is on. */
+.toggle:disabled[data-tone="on"][data-on-tone="danger"] {
+  border-color: #ff8a80;
+  background: var(--key-danger);
+  color: var(--ink);
 }
 
-.toggle:disabled:not([data-tone="on"]) {
-  border-color: var(--disabled-border);
-  background: var(--disabled-bg);
-  color: var(--disabled-text);
-}
-
-.toggle:disabled:not([data-tone="on"]) .state {
-  color: var(--disabled-text);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .thumb {
-    transition: none;
+@media (max-width: 43.75rem) {
+  .glance {
+    width: 5rem;
+    height: 5rem;
   }
 }

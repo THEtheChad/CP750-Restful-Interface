@@ -6,13 +6,15 @@ import { ProblemMessage } from "../../../ProblemMessage/ProblemMessage.tsx";
 import { ToggleButton } from "../../../ToggleButton/ToggleButton.tsx";
 import section from "../../section.module.css";
 import { StaleBadge } from "../StaleBadge/StaleBadge.tsx";
+import styles from "./MuteToggle.module.css";
 
 export const MUTE_PARAM = MAIN_PARAMS.mute;
 
 const formatValue = (value: unknown) => (Number(value) === 1 ? "muted" : "unmuted");
 
 /**
- * Main mute: the shared toggle surface at glance size, named "Mute" with state in `aria-pressed`.
+ * Main mute: the shared toggle surface at glance size (a square illuminated key beside the level
+ * readout), named "Mute" with its state in `aria-pressed`.
  * Disabled, with the reason, when the firmware/tier refuses it.
  */
 export function MuteToggle() {
@@ -27,7 +29,7 @@ export function MuteToggle() {
   const reason = access.write ?? (known ? null : access.read);
 
   return (
-    <section className={section.section} aria-labelledby={headingId}>
+    <section className={`${section.section} ${styles.mute}`} aria-labelledby={headingId}>
       <h2 className="visually-hidden" id={headingId}>
         Mute
       </h2>

@@ -4,6 +4,7 @@ import { createApi } from "./api/client.ts";
 import { createTokenStore } from "./api/token-store.ts";
 import { App } from "./components/App/App.tsx";
 import { AppProviders, createQueryClient } from "./components/AppProviders/AppProviders.tsx";
+import "@fontsource-variable/inter/opsz.css";
 import "./styles/tokens.css";
 
 const root = document.getElementById("root");

@@ -1,9 +1,11 @@
 /*
- * Shared control styles (buttons, fields), composed by the components that use them. One state
- * vocabulary everywhere: default, hover, active, focus-visible (global), disabled (explicit
- * colours), selected (accent), pending (aria-busy, set by the component).
+ * Shared controls, composed by the components that use them. Every button is a key: a face with a
+ * little depth that sinks when pressed, a 1px edge, and optionally a lamp. One state vocabulary
+ * everywhere: default, hover, active (sinks), focus-visible (global), disabled (explicit
+ * colours), lit (selected/on, ink text), pending (dashed, set by the component).
  */
 .button {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -11,43 +13,50 @@
   min-height: var(--control-height);
   min-width: var(--control-height);
   padding: 0 var(--space-4);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
-  background: var(--surface);
+  background: var(--key-face);
+  box-shadow: var(--key-depth);
   color: var(--text);
   font-weight: 600;
   cursor: pointer;
   touch-action: manipulation;
+  user-select: none;
   transition:
-    background-color 150ms ease-out,
-    border-color 150ms ease-out;
+    transform 60ms ease-out,
+    box-shadow 60ms ease-out;
 }
 
 .button:hover:not(:disabled, [aria-disabled="true"]) {
-  background: var(--surface-2);
+  background: var(--key-face-hover);
 }
 
 .button:active:not(:disabled, [aria-disabled="true"]) {
-  border-color: var(--text-muted);
+  transform: translateY(1px);
+  background: var(--key-face-down);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.6);
 }
 
 .button:disabled,
 .button[aria-disabled="true"] {
   border-color: var(--disabled-border);
   background: var(--disabled-bg);
+  box-shadow: none;
   color: var(--disabled-text);
   cursor: not-allowed;
 }
 
+/* The one primary action in a group: a lit key. */
 .primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-text);
+  border-color: var(--key-lit-edge);
+  background: var(--key-lit);
+  box-shadow: var(--key-lit-depth);
+  color: var(--ink);
 }
 
 .primary:hover:not(:disabled, [aria-disabled="true"]) {
-  background: var(--accent);
-  filter: brightness(1.08);
+  background: var(--key-lit);
+  filter: brightness(1.06);
 }
 
 .danger {
@@ -56,14 +65,14 @@
 }
 
 .dangerSolid {
-  background: var(--danger);
-  border-color: var(--danger);
-  color: var(--danger-text);
+  border-color: #ff8a80;
+  background: var(--key-danger);
+  color: var(--ink);
 }
 
 .dangerSolid:hover:not(:disabled, [aria-disabled="true"]) {
-  background: var(--danger);
-  filter: brightness(1.08);
+  background: var(--key-danger);
+  filter: brightness(1.06);
 }
 
 /* Compact, but never under the 44px touch minimum. */
@@ -74,15 +83,46 @@
   font-size: var(--text-sm);
 }
 
+/* A lamp inside a key: a dark slot when off, a solid colour when on (no halo). */
+.lamp {
+  flex: none;
+  width: 16px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--lamp-off);
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.6);
+}
+
+.lampRound {
+  composes: lamp;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.lampOn {
+  background: var(--level);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.4);
+}
+
+/* A recessed tray groups keys, like a console panel. */
+.tray {
+  padding: var(--space-2);
+  border-radius: var(--radius);
+  background: var(--tray);
+  box-shadow: var(--tray-inset);
+}
+
 /* Text inputs and selects stay >= 16px so phones don't zoom on focus. */
 .field {
   min-height: var(--control-height);
   padding: 0 var(--space-3);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--edge);
   border-radius: var(--radius-sm);
-  background: var(--surface);
+  background: var(--tray);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.7);
   color: var(--text);
-  font-size: var(--text-base);
+  font-size: var(--text-md);
   min-width: 0;
 }
 
@@ -99,6 +139,12 @@
 
 .reason {
   margin: var(--space-2) 0 0;
-  color: var(--text-muted);
+  color: var(--muted);
   font-size: var(--text-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
 }

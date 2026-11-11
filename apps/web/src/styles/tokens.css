@@ -1,54 +1,62 @@
 /*
  * Design tokens and base styles. See apps/web/DESIGN.md for the rules behind them.
  *
- * Dark is the default: the use scene is a dim projection booth. `data-theme` on <html> is
- * "dark", "light" or "system" (follows the OS); it is set before first paint by index.html.
- * Every text pair is >= 4.5:1 and every control boundary (`--border-strong`) >= 3:1 against the
- * surfaces it sits on, in both themes. `--border` is a hairline separator only, never the sole
- * edge of a control.
+ * One dark theme, from the use scene (a dim projection booth) and the references: the Dolby
+ * CP950A's near-black ground, UAD Console's keys and faders, Pro-Q's quiet finish. Text pairs are
+ * >= 4.5:1; every control edge (`--edge`) is >= 3:1 on ground, strip and raised. `--hairline` is a
+ * separator only, never a control's sole edge. Lit fills always carry `--ink` text.
  */
 :root {
   color-scheme: dark;
 
-  /* Ground and surfaces */
-  --bg: #0b0f16;
-  --surface: #121823;
-  --surface-2: #1a2230;
-  --text: #eef2f7;
-  --text-muted: #a3adbd;
-  --border: #263040;
-  --border-strong: #6b7588;
+  /* Surfaces, darkest to lightest */
+  --ground: #050608;
+  --tray: #08090c;
+  --strip: #101217;
+  --raised: #181b22;
+  --hairline: #262a33;
+  --edge: #6b7484;
 
-  /* The ink shell (header). Same in both themes. */
-  --chrome: #070a10;
-  --chrome-text: #e8edf5;
-  --chrome-muted: #9aa6b8;
-  --chrome-border: #222b3a;
-  --chrome-ok: #4fd18b;
-  --chrome-warn: #ffbf47;
-  --chrome-danger: #ff7a70;
+  /* Text */
+  --text: #e3e7ed;
+  --readout: #f2f4f7;
+  --muted: #9aa3b2;
+  --ink: #050608;
 
-  /* Colour jobs: accent = selection + primary action; danger = muted + destructive;
-     warn = above reference, stale, degraded; ok = connected only. */
-  --accent: #5cb8ff;
-  --accent-text: #04111f;
-  --accent-soft: #10263d;
-  --ok: #4fd18b;
-  --warn: #ffbf47;
-  --warn-soft: #2b2009;
-  --danger: #ff6b61;
-  --danger-text: #1d0605;
-  --danger-soft: #3a1412;
-  --focus: #8cc8ff;
+  /* Colour jobs: level = the level and focus; lit = selected/on (with ink text);
+     danger = muted, destructive, errors; warn = above reference, stale, degraded; ok = connected. */
+  --level: #2f9bf0;
+  --level-soft: #13202e;
+  --lit: #a7b6c2;
+  --ok: #3ddc84;
+  --warn: #ffb547;
+  --warn-soft: #1a1406;
+  --danger: #ff5a4f;
+  --danger-soft: #2a1414;
+  --focus: #2f9bf0;
+
+  /* Keys: a face with a little depth, a 1px edge, and a lamp. Pressed keys sink. */
+  --key-face: linear-gradient(180deg, #252a33 0%, #1b1f26 100%);
+  --key-face-hover: linear-gradient(180deg, #2b313b 0%, #1f232b 100%);
+  --key-face-down: linear-gradient(180deg, #181b21 0%, #1d2129 100%);
+  --key-depth:
+    inset 0 1px 0 rgb(255 255 255 / 0.08), 0 1px 0 rgb(0 0 0 / 0.9), 0 3px 6px rgb(0 0 0 / 0.5);
+  --key-lit: linear-gradient(180deg, #bcc8d1 0%, #9eacb8 100%);
+  --key-lit-edge: #c7d3dc;
+  --key-lit-depth:
+    inset 0 1px 0 rgb(255 255 255 / 0.5), 0 1px 0 rgb(0 0 0 / 0.9), 0 3px 6px rgb(0 0 0 / 0.5);
+  --key-danger: linear-gradient(180deg, #ff7066 0%, #e8473d 100%);
+  --tray-inset: inset 0 1px 3px rgb(0 0 0 / 0.9), 0 0 0 1px var(--hairline);
+  --lamp-off: #2c313b;
 
   /* Disabled: explicit colours, never opacity. */
-  --disabled-bg: #151b26;
-  --disabled-text: #737e90;
-  --disabled-border: #2c3646;
+  --disabled-bg: #121419;
+  --disabled-text: #6f7888;
+  --disabled-border: #3a404b;
 
   /* Shape and space */
-  --radius: 12px;
-  --radius-sm: 8px;
+  --radius: 10px;
+  --radius-sm: 7px;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -57,75 +65,24 @@
   --space-6: 2rem;
   --space-7: 3rem;
 
-  /* Type: one sans family, ~1.2 ratio, fixed rem. Mono only for cp750.* identifiers. */
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Type: Inter (bundled), sentence case, tabular figures for values. Mono only for cp750.* names. */
+  --font-sans: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
-  --text-xs: 0.8125rem;
-  --text-sm: 0.9375rem;
-  --text-base: 1.0625rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-md: 1.0625rem;
   --text-lg: 1.25rem;
-  --text-xl: 1.5rem;
-  --text-2xl: 2rem;
+  --text-xl: 1.75rem;
   --text-display: 5.5rem;
 
   --control-height: 3rem;
   --target-min: 2.75rem;
 }
 
-/* Light, chosen explicitly or via the OS when the setting is "system". */
-:root[data-theme="light"] {
-  color-scheme: light;
-  --bg: #eef1f5;
-  --surface: #ffffff;
-  --surface-2: #e6eaf0;
-  --text: #0f1620;
-  --text-muted: #475166;
-  --border: #d3d9e2;
-  --border-strong: #737d8f;
-  --accent: #0a5fb4;
-  --accent-text: #ffffff;
-  --accent-soft: #dce9f8;
-  --ok: #13703a;
-  --warn: #8a4b00;
-  --warn-soft: #fff1d6;
-  --danger: #b3261e;
-  --danger-text: #ffffff;
-  --danger-soft: #fde4e1;
-  --focus: #0a5fb4;
-  --disabled-bg: #e9edf2;
-  --disabled-text: #6b7485;
-  --disabled-border: #c9d0da;
-}
-
-@media (prefers-color-scheme: light) {
-  :root[data-theme="system"] {
-    color-scheme: light;
-    --bg: #eef1f5;
-    --surface: #ffffff;
-    --surface-2: #e6eaf0;
-    --text: #0f1620;
-    --text-muted: #475166;
-    --border: #d3d9e2;
-    --border-strong: #737d8f;
-    --accent: #0a5fb4;
-    --accent-text: #ffffff;
-    --accent-soft: #dce9f8;
-    --ok: #13703a;
-    --warn: #8a4b00;
-    --warn-soft: #fff1d6;
-    --danger: #b3261e;
-    --danger-text: #ffffff;
-    --danger-soft: #fde4e1;
-    --focus: #0a5fb4;
-    --disabled-bg: #e9edf2;
-    --disabled-text: #6b7485;
-    --disabled-border: #c9d0da;
-  }
-}
-
-@media (max-width: 40rem) {
+@media (max-width: 43.75rem) {
   :root {
-    --text-display: 4rem;
+    --text-display: 3.75rem;
   }
 }
 
@@ -138,24 +95,25 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  accent-color: var(--accent);
-  scrollbar-color: var(--border-strong) var(--bg);
+  accent-color: var(--level);
+  scrollbar-color: var(--edge) var(--ground);
 }
 
 body {
   margin: 0;
-  background: var(--bg);
+  background: var(--ground);
   color: var(--text);
   font-family: var(--font-sans);
   font-size: var(--text-base);
   font-weight: 400;
   line-height: 1.45;
-  caret-color: var(--accent);
+  caret-color: var(--level);
+  -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
-  background: var(--accent);
-  color: var(--accent-text);
+  background: var(--level);
+  color: var(--ink);
 }
 
 button,
@@ -172,7 +130,7 @@ code {
 
 :focus-visible {
   outline: 2px solid var(--focus);
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
 .visually-hidden {

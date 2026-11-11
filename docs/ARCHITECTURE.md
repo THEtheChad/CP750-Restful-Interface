@@ -492,8 +492,8 @@ picks up another program's `PORT`. `GET /api/device` reports `pollMs`.
 ## Web client (`@cp750/web`)
 
 - Vite + React + TanStack Query, plain CSS modules over a token sheet (`src/styles/tokens.css`),
-  dark by default with a Light/System setting (`data-theme`; rules in `apps/web/DESIGN.md`). Vite runs under Bun (`bun --bun vite`). No router: two
-  views (Controls, Advanced) as ARIA tabs kept in the URL hash.
+  one dark theme (rules in `apps/web/DESIGN.md`). Vite runs under Bun (`bun --bun vite`). No router: four
+  views (Home, Advanced, EQ, Settings) as an ARIA tablist rail kept in the URL hash.
 - **API types** are generated from `openapi/cp750.openapi.json` by openapi-typescript into
   `src/api/generated/schema.ts` (committed, `gen:check` in CI) and called through `openapi-fetch`.
   openapi-typescript needs the TypeScript 5 compiler API, so `apps/web` has `typescript@5.9` as a

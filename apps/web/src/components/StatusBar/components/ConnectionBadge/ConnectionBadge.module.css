@@ -1,4 +1,4 @@
-/* Sits on the ink shell, so it uses the chrome status colours. Shape differs per state too. */
+/* Colour, shape and words: never colour alone. */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -7,30 +7,27 @@
 }
 
 .dot {
-  width: 0.75rem;
-  height: 0.75rem;
+  width: 0.5rem;
+  height: 0.5rem;
   border-radius: 50%;
   border: 2px solid currentColor;
   flex: none;
 }
 
-.ok {
-  color: var(--chrome-ok);
-}
-
 .ok .dot {
-  background: currentColor;
+  background: var(--ok);
+  border-color: var(--ok);
 }
 
 .pending {
-  color: var(--chrome-warn);
+  color: var(--warn);
 }
 
 .down {
-  color: var(--chrome-danger);
+  color: var(--danger);
 }
 
 .down .dot {
-  border-radius: 2px;
+  border-radius: 1px;
   background: currentColor;
 }

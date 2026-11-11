@@ -1,4 +1,5 @@
 import { type ToggleVocabulary, toggleState } from "../../lib/param-function.ts";
+import controls from "../../styles/controls.module.css";
 import { Icon } from "../Icon/Icon.tsx";
 import styles from "./ToggleButton.module.css";
 
@@ -17,10 +18,11 @@ export interface ToggleButtonProps {
 }
 
 /**
- * Every 0/1 param, as a toggle button with a stable name and `aria-pressed` for its state. The
- * state word ("Muted", "Turning on…", "Unknown") is visible but not part of the name. The solid
- * "on" look only shows once the processor has confirmed; pending is dashed. Pending uses
- * `aria-disabled` so the button keeps keyboard focus. Disabled never hides that it is on.
+ * Every 0/1 param, as an illuminated key with a stable name and `aria-pressed` for its state:
+ * glance size is a square key (main Mute) with its state word beneath, desk size a compact key
+ * with a lamp and the word inside. The word ("Muted", "Turning on…", "Unknown") is visible but
+ * not part of the name. The lit look only shows once the processor has confirmed; pending is
+ * dashed. Pending uses `aria-disabled` so the key keeps focus. Disabled never hides that it is on.
  */
 export function ToggleButton({
   size,
@@ -34,10 +36,11 @@ export function ToggleButton({
 }: ToggleButtonProps) {
   const state = toggleState(value, pending, vocabulary);
   const speaker = vocabulary.onTone === "danger";
-  return (
+  const glance = size === "glance";
+  const button = (
     <button
       type="button"
-      className={`${styles.toggle} ${styles[size]}`}
+      className={`${controls.button} ${styles.toggle} ${styles[size]}`}
       data-tone={state.tone}
       data-on-tone={vocabulary.onTone}
       aria-pressed={state.known ? state.on : undefined}
@@ -50,17 +53,29 @@ export function ToggleButton({
         if (!pending) onToggle(state.on ? 0 : 1);
       }}
     >
-      {speaker ? (
-        <Icon name={state.on ? "speakerOff" : "speaker"} className={styles.icon} />
-      ) : (
-        <span className={styles.track} aria-hidden="true">
-          <span className={styles.thumb} />
+      <span className={styles.lamp} aria-hidden="true" />
+      {speaker && <Icon name={state.on ? "speakerOff" : "speaker"} className={styles.icon} />}
+      {"label" in name && <span className={styles.label}>{name.label}</span>}
+      {!glance && (
+        <span className={styles.state} aria-hidden="true">
+          {state.word}
         </span>
       )}
-      {"label" in name && <span className={styles.label}>{name.label}</span>}
-      <span className={styles.state} aria-hidden="true">
+    </button>
+  );
+  if (!glance) return button;
+  // Glance: a square illuminated key with its state word underneath.
+  return (
+    <div className={styles.glanceWrap}>
+      {button}
+      <span
+        className={styles.caption}
+        data-tone={state.tone}
+        data-on-tone={vocabulary.onTone}
+        aria-hidden="true"
+      >
         {state.word}
       </span>
-    </button>
+    </div>
   );
 }

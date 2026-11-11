@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 
-export const VIEWS = ["controls", "advanced"] as const;
+export const VIEWS = ["home", "advanced", "eq", "settings"] as const;
 export type View = (typeof VIEWS)[number];
+
+/** Older links: `#controls` was the home view. */
+const ALIASES: Record<string, View> = { controls: "home" };
 
 function readHash(): View {
   const hash = globalThis.location?.hash.replace(/^#\/?/, "") ?? "";
-  return (VIEWS as readonly string[]).includes(hash) ? (hash as View) : "controls";
+  if ((VIEWS as readonly string[]).includes(hash)) return hash as View;
+  return ALIASES[hash] ?? "home";
 }
 
 /** The current view, kept in the URL hash (`#advanced`) so reloads and Back work. */
@@ -18,7 +22,7 @@ export function useHashView(): [View, (view: View) => void] {
   }, []);
   const setView = useCallback((next: View) => {
     setViewState(next);
-    const hash = next === "controls" ? "" : `#${next}`;
+    const hash = next === "home" ? "" : `#${next}`;
     if (window.location.hash !== hash) {
       window.history.pushState(null, "", hash || window.location.pathname + window.location.search);
     }
