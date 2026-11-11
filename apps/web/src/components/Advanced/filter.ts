@@ -1,5 +1,5 @@
 /** Search, namespace filter and grouping for the advanced parameter list. */
-import type { Command } from "../../api/types.ts";
+import type { Command, Operation } from "../../api/types.ts";
 import { namespaceOf } from "../../lib/schema-control.ts";
 
 /** Namespaces in a sensible reading order; unknown ones follow alphabetically. */
@@ -24,10 +24,37 @@ function compareNamespaces(a: string, b: string): number {
   return rank(a) - rank(b) || a.localeCompare(b);
 }
 
+export const SCOPES = ["available", "locked", "all"] as const;
+export type Scope = (typeof SCOPES)[number];
+
+/** What the param is for: an action is triggered, a readwrite param written, the rest read. */
+export function primaryOp(command: Command): Operation {
+  return command.access === "action" ? "action" : command.access === "readwrite" ? "write" : "read";
+}
+
+/**
+ * Locked: the gateway itself refuses the param's primary operation (full set, internal, not in the
+ * unit's help…). Static per manifest and gateway flags; passing conditions such as the processor
+ * being offline or a missing token never hide a row.
+ */
+export function isLocked(command: Command): boolean {
+  return Boolean(command.blocked[primaryOp(command)]);
+}
+
+export function inScope(command: Command, scope: Scope): boolean {
+  return scope === "all" || (scope === "locked") === isLocked(command);
+}
+
 /** Every search word must appear in the name, an alias or the description (case-insensitive). */
-export function filterCommands(commands: Command[], query: string, namespace = "all"): Command[] {
+export function filterCommands(
+  commands: Command[],
+  query: string,
+  namespace = "all",
+  scope: Scope = "all",
+): Command[] {
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   return commands.filter((c) => {
+    if (!inScope(c, scope)) return false;
     if (namespace !== "all" && namespaceOf(c.name) !== namespace) return false;
     if (words.length === 0) return true;
     const haystack = [c.name, ...c.aliases, c.description ?? ""].join(" ").toLowerCase();

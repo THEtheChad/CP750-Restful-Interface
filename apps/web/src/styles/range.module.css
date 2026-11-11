@@ -1,0 +1,78 @@
+/*
+ * The one styled range: a native <input type=range> (same element, same keyboard and pointer
+ * behaviour), filled to the value. Set `--p` (0–1) inline. `--thumb` is shared so anything laid
+ * out under the track (the fader's scale) lines up with the thumb's centre.
+ */
+.range {
+  --thumb: 1.75rem;
+  --rail: var(--surface-2);
+  --fill: var(--accent);
+  --at: calc(var(--thumb) / 2 + (100% - var(--thumb)) * var(--p, 0));
+  display: block;
+  width: 100%;
+  height: var(--control-height);
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.range::-webkit-slider-runnable-track {
+  height: 0.5rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--fill) 0 var(--at), var(--rail) var(--at) 100%);
+}
+
+.range::-moz-range-track {
+  height: 0.5rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--fill) 0 var(--at), var(--rail) var(--at) 100%);
+}
+
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: var(--thumb);
+  height: var(--thumb);
+  margin-top: calc((0.5rem - 2px - var(--thumb)) / 2);
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  background: var(--text);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.4);
+}
+
+.range::-moz-range-thumb {
+  width: var(--thumb);
+  height: var(--thumb);
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  background: var(--text);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.4);
+}
+
+.range:focus-visible {
+  outline-offset: 4px;
+}
+
+.range:disabled {
+  --fill: var(--disabled-border);
+  cursor: not-allowed;
+}
+
+.range:disabled::-webkit-slider-thumb {
+  background: var(--disabled-text);
+}
+
+.range:disabled::-moz-range-thumb {
+  background: var(--disabled-text);
+}
+
+/* Windows high contrast: fall back to the system range. */
+@media (forced-colors: active) {
+  .range {
+    appearance: auto;
+    -webkit-appearance: auto;
+  }
+}

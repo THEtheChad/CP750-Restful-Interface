@@ -2,25 +2,29 @@
   display: inline-flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: var(--space-1) var(--space-2);
+  gap: var(--space-1) var(--space-3);
 }
 
 .firmware {
   font-family: var(--font-mono);
-  font-weight: 500;
 }
 
 .match {
-  font-weight: 500;
-  color: var(--text-muted);
+  color: var(--chrome-muted);
+}
+
+.verified,
+.unverified {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: 600;
 }
 
 .verified {
-  color: var(--ok);
-  font-weight: 700;
+  color: var(--chrome-ok);
 }
 
 .unverified {
-  color: var(--warn);
-  font-weight: 700;
+  color: var(--chrome-warn);
 }

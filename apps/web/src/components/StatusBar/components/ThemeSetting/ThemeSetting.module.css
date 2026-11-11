@@ -1,0 +1,41 @@
+.group {
+  display: inline-flex;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--chrome-border);
+  border-radius: var(--radius-sm);
+}
+
+.option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--chrome-muted);
+  cursor: pointer;
+}
+
+.option + .option {
+  border-inline-start: 1px solid var(--chrome-border);
+}
+
+.option input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.option:has(input:checked) {
+  background: var(--chrome-text);
+  color: var(--chrome);
+}
+
+.option:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}

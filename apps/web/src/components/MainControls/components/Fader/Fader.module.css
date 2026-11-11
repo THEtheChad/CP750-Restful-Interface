@@ -7,41 +7,126 @@
 }
 
 .value {
-  font-size: clamp(4.5rem, 16vw, 9rem);
-  font-weight: 800;
+  font-size: var(--text-display);
+  font-weight: 700;
   line-height: 1;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
 
+.level {
+  display: grid;
+  gap: var(--space-1);
+}
+
 .db {
-  font-size: clamp(1.5rem, 5vw, 2.5rem);
-  font-weight: 700;
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.pending {
+  color: var(--text-muted);
+}
+
+/* Stale: the number dims so a cached level never reads as current. */
+.stale .value,
+.stale .db {
+  color: var(--text-muted);
+}
+
+.relation,
+.setting {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+}
+
+.above {
+  color: var(--warn);
+  font-weight: 600;
+}
+
+.setting {
+  font-style: normal;
+}
+
+/* The track: the shared styled range, plus the reference scale under it. */
+.track {
+  --thumb: 1.75rem;
+  margin-bottom: var(--space-5);
+}
+
+.slider {
+  composes: range from "../../../../styles/range.module.css";
+  --ref: calc(var(--thumb) / 2 + (100% - var(--thumb)) * 0.7);
+}
+
+/* Above reference, the part of the fill past 7.0 turns warn. */
+.sliderAbove::-webkit-slider-runnable-track {
+  background: linear-gradient(
+    to right,
+    var(--fill) 0 var(--ref),
+    var(--warn) var(--ref) var(--at),
+    var(--rail) var(--at) 100%
+  );
+}
+
+.sliderAbove::-moz-range-track {
+  background: linear-gradient(
+    to right,
+    var(--fill) 0 var(--ref),
+    var(--warn) var(--ref) var(--at),
+    var(--rail) var(--at) 100%
+  );
+}
+
+.scale {
+  position: relative;
+  height: 1.75rem;
+  margin: 0 calc(var(--thumb) / 2);
+  pointer-events: none;
+  user-select: none;
+}
+
+.tick {
+  position: absolute;
+  top: 0;
+  left: calc(var(--at) * 100%);
+  transform: translateX(-50%);
+  padding-top: 0.5rem;
+  font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
   color: var(--text-muted);
 }
 
-.pending {
-  opacity: 0.45;
+.tick::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 0.375rem;
+  background: var(--border-strong);
 }
 
-.slider {
-  display: block;
-  width: 100%;
-  height: 3rem;
-  margin: 0 0 var(--space-4);
-  accent-color: var(--accent);
-  cursor: pointer;
+/* 7.0, the Dolby reference level. */
+.reference {
+  color: var(--text);
+  font-weight: 700;
 }
 
-.slider:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
+.reference::before {
+  width: 2px;
+  height: 0.75rem;
+  top: -0.375rem;
+  margin-left: -0.5px;
+  background: var(--text);
 }
 
 .steps {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(0, 1.4fr) repeat(2, minmax(0, 1fr));
   gap: var(--space-2);
 }
 
@@ -51,13 +136,37 @@
   font-variant-numeric: tabular-nums;
 }
 
+.steps .nominal {
+  font-size: var(--text-base);
+}
+
+/* Holds the reset button's cell at reference, so nothing shifts under the operator's finger. */
+.atReference {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.5rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: center;
+}
+
 @media (max-width: 30rem) {
   .steps {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .nominal {
+  .nominal,
+  .atReference {
     grid-column: 1 / -1;
     order: 5;
+  }
+
+  .steps .nominal,
+  .atReference {
+    min-height: var(--control-height);
   }
 }

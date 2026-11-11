@@ -1,5 +1,5 @@
 .group {
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   background: var(--surface);
   overflow: hidden;
@@ -7,7 +7,7 @@
 
 .heading {
   margin: 0;
-  font-size: var(--text-lg);
+  font-size: var(--text-base);
 }
 
 .toggle,
@@ -21,26 +21,23 @@
   border: 0;
   background: var(--surface-2);
   text-align: left;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .toggle {
   cursor: pointer;
 }
 
+.toggle:hover {
+  background: color-mix(in srgb, var(--surface-2) 80%, var(--text) 6%);
+}
+
 .chevron {
-  display: inline-block;
-  width: 0.6rem;
-  height: 0.6rem;
-  border-right: 3px solid currentColor;
-  border-bottom: 3px solid currentColor;
-  transform: rotate(-45deg);
-  transition: transform 0.15s;
-  flex: none;
+  transition: transform 150ms ease-out;
 }
 
 .toggle[aria-expanded="true"] .chevron {
-  transform: rotate(45deg);
+  transform: rotate(90deg);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -51,16 +48,15 @@
 
 .prefix {
   font-family: var(--font-mono);
-  font-weight: 500;
+  font-weight: 400;
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
 
 .count {
   margin-left: auto;
-  padding: 0 var(--space-2);
-  border-radius: 999px;
-  background: var(--surface);
+  color: var(--text-muted);
+  font-weight: 400;
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
 }
