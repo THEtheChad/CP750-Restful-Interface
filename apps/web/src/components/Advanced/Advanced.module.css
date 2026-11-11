@@ -1,0 +1,46 @@
+.advanced {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.heading {
+  margin: 0;
+  font-size: var(--text-xl);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.field {
+  display: grid;
+  gap: var(--space-1);
+  font-weight: 600;
+}
+
+.search {
+  flex: 1 1 18rem;
+}
+
+.count {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.groups {
+  display: grid;
+  gap: var(--space-3);
+}

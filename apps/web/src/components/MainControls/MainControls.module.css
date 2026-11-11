@@ -1,0 +1,17 @@
+.controls {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(16rem, 2fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.side {
+  display: grid;
+  gap: var(--space-5);
+}
+
+@media (max-width: 56rem) {
+  .controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

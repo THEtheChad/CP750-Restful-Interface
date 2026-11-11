@@ -1,0 +1,1610 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "description": "REST + SSE gateway for the Dolby CP750 Digital Cinema Processor. Param names and value types depend on the unit's firmware: discover them with `GET /api/commands`, which returns each param's JSON Schema. Errors are RFC 9457 `application/problem+json`.\n\n**Request rules.** Every request's `Host` must be localhost, 127.0.0.1, [::1], the listen address or one of `CP750_ALLOWED_HOSTS` (any port), else `421 HOST_NOT_ALLOWED` (DNS-rebinding defence). `PUT` and `POST` must be `Content-Type: application/json`, even with no body (`415 UNSUPPORTED_MEDIA_TYPE`), and at most 4 KiB (`413 PAYLOAD_TOO_LARGE`). They are refused with `403 ORIGIN_NOT_ALLOWED` when the browser marks them cross-site (`Sec-Fetch-Site: cross-site`) or their `Origin` is neither this server nor listed in `CP750_CORS_ORIGIN`. CORS is off unless `CP750_CORS_ORIGIN` lists origins. A known path with an unsupported method is `405 METHOD_NOT_ALLOWED` with `Allow`; an unknown one is `404 NOT_FOUND`.",
+    "license": {
+      "name": "MIT"
+    },
+    "title": "CP750 REST gateway",
+    "version": "0.1.0"
+  },
+  "tags": [
+    {
+      "description": "Health, device state and this document",
+      "name": "system"
+    },
+    {
+      "description": "Read and write CP750 parameters",
+      "name": "params"
+    },
+    {
+      "description": "Trigger CP750 actions (`cp750.ctrl.*`)",
+      "name": "actions"
+    },
+    {
+      "description": "Server-sent events",
+      "name": "events"
+    }
+  ],
+  "paths": {
+    "/api/actions/{name}": {
+      "post": {
+        "description": "Sends an `action` param (`cp750.ctrl.*`); `value` defaults to 1. Destructive actions (reboot, default_params, log_erase…) need `confirm: true`. The request must be `Content-Type: application/json` even without a body; an empty body counts as `{}`.",
+        "operationId": "triggerAction",
+        "parameters": [
+          {
+            "description": "Parameter name or alias, case-insensitive. The set depends on the firmware; discover it with `GET /api/commands`.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "description": "Parameter name or alias, case-insensitive. The set depends on the firmware; discover it with `GET /api/commands`.",
+              "example": "cp750.sys.fader",
+              "maxLength": 128,
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActionRequest"
+              }
+            }
+          },
+          "description": "Optional; an empty body counts as `{}`. `Content-Type: application/json` is required either way.",
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResult"
+                }
+              }
+            },
+            "description": "The unit's reply"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "INVALID_VALUE",
+                  "detail": "Invalid value",
+                  "errors": [
+                    "must be <= 100"
+                  ],
+                  "param": "cp750.sys.fader",
+                  "status": 400,
+                  "title": "Invalid value",
+                  "type": "urn:cp750:problem:invalid-value"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Invalid request body, value or name (`BAD_REQUEST`, `INVALID_VALUE`)"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "UNAUTHORIZED",
+                  "detail": "Unauthorized",
+                  "status": 401,
+                  "title": "Unauthorized",
+                  "type": "urn:cp750:problem:unauthorized"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Missing or wrong Bearer token (`UNAUTHORIZED`)"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "FORBIDDEN",
+                  "detail": "Forbidden",
+                  "param": "cp750.sys.fader",
+                  "reason": "read-only-mode",
+                  "status": 403,
+                  "title": "Forbidden",
+                  "type": "urn:cp750:problem:forbidden"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Refused by the access policy (`FORBIDDEN`, see `reason`), or a cross-site request whose `Origin` is not allowed (`ORIGIN_NOT_ALLOWED`)"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "UNKNOWN_PARAMETER",
+                  "detail": "Unknown parameter",
+                  "param": "cp750.sys.nope",
+                  "status": 404,
+                  "title": "Unknown parameter",
+                  "type": "urn:cp750:problem:unknown-parameter"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unknown parameter or route (`UNKNOWN_PARAMETER`, `NOT_FOUND`)"
+          },
+          "413": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "PAYLOAD_TOO_LARGE",
+                  "detail": "Request body too large",
+                  "status": 413,
+                  "title": "Request body too large",
+                  "type": "urn:cp750:problem:payload-too-large"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request body is larger than the server accepts (`PAYLOAD_TOO_LARGE`)"
+          },
+          "415": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "UNSUPPORTED_MEDIA_TYPE",
+                  "detail": "Unsupported media type",
+                  "status": 415,
+                  "title": "Unsupported media type",
+                  "type": "urn:cp750:problem:unsupported-media-type"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request body is not `application/json` (`UNSUPPORTED_MEDIA_TYPE`)"
+          },
+          "421": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "HOST_NOT_ALLOWED",
+                  "detail": "Host not allowed",
+                  "status": 421,
+                  "title": "Host not allowed",
+                  "type": "urn:cp750:problem:host-not-allowed"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The `Host` header is not one this server answers to (`HOST_NOT_ALLOWED`); see `CP750_ALLOWED_HOSTS`"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "INTERNAL",
+                  "detail": "Internal server error",
+                  "status": 500,
+                  "title": "Internal server error",
+                  "type": "urn:cp750:problem:internal"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unexpected server error (`INTERNAL`)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "NOT_CONNECTED",
+                  "detail": "Not connected to the CP750",
+                  "status": 503,
+                  "title": "Not connected to the CP750",
+                  "type": "urn:cp750:problem:not-connected"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not connected to the CP750 (`NOT_CONNECTED`)"
+          },
+          "504": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "TIMEOUT",
+                  "detail": "The CP750 did not answer",
+                  "status": 504,
+                  "title": "The CP750 did not answer",
+                  "type": "urn:cp750:problem:timeout"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The CP750 did not answer in time (`TIMEOUT`)"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {}
+        ],
+        "summary": "Trigger an action",
+        "tags": [
+          "actions"
+        ]
+      }
+    },
+    "/api/commands": {
+      "get": {
+        "description": "Every param the active firmware manifest (and `help`) knows, with its value JSON Schema, availability and the operations allowed right now. Empty before the first firmware detection.",
+        "operationId": "listCommands",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Commands"
+                }
+              }
+            },
+            "description": "The command list"
+          },
+          "421": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "HOST_NOT_ALLOWED",
+                  "detail": "Host not allowed",
+                  "status": 421,
+                  "title": "Host not allowed",
+                  "type": "urn:cp750:problem:host-not-allowed"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The `Host` header is not one this server answers to (`HOST_NOT_ALLOWED`); see `CP750_ALLOWED_HOSTS`"
+          }
+        },
+        "summary": "Parameters of the active manifest",
+        "tags": [
+          "params"
+        ]
+      }
+    },
+    "/api/device": {
+      "get": {
+        "operationId": "getDevice",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            },
+            "description": "Current session state"
+          },
+          "421": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "HOST_NOT_ALLOWED",
+                  "detail": "Host not allowed",
+                  "status": 421,
+                  "title": "Host not allowed",
+                  "type": "urn:cp750:problem:host-not-allowed"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The `Host` header is not one this server answers to (`HOST_NOT_ALLOWED`); see `CP750_ALLOWED_HOSTS`"
+          }
+        },
+        "summary": "Connection and firmware state",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/api/events": {
+      "get": {
+        "description": "A `text/event-stream`. On connect it sends a `connection` and a `device` snapshot, then forwards the session's `param`, `connection` and `device` events. Each message's `event` is the type and `data` is a JSON `SessionEvent`. Comment lines (`: ping`) are heartbeats. The number of concurrent streams is capped (`CP750_MAX_SSE_CLIENTS`), and a client that stops reading is dropped once its backlog grows past a limit. `HEAD` answers the headers without opening a stream.",
+        "operationId": "streamEvents",
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionEvent"
+                }
+              }
+            },
+            "description": "Event stream"
+          },
+          "421": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "HOST_NOT_ALLOWED",
+                  "detail": "Host not allowed",
+                  "status": 421,
+                  "title": "Host not allowed",
+                  "type": "urn:cp750:problem:host-not-allowed"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The `Host` header is not one this server answers to (`HOST_NOT_ALLOWED`); see `CP750_ALLOWED_HOSTS`"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "TOO_MANY_STREAMS",
+                  "detail": "Too many event streams",
+                  "status": 503,
+                  "title": "Too many event streams",
+                  "type": "urn:cp750:problem:too-many-streams"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Too many event streams are open (`TOO_MANY_STREAMS`); see `CP750_MAX_SSE_CLIENTS`"
+          }
+        },
+        "summary": "Live events (SSE)",
+        "tags": [
+          "events"
+        ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "description": "Answers as long as the HTTP server runs, whether or not the CP750 is reachable.",
+        "operationId": "getHealth",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "description": "Alive"
+          },
+          "421": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "HOST_NOT_ALLOWED",
+                  "detail": "Host not allowed",
+                  "status": 421,
+                  "title": "Host not allowed",
+                  "type": "urn:cp750:problem:host-not-allowed"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The `Host` header is not one this server answers to (`HOST_NOT_ALLOWED`); see `CP750_ALLOWED_HOSTS`"
+          }
+        },
+        "summary": "Liveness",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/api/openapi.json": {
+      "get": {
+        "operationId": "getOpenApi",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenApiDocument"
+                }
+              }
+            },
+            "description": "OpenAPI 3.1 document"
+          },
+          "421": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "HOST_NOT_ALLOWED",
+                  "detail": "Host not allowed",
+                  "status": 421,
+                  "title": "Host not allowed",
+                  "type": "urn:cp750:problem:host-not-allowed"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The `Host` header is not one this server answers to (`HOST_NOT_ALLOWED`); see `CP750_ALLOWED_HOSTS`"
+          }
+        },
+        "summary": "This OpenAPI document",
+        "tags": [
+          "system"
+        ]
+      }
+    },
+    "/api/params/{name}": {
+      "get": {
+        "description": "Queries the unit (`<param> ?`). Faders also report `db`.",
+        "operationId": "readParam",
+        "parameters": [
+          {
+            "description": "Parameter name or alias, case-insensitive. The set depends on the firmware; discover it with `GET /api/commands`.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "description": "Parameter name or alias, case-insensitive. The set depends on the firmware; discover it with `GET /api/commands`.",
+              "example": "cp750.sys.fader",
+              "maxLength": 128,
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParamReading"
+                }
+              }
+            },
+            "description": "The current value"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "INVALID_VALUE",
+                  "detail": "Invalid value",
+                  "errors": [
+                    "must be <= 100"
+                  ],
+                  "param": "cp750.sys.fader",
+                  "status": 400,
+                  "title": "Invalid value",
+                  "type": "urn:cp750:problem:invalid-value"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Invalid request body, value or name (`BAD_REQUEST`, `INVALID_VALUE`)"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "FORBIDDEN",
+                  "detail": "Forbidden",
+                  "param": "cp750.sys.fader",
+                  "reason": "read-only-mode",
+                  "status": 403,
+                  "title": "Forbidden",
+                  "type": "urn:cp750:problem:forbidden"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Refused by the access policy (`FORBIDDEN`, see `reason`)"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "UNKNOWN_PARAMETER",
+                  "detail": "Unknown parameter",
+                  "param": "cp750.sys.nope",
+                  "status": 404,
+                  "title": "Unknown parameter",
+                  "type": "urn:cp750:problem:unknown-parameter"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unknown parameter or route (`UNKNOWN_PARAMETER`, `NOT_FOUND`)"
+          },
+          "421": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "HOST_NOT_ALLOWED",
+                  "detail": "Host not allowed",
+                  "status": 421,
+                  "title": "Host not allowed",
+                  "type": "urn:cp750:problem:host-not-allowed"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The `Host` header is not one this server answers to (`HOST_NOT_ALLOWED`); see `CP750_ALLOWED_HOSTS`"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "INTERNAL",
+                  "detail": "Internal server error",
+                  "status": 500,
+                  "title": "Internal server error",
+                  "type": "urn:cp750:problem:internal"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unexpected server error (`INTERNAL`)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "NOT_CONNECTED",
+                  "detail": "Not connected to the CP750",
+                  "status": 503,
+                  "title": "Not connected to the CP750",
+                  "type": "urn:cp750:problem:not-connected"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not connected to the CP750 (`NOT_CONNECTED`)"
+          },
+          "504": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "TIMEOUT",
+                  "detail": "The CP750 did not answer",
+                  "status": 504,
+                  "title": "The CP750 did not answer",
+                  "type": "urn:cp750:problem:timeout"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The CP750 did not answer in time (`TIMEOUT`)"
+          }
+        },
+        "summary": "Read a parameter",
+        "tags": [
+          "params"
+        ]
+      },
+      "put": {
+        "description": "Validates the value against the param's schema, sends it, and compares the unit's echo with the request. A mismatch is `422 WRITE_REJECTED`.",
+        "operationId": "writeParam",
+        "parameters": [
+          {
+            "description": "Parameter name or alias, case-insensitive. The set depends on the firmware; discover it with `GET /api/commands`.",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "description": "Parameter name or alias, case-insensitive. The set depends on the firmware; discover it with `GET /api/commands`.",
+              "example": "cp750.sys.fader",
+              "maxLength": 128,
+              "minLength": 1,
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WriteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParamReading"
+                }
+              }
+            },
+            "description": "The value the unit now holds"
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "INVALID_VALUE",
+                  "detail": "Invalid value",
+                  "errors": [
+                    "must be <= 100"
+                  ],
+                  "param": "cp750.sys.fader",
+                  "status": 400,
+                  "title": "Invalid value",
+                  "type": "urn:cp750:problem:invalid-value"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Invalid request body, value or name (`BAD_REQUEST`, `INVALID_VALUE`)"
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "UNAUTHORIZED",
+                  "detail": "Unauthorized",
+                  "status": 401,
+                  "title": "Unauthorized",
+                  "type": "urn:cp750:problem:unauthorized"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Missing or wrong Bearer token (`UNAUTHORIZED`)"
+          },
+          "403": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "FORBIDDEN",
+                  "detail": "Forbidden",
+                  "param": "cp750.sys.fader",
+                  "reason": "read-only-mode",
+                  "status": 403,
+                  "title": "Forbidden",
+                  "type": "urn:cp750:problem:forbidden"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Refused by the access policy (`FORBIDDEN`, see `reason`), or a cross-site request whose `Origin` is not allowed (`ORIGIN_NOT_ALLOWED`)"
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "UNKNOWN_PARAMETER",
+                  "detail": "Unknown parameter",
+                  "param": "cp750.sys.nope",
+                  "status": 404,
+                  "title": "Unknown parameter",
+                  "type": "urn:cp750:problem:unknown-parameter"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unknown parameter or route (`UNKNOWN_PARAMETER`, `NOT_FOUND`)"
+          },
+          "413": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "PAYLOAD_TOO_LARGE",
+                  "detail": "Request body too large",
+                  "status": 413,
+                  "title": "Request body too large",
+                  "type": "urn:cp750:problem:payload-too-large"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request body is larger than the server accepts (`PAYLOAD_TOO_LARGE`)"
+          },
+          "415": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "UNSUPPORTED_MEDIA_TYPE",
+                  "detail": "Unsupported media type",
+                  "status": 415,
+                  "title": "Unsupported media type",
+                  "type": "urn:cp750:problem:unsupported-media-type"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The request body is not `application/json` (`UNSUPPORTED_MEDIA_TYPE`)"
+          },
+          "421": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "HOST_NOT_ALLOWED",
+                  "detail": "Host not allowed",
+                  "status": 421,
+                  "title": "Host not allowed",
+                  "type": "urn:cp750:problem:host-not-allowed"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The `Host` header is not one this server answers to (`HOST_NOT_ALLOWED`); see `CP750_ALLOWED_HOSTS`"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "actual": 70,
+                  "code": "WRITE_REJECTED",
+                  "detail": "Write rejected by the device",
+                  "param": "cp750.sys.fader",
+                  "raw": "70",
+                  "requested": 80,
+                  "status": 422,
+                  "title": "Write rejected by the device",
+                  "type": "urn:cp750:problem:write-rejected"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The device kept a different value (`WRITE_REJECTED`, see `requested` and `actual`)"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "INTERNAL",
+                  "detail": "Internal server error",
+                  "status": 500,
+                  "title": "Internal server error",
+                  "type": "urn:cp750:problem:internal"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Unexpected server error (`INTERNAL`)"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "NOT_CONNECTED",
+                  "detail": "Not connected to the CP750",
+                  "status": 503,
+                  "title": "Not connected to the CP750",
+                  "type": "urn:cp750:problem:not-connected"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Not connected to the CP750 (`NOT_CONNECTED`)"
+          },
+          "504": {
+            "content": {
+              "application/problem+json": {
+                "example": {
+                  "code": "TIMEOUT",
+                  "detail": "The CP750 did not answer",
+                  "status": 504,
+                  "title": "The CP750 did not answer",
+                  "type": "urn:cp750:problem:timeout"
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "The CP750 did not answer in time (`TIMEOUT`)"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {}
+        ],
+        "summary": "Write a parameter",
+        "tags": [
+          "params"
+        ]
+      }
+    }
+  },
+  "webhooks": {},
+  "components": {
+    "parameters": {},
+    "schemas": {
+      "ActionRequest": {
+        "example": {
+          "value": 5
+        },
+        "properties": {
+          "confirm": {
+            "description": "Required (`true`) for destructive actions",
+            "type": "boolean"
+          },
+          "value": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ParamValue"
+              },
+              {
+                "description": "Defaults to 1"
+              }
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "ActionResult": {
+        "properties": {
+          "name": {
+            "example": "cp750.ctrl.fader_delta",
+            "type": "string"
+          },
+          "raw": {
+            "example": "5",
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/ParamValue"
+          }
+        },
+        "required": [
+          "name",
+          "value",
+          "raw"
+        ],
+        "type": "object"
+      },
+      "Command": {
+        "properties": {
+          "access": {
+            "enum": [
+              "readwrite",
+              "readonly",
+              "action",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "aliases": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "availability": {
+            "enum": [
+              "confirmed",
+              "missing",
+              "unchecked"
+            ],
+            "type": "string"
+          },
+          "blocked": {
+            "description": "Why each refused operation is refused",
+            "properties": {
+              "action": {
+                "enum": [
+                  "full-tier",
+                  "internal",
+                  "access",
+                  "read-only-mode",
+                  "unverified",
+                  "confirmation-required",
+                  "raw-only",
+                  "raw-command",
+                  "unavailable"
+                ],
+                "type": "string"
+              },
+              "read": {
+                "enum": [
+                  "full-tier",
+                  "internal",
+                  "access",
+                  "read-only-mode",
+                  "unverified",
+                  "confirmation-required",
+                  "raw-only",
+                  "raw-command",
+                  "unavailable"
+                ],
+                "type": "string"
+              },
+              "write": {
+                "enum": [
+                  "full-tier",
+                  "internal",
+                  "access",
+                  "read-only-mode",
+                  "unverified",
+                  "confirmation-required",
+                  "raw-only",
+                  "raw-command",
+                  "unavailable"
+                ],
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "destructive": {
+            "type": "boolean"
+          },
+          "internal": {
+            "type": "boolean"
+          },
+          "name": {
+            "example": "cp750.sys.fader",
+            "type": "string"
+          },
+          "operations": {
+            "description": "Operations allowed now (destructive ones still need confirm)",
+            "items": {
+              "enum": [
+                "read",
+                "write",
+                "action"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "schema": {
+            "$ref": "#/components/schemas/ValueSchema"
+          },
+          "source": {
+            "description": "`help` names are not in the manifest and are raw read-only",
+            "enum": [
+              "manifest",
+              "help"
+            ],
+            "type": "string"
+          },
+          "tier": {
+            "enum": [
+              "normal",
+              "full",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "unit": {
+            "enum": [
+              "fader",
+              "ms",
+              "us",
+              "dB_tenths",
+              "feet_or_meters",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "aliases",
+          "source",
+          "availability",
+          "operations",
+          "blocked",
+          "access",
+          "tier",
+          "unit",
+          "destructive",
+          "internal",
+          "description",
+          "schema"
+        ],
+        "type": "object"
+      },
+      "Commands": {
+        "properties": {
+          "commands": {
+            "items": {
+              "$ref": "#/components/schemas/Command"
+            },
+            "type": "array"
+          },
+          "firmware": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "manifest": {
+            "$ref": "#/components/schemas/ManifestInfo"
+          }
+        },
+        "required": [
+          "firmware",
+          "manifest",
+          "commands"
+        ],
+        "type": "object"
+      },
+      "ConnectionEvent": {
+        "properties": {
+          "at": {
+            "description": "ISO timestamp",
+            "example": "2026-11-10T12:00:00.000Z",
+            "type": "string"
+          },
+          "connection": {
+            "enum": [
+              "idle",
+              "connecting",
+              "connected",
+              "reconnecting",
+              "closed"
+            ],
+            "type": "string"
+          },
+          "error": {
+            "$ref": "#/components/schemas/SessionError"
+          },
+          "type": {
+            "enum": [
+              "connection"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "connection",
+          "error",
+          "at"
+        ],
+        "type": "object"
+      },
+      "Device": {
+        "properties": {
+          "allowFull": {
+            "type": "boolean"
+          },
+          "allowInternal": {
+            "type": "boolean"
+          },
+          "authRequired": {
+            "description": "True when mutations need a Bearer token",
+            "type": "boolean"
+          },
+          "connection": {
+            "enum": [
+              "idle",
+              "connecting",
+              "connected",
+              "reconnecting",
+              "closed"
+            ],
+            "type": "string"
+          },
+          "firmware": {
+            "example": "1.2.8.3",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fullControl": {
+            "type": "boolean"
+          },
+          "host": {
+            "example": "192.168.1.136",
+            "type": "string"
+          },
+          "lastError": {
+            "$ref": "#/components/schemas/SessionError"
+          },
+          "manifest": {
+            "$ref": "#/components/schemas/ManifestInfo"
+          },
+          "pollMs": {
+            "description": "How often (ms) the gateway polls fader, mute and input for front-panel changes; 0 when polling is off",
+            "example": 1000,
+            "type": "integer"
+          },
+          "port": {
+            "example": 61408,
+            "type": "integer"
+          },
+          "readOnly": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "connection",
+          "host",
+          "port",
+          "firmware",
+          "manifest",
+          "fullControl",
+          "readOnly",
+          "allowFull",
+          "allowInternal",
+          "authRequired",
+          "pollMs",
+          "lastError"
+        ],
+        "type": "object"
+      },
+      "DeviceEvent": {
+        "properties": {
+          "at": {
+            "description": "ISO timestamp",
+            "example": "2026-11-10T12:00:00.000Z",
+            "type": "string"
+          },
+          "firmware": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "manifest": {
+            "$ref": "#/components/schemas/ManifestInfo"
+          },
+          "type": {
+            "enum": [
+              "device"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "firmware",
+          "manifest",
+          "at"
+        ],
+        "type": "object"
+      },
+      "Health": {
+        "properties": {
+          "status": {
+            "enum": [
+              "ok"
+            ],
+            "type": "string"
+          },
+          "version": {
+            "example": "0.1.0",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "version"
+        ],
+        "type": "object"
+      },
+      "ManifestInfo": {
+        "properties": {
+          "firmware": {
+            "example": "1.2.8.3",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "match": {
+            "enum": [
+              "exact",
+              "nearest",
+              "none"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "verified",
+              "draft",
+              null
+            ],
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "firmware",
+          "status",
+          "match",
+          "verified"
+        ],
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "OpenApiDocument": {
+        "additionalProperties": {},
+        "description": "This OpenAPI 3.1 document",
+        "type": "object"
+      },
+      "ParamEvent": {
+        "properties": {
+          "at": {
+            "description": "ISO timestamp",
+            "example": "2026-11-10T12:00:00.000Z",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "previous": {
+            "$ref": "#/components/schemas/ParamValue"
+          },
+          "raw": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "param"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/ParamValue"
+          }
+        },
+        "required": [
+          "type",
+          "name",
+          "value",
+          "raw",
+          "at"
+        ],
+        "type": "object"
+      },
+      "ParamReading": {
+        "properties": {
+          "db": {
+            "description": "Fader level in dB (only for the `fader` unit)",
+            "example": 0,
+            "type": "number"
+          },
+          "name": {
+            "description": "Canonical name",
+            "example": "cp750.sys.fader",
+            "type": "string"
+          },
+          "raw": {
+            "description": "Value as the unit sent it",
+            "example": "70",
+            "type": "string"
+          },
+          "unit": {
+            "enum": [
+              "fader",
+              "ms",
+              "us",
+              "dB_tenths",
+              "feet_or_meters"
+            ],
+            "example": "fader",
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/ParamValue"
+          }
+        },
+        "required": [
+          "name",
+          "value",
+          "raw"
+        ],
+        "type": "object"
+      },
+      "ParamValue": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "maxLength": 256,
+            "type": "string"
+          }
+        ],
+        "description": "A parameter value: an integer or a string, depending on the param. `GET /api/commands` returns each param's JSON Schema.",
+        "example": 70
+      },
+      "Problem": {
+        "description": "RFC 9457 problem details",
+        "properties": {
+          "actual": {
+            "$ref": "#/components/schemas/ParamValue"
+          },
+          "code": {
+            "enum": [
+              "BAD_REQUEST",
+              "INVALID_VALUE",
+              "UNAUTHORIZED",
+              "FORBIDDEN",
+              "ORIGIN_NOT_ALLOWED",
+              "NOT_FOUND",
+              "UNKNOWN_PARAMETER",
+              "METHOD_NOT_ALLOWED",
+              "PAYLOAD_TOO_LARGE",
+              "UNSUPPORTED_MEDIA_TYPE",
+              "HOST_NOT_ALLOWED",
+              "WRITE_REJECTED",
+              "INTERNAL",
+              "NOT_CONNECTED",
+              "TOO_MANY_STREAMS",
+              "TIMEOUT"
+            ],
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "instance": {
+            "type": "string"
+          },
+          "param": {
+            "type": "string"
+          },
+          "raw": {
+            "type": "string"
+          },
+          "reason": {
+            "enum": [
+              "full-tier",
+              "internal",
+              "access",
+              "read-only-mode",
+              "unverified",
+              "confirmation-required",
+              "raw-only",
+              "raw-command",
+              "unavailable"
+            ],
+            "type": "string"
+          },
+          "requested": {
+            "$ref": "#/components/schemas/ParamValue"
+          },
+          "status": {
+            "example": 403,
+            "type": "integer"
+          },
+          "title": {
+            "example": "Forbidden",
+            "type": "string"
+          },
+          "type": {
+            "example": "urn:cp750:problem:forbidden",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail",
+          "code"
+        ],
+        "type": "object"
+      },
+      "SessionError": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "SessionEvent": {
+        "description": "The `data` of each SSE message (JSON); the SSE `event` field equals `type`. Heartbeats are SSE comments.",
+        "discriminator": {
+          "mapping": {
+            "connection": "#/components/schemas/ConnectionEvent",
+            "device": "#/components/schemas/DeviceEvent",
+            "param": "#/components/schemas/ParamEvent"
+          },
+          "propertyName": "type"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ParamEvent"
+          },
+          {
+            "$ref": "#/components/schemas/ConnectionEvent"
+          },
+          {
+            "$ref": "#/components/schemas/DeviceEvent"
+          }
+        ]
+      },
+      "ValueSchema": {
+        "description": "JSON Schema (2020-12) of a param's value. `null` for raw names that only `help` lists.",
+        "example": {
+          "maximum": 100,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "properties": {
+          "enum": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "maxLength": {
+            "type": "integer"
+          },
+          "maximum": {
+            "type": "integer"
+          },
+          "minimum": {
+            "type": "integer"
+          },
+          "type": {
+            "enum": [
+              "integer",
+              "string"
+            ],
+            "type": "string"
+          },
+          "x-format": {
+            "description": "Annotation for structured strings (format unverified)",
+            "enum": [
+              "route-list",
+              "ip-setting"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "WriteRequest": {
+        "example": {
+          "value": 70
+        },
+        "properties": {
+          "confirm": {
+            "description": "Required (`true`) for destructive params",
+            "type": "boolean"
+          },
+          "value": {
+            "$ref": "#/components/schemas/ParamValue"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "description": "Required for PUT/POST only when the server has `CP750_API_TOKEN` set.",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  }
+}

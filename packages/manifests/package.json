@@ -1,0 +1,21 @@
+{
+  "name": "@cp750/manifests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "CP750 firmware manifests, meta-schema, loader, value codec and generated types.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./generated": "./src/generated/index.ts",
+    "./schema": "./schema/cp750-manifest.v1.schema.json",
+    "./firmware/*.json": "./firmware/*.json"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "gen": "bun scripts/gen.ts",
+    "gen:check": "bun scripts/gen.ts --check"
+  },
+  "dependencies": {
+    "ajv": "8.20.0"
+  }
+}

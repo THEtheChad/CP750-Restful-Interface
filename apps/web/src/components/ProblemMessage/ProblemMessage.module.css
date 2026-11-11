@@ -1,0 +1,26 @@
+.problem {
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--danger);
+  border-left-width: 6px;
+  border-radius: var(--radius-sm);
+  background: var(--danger-soft);
+  color: var(--text);
+}
+
+.title {
+  display: block;
+  font-weight: 700;
+}
+
+.detail {
+  margin: var(--space-1) 0 0;
+}
+
+.code {
+  margin-left: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}

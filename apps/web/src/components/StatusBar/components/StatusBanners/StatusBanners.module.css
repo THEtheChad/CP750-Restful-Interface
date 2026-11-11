@@ -1,0 +1,33 @@
+.banners {
+  display: grid;
+  gap: 1px;
+  background: var(--border);
+}
+
+.banner {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  font-weight: 600;
+}
+
+.banner > span {
+  display: block;
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+.danger {
+  background: var(--danger);
+  color: var(--danger-text);
+}
+
+.warn {
+  background: var(--warn-soft);
+  color: var(--warn);
+  border-top: 1px solid var(--warn-border);
+}
+
+.info {
+  background: var(--accent-soft);
+  color: var(--text);
+}

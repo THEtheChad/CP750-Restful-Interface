@@ -1,0 +1,120 @@
+/*
+ * Design tokens and base styles. Light by default; dark follows the OS (`prefers-color-scheme`).
+ * Sizes are generous on purpose: this is read from across a projection booth.
+ */
+:root {
+  color-scheme: light dark;
+
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface-2: #eceef2;
+  --text: #11151c;
+  --text-muted: #4a5261;
+  --border: #c9ced8;
+  --border-strong: #8a93a3;
+  --accent: #1557c0;
+  --accent-text: #ffffff;
+  --accent-soft: #dbe7fb;
+  --ok: #157a3c;
+  --ok-soft: #dcf3e4;
+  --warn: #8a4b00;
+  --warn-soft: #fff1d6;
+  --warn-border: #e8a33d;
+  --danger: #b3261e;
+  --danger-text: #ffffff;
+  --danger-soft: #fde4e1;
+  --focus: #1557c0;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  --text-sm: 0.9375rem;
+  --text-base: 1.0625rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 2px 8px rgb(0 0 0 / 0.06);
+  --control-height: 3rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1015;
+    --surface: #171a21;
+    --surface-2: #1f232c;
+    --text: #f2f4f8;
+    --text-muted: #a9b1c0;
+    --border: #2f3542;
+    --border-strong: #5b6578;
+    --accent: #6ea8ff;
+    --accent-text: #0b1220;
+    --accent-soft: #1b2a45;
+    --ok: #5ad48a;
+    --ok-soft: #12301f;
+    --warn: #ffc566;
+    --warn-soft: #33250b;
+    --warn-border: #a8731d;
+    --danger: #ff7a70;
+    --danger-text: #1d0907;
+    --danger-soft: #3a1513;
+    --focus: #8cbcff;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.45;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+code {
+  font-family: var(--font-mono);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

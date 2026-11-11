@@ -1,0 +1,90 @@
+/* Shared control styles (buttons, fields), composed by the components that use them. */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+  min-width: var(--control-height);
+  padding: 0 var(--space-4);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.button:disabled,
+.button[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--accent);
+  filter: brightness(1.08);
+}
+
+.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.dangerSolid {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--danger-text);
+}
+
+.dangerSolid:hover:not(:disabled) {
+  background: var(--danger);
+  filter: brightness(1.08);
+}
+
+.small {
+  min-height: 2.25rem;
+  min-width: 2.25rem;
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.field {
+  min-height: var(--control-height);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  min-width: 0;
+}
+
+.field:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.fieldSmall {
+  min-height: 2.25rem;
+}
+
+.reason {
+  margin: var(--space-2) 0 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.reason::before {
+  content: "🔒 ";
+}

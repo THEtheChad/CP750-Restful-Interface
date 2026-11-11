@@ -1,0 +1,3730 @@
+{
+  "$schema": "../schema/cp750-manifest.v1.schema.json",
+  "manifestVersion": 1,
+  "firmware": "1.0.0.150183",
+  "status": "draft",
+  "sources": [
+    {
+      "kind": "manual",
+      "ref": "Dolby 9110270 Issue 4, Tables 6-1/6-2",
+      "notes": "Transcribed from Table 6-1 (normal set) and Table 6-2 (full set). A parameter that appears in Table 6-1 is tier normal; one that appears only in Table 6-2 is tier full. The manual does not mark access, so access is inferred (state/sysinfo readonly, ctrl actions, everything else readwrite) with two deliberate exceptions: internal.save_params is an action, and sys.serial_number is treated as readonly for safety. PDF fixes applied: the Table 6-1 row printed as \"p750.sys.dolby_digital_2_channel_decode_mode_1\" and the Table 6-2 row printed as \"p750.sys.eq_rs_4k\" are cp750.*. Table 7-9 (serial strings) was ignored because it is stale. Draft until a capture of a real 1.0.0.150183 unit is checked in (see docs/ADDING-A-FIRMWARE.md); the manual alone does not meet the bar for verified."
+    }
+  ],
+  "params": {
+    "cp750.ctrl.alignment_mode_tickle": {
+      "tier": "full",
+      "access": "action",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 2147483647
+      }
+    },
+    "cp750.ctrl.default_params": {
+      "tier": "normal",
+      "access": "action",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      },
+      "destructive": true,
+      "description": "Restore factory default parameters"
+    },
+    "cp750.ctrl.fader_delta": {
+      "tier": "normal",
+      "access": "action",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -100,
+        "maximum": 100
+      },
+      "description": "Nudge the main fader up or down by a raw amount"
+    },
+    "cp750.ctrl.full_ascii_ctrl": {
+      "tier": "normal",
+      "access": "action",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      },
+      "description": "Enable (1) or disable (0) the full command set for this session"
+    },
+    "cp750.ctrl.log_erase": {
+      "tier": "normal",
+      "access": "action",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      },
+      "destructive": true,
+      "description": "Erase the event log"
+    },
+    "cp750.ctrl.reboot": {
+      "tier": "normal",
+      "access": "action",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 2147483647
+      },
+      "destructive": true,
+      "description": "Reboot the unit"
+    },
+    "cp750.internal.save_params": {
+      "tier": "full",
+      "access": "action",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      },
+      "destructive": true,
+      "internal": true,
+      "description": "Save parameters to non-volatile storage"
+    },
+    "cp750.internal.tecs_set_test_mode": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      },
+      "internal": true
+    },
+    "cp750.state.bitstream_format": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["Dolby_Digital", "PCM", "n_a"]
+      },
+      "description": "Format of the current input signal"
+    },
+    "cp750.state.channel_mode": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["1_0", "1_1", "2_0", "2_1", "2_2", "3_0", "3_1", "3_2", "3_2_L", "n_a"]
+      },
+      "description": "Dolby Digital channel mode of the current signal"
+    },
+    "cp750.state.data_rate": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": [
+          "112",
+          "128",
+          "160",
+          "192",
+          "224",
+          "256",
+          "32",
+          "320",
+          "384",
+          "40",
+          "448",
+          "48",
+          "512",
+          "56",
+          "576",
+          "64",
+          "640",
+          "80",
+          "96",
+          "n_a"
+        ]
+      },
+      "description": "Dolby Digital data rate of the current signal in kbit/s"
+    },
+    "cp750.state.decode_mode": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["auto", "invalid", "lr_discrete", "n_a", "prologic", "prologic_2"]
+      },
+      "description": "Two-channel decode mode currently in use"
+    },
+    "cp750.state.dialnorm": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -31,
+        "maximum": 0
+      },
+      "description": "Dialnorm value of the current Dolby Digital signal"
+    },
+    "cp750.state.dig_1_valid": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      },
+      "description": "Whether the Digital 1 input has a valid signal"
+    },
+    "cp750.state.dig_2_valid": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      },
+      "description": "Whether the Digital 2 input has a valid signal"
+    },
+    "cp750.state.dig_3_valid": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      },
+      "description": "Whether the Digital 3 input has a valid signal"
+    },
+    "cp750.state.dig_4_valid": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      },
+      "description": "Whether the Digital 4 input has a valid signal"
+    },
+    "cp750.state.headless": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      }
+    },
+    "cp750.state.ip_status": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Current network status"
+    },
+    "cp750.state.meters": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Current level meter readings"
+    },
+    "cp750.state.rta": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Current real-time analyzer readings"
+    },
+    "cp750.state.rta_avg": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "cp750.state.sample_rate": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["32", "44_1", "48", "88_2", "96", "n_a"]
+      },
+      "description": "Sample rate of the current signal in kHz (44_1 = 44.1)"
+    },
+    "cp750.state.spl": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -5000,
+        "maximum": 5000
+      }
+    },
+    "cp750.state.spl_calibrated": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      }
+    },
+    "cp750.state.spl_stable": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      }
+    },
+    "cp750.state.time": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Current date and time"
+    },
+    "cp750.sys.alignment_mode": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["n_a", "off", "on"]
+      },
+      "description": "Alignment (setup) mode"
+    },
+    "cp750.sys.analog_global_delay": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 250
+      },
+      "unit": "ms",
+      "description": "Audio delay for the Analog input"
+    },
+    "cp750.sys.analog_route": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "x-format": "route-list"
+      },
+      "description": "Channel routing for the Analog input"
+    },
+    "cp750.sys.analog_text": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Display label for the Analog input"
+    },
+    "cp750.sys.auditorium_number": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Auditorium number label"
+    },
+    "cp750.sys.automation_text": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Automation description label"
+    },
+    "cp750.sys.bass_level_bsl": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel bass level"
+    },
+    "cp750.sys.bass_level_bsr": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel bass level"
+    },
+    "cp750.sys.bass_level_c": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel bass level"
+    },
+    "cp750.sys.bass_level_l": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel bass level"
+    },
+    "cp750.sys.bass_level_ls": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel bass level"
+    },
+    "cp750.sys.bass_level_r": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel bass level"
+    },
+    "cp750.sys.bass_level_rs": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel bass level"
+    },
+    "cp750.sys.cinema_system_text": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Cinema system description label"
+    },
+    "cp750.sys.comment_text": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Free-form comment"
+    },
+    "cp750.sys.cp_text": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Cinema processor description label"
+    },
+    "cp750.sys.dig_1_global_delay": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 250
+      },
+      "unit": "ms",
+      "description": "Audio delay for the Digital 1 input"
+    },
+    "cp750.sys.dig_1_route": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "x-format": "route-list"
+      },
+      "description": "Channel routing for the Digital 1 input"
+    },
+    "cp750.sys.dig_1_text": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Display label for the Digital 1 input"
+    },
+    "cp750.sys.dig_2_global_delay": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 250
+      },
+      "unit": "ms",
+      "description": "Audio delay for the Digital 2 input"
+    },
+    "cp750.sys.dig_2_text": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Display label for the Digital 2 input"
+    },
+    "cp750.sys.dig_3_global_delay": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 250
+      },
+      "unit": "ms",
+      "description": "Audio delay for the Digital 3 input"
+    },
+    "cp750.sys.dig_3_text": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Display label for the Digital 3 input"
+    },
+    "cp750.sys.dig_4_global_delay": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 250
+      },
+      "unit": "ms",
+      "description": "Audio delay for the Digital 4 input"
+    },
+    "cp750.sys.dig_4_text": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Display label for the Digital 4 input"
+    },
+    "cp750.sys.distance_units": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["feet", "meters"]
+      },
+      "description": "Units used for the room distance parameters"
+    },
+    "cp750.sys.dolby_digital_2_channel_decode_mode_1": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["auto", "invalid", "lr_discrete", "n_a", "prologic", "prologic_2"]
+      },
+      "description": "Decode mode for two-channel Dolby Digital on the Digital 1 input"
+    },
+    "cp750.sys.dolby_digital_2_channel_decode_mode_2": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["auto", "invalid", "lr_discrete", "n_a", "prologic", "prologic_2"]
+      },
+      "description": "Decode mode for two-channel Dolby Digital on the Digital 2 input"
+    },
+    "cp750.sys.dolby_digital_2_channel_decode_mode_3": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["auto", "invalid", "lr_discrete", "n_a", "prologic", "prologic_2"]
+      },
+      "description": "Decode mode for two-channel Dolby Digital on the Digital 3 input"
+    },
+    "cp750.sys.dolby_digital_2_channel_decode_mode_4": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["auto", "invalid", "lr_discrete", "n_a", "prologic", "prologic_2"]
+      },
+      "description": "Decode mode for two-channel Dolby Digital on the Digital 4 input"
+    },
+    "cp750.sys.dolby_digital_dialnorm_1": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["n_a", "off", "on"]
+      },
+      "description": "Apply Dolby Digital dialnorm on the Digital 1 input"
+    },
+    "cp750.sys.dolby_digital_dialnorm_2": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["n_a", "off", "on"]
+      },
+      "description": "Apply Dolby Digital dialnorm on the Digital 2 input"
+    },
+    "cp750.sys.dolby_digital_dialnorm_3": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["n_a", "off", "on"]
+      },
+      "description": "Apply Dolby Digital dialnorm on the Digital 3 input"
+    },
+    "cp750.sys.dolby_digital_dialnorm_4": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["n_a", "off", "on"]
+      },
+      "description": "Apply Dolby Digital dialnorm on the Digital 4 input"
+    },
+    "cp750.sys.eq_bsl_100": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 100 Hz"
+    },
+    "cp750.sys.eq_bsl_10k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 10 kHz"
+    },
+    "cp750.sys.eq_bsl_125": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 125 Hz"
+    },
+    "cp750.sys.eq_bsl_12_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 12.5 kHz"
+    },
+    "cp750.sys.eq_bsl_160": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 160 Hz"
+    },
+    "cp750.sys.eq_bsl_16k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 16 kHz"
+    },
+    "cp750.sys.eq_bsl_1_25k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 1.25 kHz"
+    },
+    "cp750.sys.eq_bsl_1_6k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 1.6 kHz"
+    },
+    "cp750.sys.eq_bsl_1k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 1 kHz"
+    },
+    "cp750.sys.eq_bsl_200": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 200 Hz"
+    },
+    "cp750.sys.eq_bsl_250": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 250 Hz"
+    },
+    "cp750.sys.eq_bsl_2_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 2.5 kHz"
+    },
+    "cp750.sys.eq_bsl_2k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 2 kHz"
+    },
+    "cp750.sys.eq_bsl_315": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 315 Hz"
+    },
+    "cp750.sys.eq_bsl_3_15k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 3.15 kHz"
+    },
+    "cp750.sys.eq_bsl_40": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 40 Hz"
+    },
+    "cp750.sys.eq_bsl_400": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 400 Hz"
+    },
+    "cp750.sys.eq_bsl_4k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 4 kHz"
+    },
+    "cp750.sys.eq_bsl_50": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 50 Hz"
+    },
+    "cp750.sys.eq_bsl_500": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 500 Hz"
+    },
+    "cp750.sys.eq_bsl_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 5 kHz"
+    },
+    "cp750.sys.eq_bsl_63": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 63 Hz"
+    },
+    "cp750.sys.eq_bsl_630": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 630 Hz"
+    },
+    "cp750.sys.eq_bsl_6_3k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 6.3 kHz"
+    },
+    "cp750.sys.eq_bsl_80": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 80 Hz"
+    },
+    "cp750.sys.eq_bsl_800": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 800 Hz"
+    },
+    "cp750.sys.eq_bsl_8k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsl channel 1/3-octave EQ band at 8 kHz"
+    },
+    "cp750.sys.eq_bsr_100": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 100 Hz"
+    },
+    "cp750.sys.eq_bsr_10k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 10 kHz"
+    },
+    "cp750.sys.eq_bsr_125": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 125 Hz"
+    },
+    "cp750.sys.eq_bsr_12_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 12.5 kHz"
+    },
+    "cp750.sys.eq_bsr_160": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 160 Hz"
+    },
+    "cp750.sys.eq_bsr_16k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 16 kHz"
+    },
+    "cp750.sys.eq_bsr_1_25k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 1.25 kHz"
+    },
+    "cp750.sys.eq_bsr_1_6k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 1.6 kHz"
+    },
+    "cp750.sys.eq_bsr_1k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 1 kHz"
+    },
+    "cp750.sys.eq_bsr_200": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 200 Hz"
+    },
+    "cp750.sys.eq_bsr_250": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 250 Hz"
+    },
+    "cp750.sys.eq_bsr_2_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 2.5 kHz"
+    },
+    "cp750.sys.eq_bsr_2k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 2 kHz"
+    },
+    "cp750.sys.eq_bsr_315": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 315 Hz"
+    },
+    "cp750.sys.eq_bsr_3_15k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 3.15 kHz"
+    },
+    "cp750.sys.eq_bsr_40": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 40 Hz"
+    },
+    "cp750.sys.eq_bsr_400": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 400 Hz"
+    },
+    "cp750.sys.eq_bsr_4k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 4 kHz"
+    },
+    "cp750.sys.eq_bsr_50": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 50 Hz"
+    },
+    "cp750.sys.eq_bsr_500": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 500 Hz"
+    },
+    "cp750.sys.eq_bsr_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 5 kHz"
+    },
+    "cp750.sys.eq_bsr_63": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 63 Hz"
+    },
+    "cp750.sys.eq_bsr_630": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 630 Hz"
+    },
+    "cp750.sys.eq_bsr_6_3k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 6.3 kHz"
+    },
+    "cp750.sys.eq_bsr_80": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 80 Hz"
+    },
+    "cp750.sys.eq_bsr_800": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 800 Hz"
+    },
+    "cp750.sys.eq_bsr_8k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Bsr channel 1/3-octave EQ band at 8 kHz"
+    },
+    "cp750.sys.eq_c_100": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 100 Hz"
+    },
+    "cp750.sys.eq_c_10k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 10 kHz"
+    },
+    "cp750.sys.eq_c_125": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 125 Hz"
+    },
+    "cp750.sys.eq_c_12_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 12.5 kHz"
+    },
+    "cp750.sys.eq_c_160": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 160 Hz"
+    },
+    "cp750.sys.eq_c_16k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 16 kHz"
+    },
+    "cp750.sys.eq_c_1_25k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 1.25 kHz"
+    },
+    "cp750.sys.eq_c_1_6k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 1.6 kHz"
+    },
+    "cp750.sys.eq_c_1k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 1 kHz"
+    },
+    "cp750.sys.eq_c_200": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 200 Hz"
+    },
+    "cp750.sys.eq_c_250": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 250 Hz"
+    },
+    "cp750.sys.eq_c_2_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 2.5 kHz"
+    },
+    "cp750.sys.eq_c_2k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 2 kHz"
+    },
+    "cp750.sys.eq_c_315": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 315 Hz"
+    },
+    "cp750.sys.eq_c_3_15k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 3.15 kHz"
+    },
+    "cp750.sys.eq_c_40": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 40 Hz"
+    },
+    "cp750.sys.eq_c_400": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 400 Hz"
+    },
+    "cp750.sys.eq_c_4k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 4 kHz"
+    },
+    "cp750.sys.eq_c_50": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 50 Hz"
+    },
+    "cp750.sys.eq_c_500": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 500 Hz"
+    },
+    "cp750.sys.eq_c_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 5 kHz"
+    },
+    "cp750.sys.eq_c_63": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 63 Hz"
+    },
+    "cp750.sys.eq_c_630": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 630 Hz"
+    },
+    "cp750.sys.eq_c_6_3k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 6.3 kHz"
+    },
+    "cp750.sys.eq_c_80": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 80 Hz"
+    },
+    "cp750.sys.eq_c_800": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 800 Hz"
+    },
+    "cp750.sys.eq_c_8k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "C channel 1/3-octave EQ band at 8 kHz"
+    },
+    "cp750.sys.eq_l_100": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 100 Hz"
+    },
+    "cp750.sys.eq_l_10k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 10 kHz"
+    },
+    "cp750.sys.eq_l_125": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 125 Hz"
+    },
+    "cp750.sys.eq_l_12_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 12.5 kHz"
+    },
+    "cp750.sys.eq_l_160": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 160 Hz"
+    },
+    "cp750.sys.eq_l_16k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 16 kHz"
+    },
+    "cp750.sys.eq_l_1_25k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 1.25 kHz"
+    },
+    "cp750.sys.eq_l_1_6k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 1.6 kHz"
+    },
+    "cp750.sys.eq_l_1k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 1 kHz"
+    },
+    "cp750.sys.eq_l_200": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 200 Hz"
+    },
+    "cp750.sys.eq_l_250": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 250 Hz"
+    },
+    "cp750.sys.eq_l_2_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 2.5 kHz"
+    },
+    "cp750.sys.eq_l_2k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 2 kHz"
+    },
+    "cp750.sys.eq_l_315": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 315 Hz"
+    },
+    "cp750.sys.eq_l_3_15k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 3.15 kHz"
+    },
+    "cp750.sys.eq_l_40": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 40 Hz"
+    },
+    "cp750.sys.eq_l_400": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 400 Hz"
+    },
+    "cp750.sys.eq_l_4k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 4 kHz"
+    },
+    "cp750.sys.eq_l_50": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 50 Hz"
+    },
+    "cp750.sys.eq_l_500": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 500 Hz"
+    },
+    "cp750.sys.eq_l_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 5 kHz"
+    },
+    "cp750.sys.eq_l_63": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 63 Hz"
+    },
+    "cp750.sys.eq_l_630": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 630 Hz"
+    },
+    "cp750.sys.eq_l_6_3k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 6.3 kHz"
+    },
+    "cp750.sys.eq_l_80": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 80 Hz"
+    },
+    "cp750.sys.eq_l_800": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 800 Hz"
+    },
+    "cp750.sys.eq_l_8k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "L channel 1/3-octave EQ band at 8 kHz"
+    },
+    "cp750.sys.eq_lfe_cut": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -126,
+        "maximum": 0
+      },
+      "description": "Subwoofer parametric EQ cut amount"
+    },
+    "cp750.sys.eq_lfe_freq": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 25,
+        "maximum": 125
+      },
+      "description": "Subwoofer parametric EQ centre frequency in Hz"
+    },
+    "cp750.sys.eq_lfe_q": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["0_5", "1_0", "2_0", "4_0"]
+      },
+      "description": "Subwoofer parametric EQ Q (0_5 = 0.5)"
+    },
+    "cp750.sys.eq_ls_100": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 100 Hz"
+    },
+    "cp750.sys.eq_ls_10k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 10 kHz"
+    },
+    "cp750.sys.eq_ls_125": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 125 Hz"
+    },
+    "cp750.sys.eq_ls_12_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 12.5 kHz"
+    },
+    "cp750.sys.eq_ls_160": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 160 Hz"
+    },
+    "cp750.sys.eq_ls_16k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 16 kHz"
+    },
+    "cp750.sys.eq_ls_1_25k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 1.25 kHz"
+    },
+    "cp750.sys.eq_ls_1_6k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 1.6 kHz"
+    },
+    "cp750.sys.eq_ls_1k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 1 kHz"
+    },
+    "cp750.sys.eq_ls_200": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 200 Hz"
+    },
+    "cp750.sys.eq_ls_250": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 250 Hz"
+    },
+    "cp750.sys.eq_ls_2_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 2.5 kHz"
+    },
+    "cp750.sys.eq_ls_2k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 2 kHz"
+    },
+    "cp750.sys.eq_ls_315": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 315 Hz"
+    },
+    "cp750.sys.eq_ls_3_15k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 3.15 kHz"
+    },
+    "cp750.sys.eq_ls_40": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 40 Hz"
+    },
+    "cp750.sys.eq_ls_400": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 400 Hz"
+    },
+    "cp750.sys.eq_ls_4k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 4 kHz"
+    },
+    "cp750.sys.eq_ls_50": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 50 Hz"
+    },
+    "cp750.sys.eq_ls_500": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 500 Hz"
+    },
+    "cp750.sys.eq_ls_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 5 kHz"
+    },
+    "cp750.sys.eq_ls_63": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 63 Hz"
+    },
+    "cp750.sys.eq_ls_630": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 630 Hz"
+    },
+    "cp750.sys.eq_ls_6_3k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 6.3 kHz"
+    },
+    "cp750.sys.eq_ls_80": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 80 Hz"
+    },
+    "cp750.sys.eq_ls_800": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 800 Hz"
+    },
+    "cp750.sys.eq_ls_8k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Ls channel 1/3-octave EQ band at 8 kHz"
+    },
+    "cp750.sys.eq_r_100": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 100 Hz"
+    },
+    "cp750.sys.eq_r_10k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 10 kHz"
+    },
+    "cp750.sys.eq_r_125": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 125 Hz"
+    },
+    "cp750.sys.eq_r_12_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 12.5 kHz"
+    },
+    "cp750.sys.eq_r_160": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 160 Hz"
+    },
+    "cp750.sys.eq_r_16k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 16 kHz"
+    },
+    "cp750.sys.eq_r_1_25k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 1.25 kHz"
+    },
+    "cp750.sys.eq_r_1_6k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 1.6 kHz"
+    },
+    "cp750.sys.eq_r_1k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 1 kHz"
+    },
+    "cp750.sys.eq_r_200": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 200 Hz"
+    },
+    "cp750.sys.eq_r_250": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 250 Hz"
+    },
+    "cp750.sys.eq_r_2_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 2.5 kHz"
+    },
+    "cp750.sys.eq_r_2k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 2 kHz"
+    },
+    "cp750.sys.eq_r_315": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 315 Hz"
+    },
+    "cp750.sys.eq_r_3_15k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 3.15 kHz"
+    },
+    "cp750.sys.eq_r_40": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 40 Hz"
+    },
+    "cp750.sys.eq_r_400": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 400 Hz"
+    },
+    "cp750.sys.eq_r_4k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 4 kHz"
+    },
+    "cp750.sys.eq_r_50": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 50 Hz"
+    },
+    "cp750.sys.eq_r_500": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 500 Hz"
+    },
+    "cp750.sys.eq_r_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 5 kHz"
+    },
+    "cp750.sys.eq_r_63": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 63 Hz"
+    },
+    "cp750.sys.eq_r_630": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 630 Hz"
+    },
+    "cp750.sys.eq_r_6_3k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 6.3 kHz"
+    },
+    "cp750.sys.eq_r_80": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 80 Hz"
+    },
+    "cp750.sys.eq_r_800": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 800 Hz"
+    },
+    "cp750.sys.eq_r_8k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "R channel 1/3-octave EQ band at 8 kHz"
+    },
+    "cp750.sys.eq_rs_100": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 100 Hz"
+    },
+    "cp750.sys.eq_rs_10k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 10 kHz"
+    },
+    "cp750.sys.eq_rs_125": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 125 Hz"
+    },
+    "cp750.sys.eq_rs_12_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 12.5 kHz"
+    },
+    "cp750.sys.eq_rs_160": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 160 Hz"
+    },
+    "cp750.sys.eq_rs_16k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 16 kHz"
+    },
+    "cp750.sys.eq_rs_1_25k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 1.25 kHz"
+    },
+    "cp750.sys.eq_rs_1_6k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 1.6 kHz"
+    },
+    "cp750.sys.eq_rs_1k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 1 kHz"
+    },
+    "cp750.sys.eq_rs_200": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 200 Hz"
+    },
+    "cp750.sys.eq_rs_250": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 250 Hz"
+    },
+    "cp750.sys.eq_rs_2_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 2.5 kHz"
+    },
+    "cp750.sys.eq_rs_2k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 2 kHz"
+    },
+    "cp750.sys.eq_rs_315": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 315 Hz"
+    },
+    "cp750.sys.eq_rs_3_15k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 3.15 kHz"
+    },
+    "cp750.sys.eq_rs_40": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 40 Hz"
+    },
+    "cp750.sys.eq_rs_400": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 400 Hz"
+    },
+    "cp750.sys.eq_rs_4k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 4 kHz"
+    },
+    "cp750.sys.eq_rs_50": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 50 Hz"
+    },
+    "cp750.sys.eq_rs_500": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 500 Hz"
+    },
+    "cp750.sys.eq_rs_5k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 5 kHz"
+    },
+    "cp750.sys.eq_rs_63": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 63 Hz"
+    },
+    "cp750.sys.eq_rs_630": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 630 Hz"
+    },
+    "cp750.sys.eq_rs_6_3k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 6.3 kHz"
+    },
+    "cp750.sys.eq_rs_80": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 80 Hz"
+    },
+    "cp750.sys.eq_rs_800": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 800 Hz"
+    },
+    "cp750.sys.eq_rs_8k": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -60,
+        "maximum": 60
+      },
+      "description": "Rs channel 1/3-octave EQ band at 8 kHz"
+    },
+    "cp750.sys.fader": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100
+      },
+      "unit": "fader",
+      "description": "Main fader; raw 0-100 is the 0.0-10.0 display, 70 is 0 dB"
+    },
+    "cp750.sys.fader_preset_1": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100
+      },
+      "unit": "fader",
+      "description": "Fader level applied when the Digital 1 input is selected"
+    },
+    "cp750.sys.fader_preset_1_enable": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      },
+      "description": "Enable the fader preset for the Digital 1 input"
+    },
+    "cp750.sys.fader_preset_2": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100
+      },
+      "unit": "fader",
+      "description": "Fader level applied when the Digital 2 input is selected"
+    },
+    "cp750.sys.fader_preset_2_enable": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      },
+      "description": "Enable the fader preset for the Digital 2 input"
+    },
+    "cp750.sys.fader_preset_3": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100
+      },
+      "unit": "fader",
+      "description": "Fader level applied when the Digital 3 input is selected"
+    },
+    "cp750.sys.fader_preset_3_enable": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      },
+      "description": "Enable the fader preset for the Digital 3 input"
+    },
+    "cp750.sys.fader_preset_4": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100
+      },
+      "unit": "fader",
+      "description": "Fader level applied when the Digital 4 input is selected"
+    },
+    "cp750.sys.fader_preset_4_enable": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      },
+      "description": "Enable the fader preset for the Digital 4 input"
+    },
+    "cp750.sys.fader_preset_a": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100
+      },
+      "unit": "fader",
+      "description": "Fader level applied when the Analog input is selected"
+    },
+    "cp750.sys.fader_preset_a_enable": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      },
+      "description": "Enable the fader preset for the Analog input"
+    },
+    "cp750.sys.fader_preset_m": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100
+      },
+      "unit": "fader",
+      "description": "Fader level applied when the Mic input is selected"
+    },
+    "cp750.sys.fader_preset_m_enable": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      },
+      "description": "Enable the fader preset for the Mic input"
+    },
+    "cp750.sys.fader_preset_n": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100
+      },
+      "unit": "fader",
+      "description": "Fader level applied when the Non-sync input is selected"
+    },
+    "cp750.sys.fader_preset_n_enable": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      },
+      "description": "Enable the fader preset for the Non-sync input"
+    },
+    "cp750.sys.input_mode": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["analog", "dig_1", "dig_2", "dig_3", "dig_4", "last", "mic", "non_sync"]
+      },
+      "description": "Currently selected input"
+    },
+    "cp750.sys.ip_setting": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "x-format": "ip-setting"
+      },
+      "description": "Network settings: address, netmask, gateway, an off|on flag and hostname"
+    },
+    "cp750.sys.lcd_contrast": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 31
+      },
+      "description": "Front-panel LCD contrast"
+    },
+    "cp750.sys.level_bsl": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -160,
+        "maximum": 160
+      },
+      "description": "Bsl channel level trim"
+    },
+    "cp750.sys.level_bsr": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -160,
+        "maximum": 160
+      },
+      "description": "Bsr channel level trim"
+    },
+    "cp750.sys.level_c": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -160,
+        "maximum": 160
+      },
+      "description": "C channel level trim"
+    },
+    "cp750.sys.level_l": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -160,
+        "maximum": 160
+      },
+      "description": "L channel level trim"
+    },
+    "cp750.sys.level_lfe": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -160,
+        "maximum": 160
+      },
+      "description": "LFE channel level trim"
+    },
+    "cp750.sys.level_ls": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -160,
+        "maximum": 160
+      },
+      "description": "Ls channel level trim"
+    },
+    "cp750.sys.level_r": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -160,
+        "maximum": 160
+      },
+      "description": "R channel level trim"
+    },
+    "cp750.sys.level_rs": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -160,
+        "maximum": 160
+      },
+      "description": "Rs channel level trim"
+    },
+    "cp750.sys.mic_global_delay": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 250
+      },
+      "unit": "ms",
+      "description": "Audio delay for the Mic input"
+    },
+    "cp750.sys.mic_text": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Display label for the Mic input"
+    },
+    "cp750.sys.mute": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      },
+      "description": "Main mute (1 = muted)"
+    },
+    "cp750.sys.mute_fade_in_time": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 200,
+        "maximum": 5000
+      },
+      "unit": "ms",
+      "description": "Fade-in time when unmuting"
+    },
+    "cp750.sys.mute_fade_out_time": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 200,
+        "maximum": 5000
+      },
+      "unit": "ms",
+      "description": "Fade-out time when muting"
+    },
+    "cp750.sys.non_sync_global_delay": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 250
+      },
+      "unit": "ms",
+      "description": "Audio delay for the Non-sync input"
+    },
+    "cp750.sys.non_sync_route": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "x-format": "route-list"
+      },
+      "description": "Channel routing for the Non-sync input"
+    },
+    "cp750.sys.non_sync_text": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Display label for the Non-sync input"
+    },
+    "cp750.sys.ntp_server": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "NTP server hostname or address"
+    },
+    "cp750.sys.pcm_2_channel_decode_mode_1": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["auto", "invalid", "lr_discrete", "n_a", "prologic", "prologic_2"]
+      },
+      "description": "Decode mode for two-channel PCM on the Digital 1 input"
+    },
+    "cp750.sys.pcm_2_channel_decode_mode_2": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["auto", "invalid", "lr_discrete", "n_a", "prologic", "prologic_2"]
+      },
+      "description": "Decode mode for two-channel PCM on the Digital 2 input"
+    },
+    "cp750.sys.pcm_2_channel_decode_mode_3": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["auto", "invalid", "lr_discrete", "n_a", "prologic", "prologic_2"]
+      },
+      "description": "Decode mode for two-channel PCM on the Digital 3 input"
+    },
+    "cp750.sys.pcm_2_channel_decode_mode_4": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["auto", "invalid", "lr_discrete", "n_a", "prologic", "prologic_2"]
+      },
+      "description": "Decode mode for two-channel PCM on the Digital 4 input"
+    },
+    "cp750.sys.pcm_2_channel_decode_mode_a": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["auto", "invalid", "lr_discrete", "n_a", "prologic", "prologic_2"]
+      },
+      "description": "Decode mode for two-channel PCM on the Analog input"
+    },
+    "cp750.sys.pcm_2_channel_decode_mode_n": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["auto", "invalid", "lr_discrete", "n_a", "prologic", "prologic_2"]
+      },
+      "description": "Decode mode for two-channel PCM on the Non-sync input"
+    },
+    "cp750.sys.power_on_input": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["analog", "dig_1", "dig_2", "dig_3", "dig_4", "last", "mic", "non_sync"]
+      },
+      "description": "Input selected at power-on (last = previous input)"
+    },
+    "cp750.sys.process_mode_1": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["minimum_latency", "mute", "silent_switch"]
+      },
+      "description": "PCM processing mode for the Digital 1 input"
+    },
+    "cp750.sys.process_mode_2": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["minimum_latency", "mute", "silent_switch"]
+      },
+      "description": "PCM processing mode for the Digital 2 input"
+    },
+    "cp750.sys.process_mode_3": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["minimum_latency", "mute", "silent_switch"]
+      },
+      "description": "PCM processing mode for the Digital 3 input"
+    },
+    "cp750.sys.process_mode_4": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["minimum_latency", "mute", "silent_switch"]
+      },
+      "description": "PCM processing mode for the Digital 4 input"
+    },
+    "cp750.sys.projector_text": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Projector description label"
+    },
+    "cp750.sys.rta_channel": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["Bsl", "Bsr", "C", "L", "LFE", "Ls", "R", "Rs"]
+      },
+      "description": "Channel shown on the real-time analyzer"
+    },
+    "cp750.sys.screen_distance": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 2147483647
+      },
+      "unit": "feet_or_meters",
+      "description": "Room measurement used to calculate surround delay"
+    },
+    "cp750.sys.serial_number": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 2147483647
+      },
+      "description": "Unit serial number"
+    },
+    "cp750.sys.signal_gen_channel": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["Bsl", "Bsr", "C", "L", "LFE", "Ls", "R", "Rs"]
+      },
+      "description": "Channel the signal generator drives"
+    },
+    "cp750.sys.signal_gen_mode": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string",
+        "enum": ["off", "pink", "program", "sine_100", "sine_10k", "sine_1k", "thump"]
+      },
+      "description": "Signal generator output (off disables it)"
+    },
+    "cp750.sys.speaker_distance": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 2147483647
+      },
+      "unit": "feet_or_meters",
+      "description": "Room measurement used to calculate surround delay"
+    },
+    "cp750.sys.spl_room": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -5000,
+        "maximum": 5000
+      }
+    },
+    "cp750.sys.subwoofer_filter": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 50,
+        "maximum": 100
+      },
+      "description": "Subwoofer crossover frequency in Hz"
+    },
+    "cp750.sys.surround_delay": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 150
+      },
+      "unit": "ms",
+      "description": "Surround channel delay for digital material"
+    },
+    "cp750.sys.theater_name": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Theater name label"
+    },
+    "cp750.sys.time": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Current date and time"
+    },
+    "cp750.sys.time_update_int": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 60
+      },
+      "description": "Interval between NTP time updates"
+    },
+    "cp750.sys.treble_freq_bsl": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 4
+      },
+      "description": "Bsl channel treble frequency setting"
+    },
+    "cp750.sys.treble_freq_bsr": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 4
+      },
+      "description": "Bsr channel treble frequency setting"
+    },
+    "cp750.sys.treble_freq_c": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 4
+      },
+      "description": "C channel treble frequency setting"
+    },
+    "cp750.sys.treble_freq_l": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 4
+      },
+      "description": "L channel treble frequency setting"
+    },
+    "cp750.sys.treble_freq_ls": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 4
+      },
+      "description": "Ls channel treble frequency setting"
+    },
+    "cp750.sys.treble_freq_r": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 4
+      },
+      "description": "R channel treble frequency setting"
+    },
+    "cp750.sys.treble_freq_rs": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 4
+      },
+      "description": "Rs channel treble frequency setting"
+    },
+    "cp750.sys.treble_level_bsl": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -120,
+        "maximum": 120
+      },
+      "description": "Bsl channel treble level"
+    },
+    "cp750.sys.treble_level_bsr": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -120,
+        "maximum": 120
+      },
+      "description": "Bsr channel treble level"
+    },
+    "cp750.sys.treble_level_c": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -120,
+        "maximum": 120
+      },
+      "description": "C channel treble level"
+    },
+    "cp750.sys.treble_level_l": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -120,
+        "maximum": 120
+      },
+      "description": "L channel treble level"
+    },
+    "cp750.sys.treble_level_ls": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -120,
+        "maximum": 120
+      },
+      "description": "Ls channel treble level"
+    },
+    "cp750.sys.treble_level_r": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -120,
+        "maximum": 120
+      },
+      "description": "R channel treble level"
+    },
+    "cp750.sys.treble_level_rs": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": -120,
+        "maximum": 120
+      },
+      "description": "Rs channel treble level"
+    },
+    "cp750.sys.velocity_helper": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "enum": [0, 1]
+      }
+    },
+    "cp750.sys_tune.dsp_1": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      }
+    },
+    "cp750.sys_tune.dsp_2": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      }
+    },
+    "cp750.sys_tune.dsp_3": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      }
+    },
+    "cp750.sys_tune.dsp_4": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      }
+    },
+    "cp750.sys_tune.dsp_5": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      }
+    },
+    "cp750.sys_tune.dsp_6": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      }
+    },
+    "cp750.sys_tune.dsp_7": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      }
+    },
+    "cp750.sys_tune.dsp_8": {
+      "tier": "normal",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      }
+    },
+    "cp750.sys_tune.dsp_boot_delay_us": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 2147483647
+      },
+      "unit": "us"
+    },
+    "cp750.sys_tune.dsp_fade_time_ms": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 2147483647
+      },
+      "unit": "ms"
+    },
+    "cp750.sys_tune.log_interval": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 60000
+      }
+    },
+    "cp750.sys_tune.meter_rate": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 30
+      }
+    },
+    "cp750.sys_tune.rta_rate": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 30
+      }
+    },
+    "cp750.sys_tune.upgrade_timeout": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 120,
+        "maximum": 1800
+      }
+    },
+    "cp750.sys_tune.usb_cycle_time": {
+      "tier": "full",
+      "access": "readwrite",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 30
+      }
+    },
+    "cp750.sysinfo.ethernet_address": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "MAC address of the Ethernet interface"
+    },
+    "cp750.sysinfo.hardware_rev": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 16
+      },
+      "description": "Hardware revision"
+    },
+    "cp750.sysinfo.parameter_file_version": {
+      "tier": "full",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "description": "Version of the stored parameter file"
+    },
+    "cp750.sysinfo.version": {
+      "tier": "normal",
+      "access": "readonly",
+      "accessSource": "inferred",
+      "value": {
+        "type": "string"
+      },
+      "aliases": ["version"],
+      "description": "Firmware version reported by the unit"
+    }
+  },
+  "commands": ["help", "status", "dump_log", "dump_log_100", "exit"]
+}

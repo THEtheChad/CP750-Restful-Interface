@@ -1,0 +1,8 @@
+[install]
+# Only resolve releases at least 14 days old (supply-chain cool-off).
+minimumReleaseAge = 1209600
+
+[test]
+# apps/web runs its own `bun test` (with a happy-dom preload, see apps/web/bunfig.toml), so its
+# DOM globals never leak into the server and device tests.
+pathIgnorePatterns = ["apps/web/**"]
