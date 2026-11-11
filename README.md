@@ -30,14 +30,16 @@ bun apps/server/src/cli.ts serve              # against the real unit at CP750_H
 ## Web client
 
 `apps/web` (`@cp750/web`) is the booth operator's UI: Vite, React and TanStack Query, plain CSS
-(light and dark follow the OS), usable from a phone up to a booth monitor, with the keyboard.
+(dark by default for the booth; Light or System under Details), usable from a phone up to a booth
+monitor, with the keyboard. Design rules: [`apps/web/DESIGN.md`](apps/web/DESIGN.md).
 
-- **Status bar**: connection, host, firmware, the selected manifest (exact/nearest/none, verified
-  or not), read-only and full-control modes, and the API token when the gateway requires one (kept
-  in `sessionStorage` for the tab). Banners warn when the gateway or the processor is unreachable
+- **Status bar**: connection and host always visible; read-only and full-control modes when on;
+  Details for firmware, the selected manifest (exact/nearest/none, verified or not), modes and
+  theme; and the API token when the gateway requires one (kept in `sessionStorage` for the tab). Banners warn when the gateway or the processor is unreachable
   or the manifest is unverified.
-- **Controls**: the fader as a big `7.0` readout with dB from the API, a slider, ±0.1/±1.0 steps and
-  a return to 7.0; mute; the input. Writes are optimistic and roll back on errors (unless something
+- **Controls**: the fader as a big `7.0` readout with dB from the API and where it sits against
+  reference (only once confirmed), a slider over a 0–10 scale marking 7.0, ±0.1/±1.0 steps and a
+  reset to 7.0; mute; the input. Pending writes say so ("Muting…", "Switching…"). Writes are optimistic and roll back on errors (unless something
   newer arrived meanwhile); a rejected write (`422`) says what the processor kept. Writes to one
   param go one at a time, and mute and input ignore clicks while theirs is pending. Each shows
   **Stale** when live updates have stopped for a few poll intervals.
@@ -46,9 +48,11 @@ bun apps/server/src/cli.ts serve              # against the real unit at CP750_H
   final value on release; no single write moves the level more than 1.0 (bigger moves ramp in
   1.0 steps). A click on the track moves one page (1.0) toward the click. The mouse wheel does
   nothing.
-- **Advanced**: every param from `/api/commands`, grouped by namespace, with search. Each control
-  comes from the param's JSON Schema (switch, select, slider + number, number, text). Values are only
-  read for rows on screen, or with Read. Disabled controls say why. Destructive actions need an
+- **Advanced**: every param from `/api/commands`, grouped by namespace, with search and a scope:
+  Available (default), Locked (refused by the gateway, e.g. the full command set) or All. Each
+  control comes from the param's JSON Schema (switch, select, slider + number, number, text); a
+  param that can't be changed shows its value as text with a short reason. Values are only read
+  for rows on screen, or with Read. Destructive actions need an
   inline second confirmation and send `"confirm": true`.
 - **Live**: one `EventSource` on `/api/events` updates the cache, reconnecting with backoff.
 
